@@ -167,16 +167,21 @@ export default function Landing() {
       if (!s || typing(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
       if (on && e.key === 'Escape') { setPlaying(false); return; }
       if (on && e.key === 'Enter' && at && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') { e.preventDefault(); navigate(`/work/${at}`); return; }
-      if (!WALK.has(e.code) || e.shiftKey || !inHood()) return;
+      if (e.key === 'Shift') { s.setRun(true); return; }
+      if (!WALK.has(e.code) || !inHood()) return;
       if (!s.onStreet() && !SIDE.has(e.code)) return;
       e.preventDefault(); // the street, not the page, gets the arrows
       // Ease the page back to the street view if it had scrolled
       const top = heroRef.current.getBoundingClientRect().top + scrollY;
       if (scrollY - top > 2) scrollTo({ top, behavior: reducedMotion() ? 'auto' : 'smooth' });
       if (!on) startPlaying();
+      s.setRun(e.shiftKey); // Shift + arrows: jog
       s.key(e.code, true);
     };
-    const up = (e) => sceneRef.current?.key(e.code, false);
+    const up = (e) => {
+      if (e.key === 'Shift') sceneRef.current?.setRun(false);
+      sceneRef.current?.key(e.code, false);
+    };
     const blur = () => sceneRef.current?.releaseKeys(); // a key held while switching tabs never gets its keyup
     addEventListener('keydown', down);
     addEventListener('keyup', up);
@@ -223,7 +228,7 @@ export default function Landing() {
 
           <div className={`hood__help${playing ? ' is-on' : ''}${guideOpen ? '' : ' is-mini'}`}>
             <p id="hood-help" role="status" className="sr-only">
-              {playing ? 'Click the ground or use the arrow keys to walk, drag to look around. At a door, press Enter or Go inside.' : ''}
+              {playing ? 'Click the ground or use the arrow keys to walk, hold Shift to run, drag to look around. At a door, press Enter or Go inside.' : ''}
             </p>
             {playing && (
               <button className="hood__guide-toggle" aria-expanded={guideOpen} onClick={(e) => { e.stopPropagation(); setGuideOpen((o) => !o); }} aria-label={guideOpen ? 'Hide controls' : 'Show controls'}>
@@ -233,7 +238,7 @@ export default function Landing() {
             )}
             {playing && guideOpen && (
               <ul className="hood__keys" aria-hidden="true">
-                <li><span className="hood__key-ico"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3m3-3 3 3M12 21l-3-3m3 3 3-3M3 12l3-3m-3 3 3 3M21 12l-3-3m3 3-3 3" /></svg></span><span><b>Walk</b><small>Click or <kbd>←↑↓→</kbd></small></span></li>
+                <li><span className="hood__key-ico"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3m3-3 3 3M12 21l-3-3m3 3 3-3M3 12l3-3m-3 3 3 3M21 12l-3-3m3 3-3 3" /></svg></span><span><b>Walk</b><small>Click or <kbd>←↑↓→</kbd> · <kbd>Shift</kbd> to run</small></span></li>
                 <li><span className="hood__key-ico"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4" /></svg></span><span><b>Look around</b><small>Drag · pinch to zoom</small></span></li>
                 <li><span className="hood__key-ico"><svg viewBox="0 0 24 24"><path d="M4 21V9l8-6 8 6v12h-6v-6h-4v6Z" /></svg></span><span><b>Go inside</b><small>At a door, <kbd>Enter</kbd></small></span></li>
               </ul>

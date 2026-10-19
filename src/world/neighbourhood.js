@@ -797,7 +797,9 @@ export class NeighbourhoodScene {
     }
     return true;
   }
-  releaseKeys() { this.sim.keys.clear(); this.realKeys?.clear(); }
+  releaseKeys() { this.sim.keys.clear(); this.realKeys?.clear(); this.sim.running = false; }
+  /** Shift held: she breaks into a jog. */
+  setRun(on) { this.sim.running = !!on; }
 
   /** Wild frogs do the odd little hop on the spot; caught frogs hop along her trail, one behind another. */
   tickFrogs(time, dt) {
@@ -941,13 +943,15 @@ export class NeighbourhoodScene {
       }
     }
     const moving = move.lengthSq() > 0 && this.view < 0.6 && !this.intro;
+    // Shift + keys: ease up to a jog (0 walk → 1 run), and back down when Shift is let go
+    S.run = (S.run || 0) + (((moving && S.running && S.keys.size) ? 1 : 0) - (S.run || 0)) * Math.min(1, dt * 5);
     if (moving) {
       // Ease into the stride instead of snapping to full speed
-      move.normalize().multiplyScalar(S.speed * (0.35 + 0.65 * S.walk) * dt);
+      move.normalize().multiplyScalar(S.speed * (1 + 0.9 * S.run) * (0.35 + 0.65 * S.walk) * dt);
       const next = this.clampWalkable(S.pos.clone().add(move));
       S.pos.copy(next);
       const before = Math.floor(S.step / Math.PI);
-      S.step += dt * 8.5;
+      S.step += dt * (8.5 + 4.5 * S.run);
       if (Math.floor(S.step / Math.PI) !== before) this.emit('step'); // one per footfall
     }
     S.walk += ((moving ? 1 : 0) - S.walk) * Math.min(1, dt * 7); // 0 idle → 1 full stride
@@ -971,7 +975,7 @@ export class NeighbourhoodScene {
       const stepUp = Math.abs(Math.sin(ph));
       g.position.y = stepUp * 0.13 * w;
       g.rotation.z = Math.sin(ph) * 0.07 * w;
-      g.rotation.x = 0.09 * w + Math.cos(ph * 2) * 0.015 * w;
+      g.rotation.x = (0.09 + 0.08 * (S.run || 0)) * w + Math.cos(ph * 2) * 0.015 * w; // leans in more when jogging
       g.rotation.y = Math.sin(ph) * 0.1 * w;
       const breathe = this.reducedMotion ? 0 : Math.sin(time * 1.7) * 0.008 * (1 - w);
       const squash = (1 - stepUp) * 0.035 * w;
