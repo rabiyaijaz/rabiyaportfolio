@@ -31,8 +31,10 @@ const DIAL = [
   { id: 'people', label: 'Relationships', icon: 'empathetic' },
   { id: 'items', label: 'Inventory', icon: 'items' },
   { id: 'offwork', label: 'Off work', icon: 'chai' },
-  { id: 'work', label: 'Build mode · See the work', icon: 'design', to: '/work' },
-  { id: 'contact', label: 'Contact', icon: 'social', to: '/contact' },
+  { id: 'work', label: 'Build mode · See the work', icon: 'design', to: '/work',
+    ask: { title: 'Leave the lot?', body: 'Head over to the Work page to see the projects I’ve designed?' } },
+  { id: 'contact', label: 'Contact', icon: 'social', to: '/contact',
+    ask: { title: 'Leave the lot?', body: 'Head over to the Contact page to send me a message?' } },
 ];
 const NEED_ICON = { hunger: 'hunger', fun: 'fun', screen: 'screen', social: 'social', flow: 'flow', energy: 'energy', chai: 'chai', environment: 'environment' };
 
@@ -43,6 +45,7 @@ export default function Room() {
   const [panel, setPanel] = useState('needs');
   const [menu, setMenu] = useState(null);
   const [bubble, setBubble] = useState(false);
+  const [leave, setLeave] = useState(null); // the dial item waiting for "leave the lot?" confirmation
   const simRef = useRef(null);
 
   // Her needs only change when the visitor does something for her from the pie menu.
@@ -122,8 +125,10 @@ export default function Room() {
             const style = d.center ? undefined : { '--a': `${-90 + (i - 1) * (360 / (DIAL.length - 1))}deg`, '--k': i };
             const cls = `hud-dial__btn hud-dial__btn--${d.id}${d.center ? ' hud-dial__btn--live' : ''}`;
             const inner = <><Icon name={d.icon} size={d.center ? 30 : 19} /><span className="hud-dial__tip">{d.label}</span></>;
+            // Leaving the room asks first, Sims-style; modified clicks still open the page directly
             return d.to
-              ? <Link key={d.id} className={cls} style={style} to={d.to} aria-label={d.label}>{inner}</Link>
+              ? <Link key={d.id} className={cls} style={style} to={d.to} aria-label={d.label} aria-haspopup="dialog"
+                  onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; e.preventDefault(); sfx('chime', { volume: 0.5 }); setLeave(d); }}>{inner}</Link>
               : <button key={d.id} className={cls} style={style} aria-pressed={panel === d.id} aria-controls="hud-panel" onClick={() => setPanel(d.id)} aria-label={d.label}>{inner}</button>;
           })}
         </nav>
@@ -175,11 +180,51 @@ export default function Room() {
           ]}
         />
       )}
+      {leave && <LeaveDialog item={leave} onCancel={() => setLeave(null)} onGo={() => navigate(leave.to)} />}
     </section>
   );
 }
 
 // ---------------------------------------------------------------- panels
+/** The Sims' "are you sure?" box: a question, a green tick and a red cross. Esc or the backdrop cancels. */
+function LeaveDialog({ item, onCancel, onGo }) {
+  const yes = useRef(null);
+  const cancel = useRef(onCancel);
+  cancel.current = onCancel;
+  useEffect(() => {
+    const back = document.activeElement;
+    yes.current?.focus();
+    const onKey = (e) => { if (e.key === 'Escape') cancel.current(); };
+    addEventListener('keydown', onKey);
+    return () => { removeEventListener('keydown', onKey); back?.focus?.(); };
+  }, []);
+  // Keep Tab inside the two buttons
+  const trap = (e) => {
+    if (e.key !== 'Tab') return;
+    const [a, b] = e.currentTarget.querySelectorAll('button');
+    if (e.shiftKey && document.activeElement === a) { e.preventDefault(); b.focus(); }
+    else if (!e.shiftKey && document.activeElement === b) { e.preventDefault(); a.focus(); }
+  };
+  return createPortal(
+    <div className="leave" onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
+      <div className="leave__box" role="alertdialog" aria-modal="true" aria-labelledby="leave-title" aria-describedby="leave-body" onKeyDown={trap}>
+        <span className="leave__bob" aria-hidden="true" />
+        <p className="leave__title" id="leave-title">{item.ask.title}</p>
+        <p className="leave__body" id="leave-body">{item.ask.body}</p>
+        <div className="leave__actions">
+          <button ref={yes} className="leave__btn leave__btn--yes" onClick={onGo} aria-label="Yes, take me there">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 10 17.5 19 7" /></svg>
+          </button>
+          <button className="leave__btn leave__btn--no" onClick={onCancel} aria-label="No, stay here">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" /></svg>
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 const tone = (v) => (v >= 60 ? 'good' : v >= 35 ? 'mid' : 'low');
 
 function Bar({ value, max = 100, label }) {

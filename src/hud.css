@@ -213,7 +213,38 @@
   .hud-traits li { grid-template-columns: 104px 1fr 36px; }
   .hud-pips i { width: 10px; height: 10px; }
 }
+/* "Leave the lot?" confirmation before the dial's Work / Contact links (Room.jsx LeaveDialog) */
+.leave { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 16px; background: rgba(10, 12, 20, 0.42); animation: leave-fade 200ms var(--ease); }
+.leave__box {
+  position: relative; width: min(360px, 100%); padding: 34px 26px 22px; border-radius: 26px; text-align: center; color: var(--ink);
+  background: color-mix(in srgb, var(--bg) 88%, transparent); border: 1px solid var(--line);
+  backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  box-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.55); animation: leave-pop 280ms var(--ease);
+}
+.leave__bob {
+  position: absolute; left: 50%; top: -18px; width: 22px; height: 34px; margin-left: -11px; background: var(--accent);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); filter: drop-shadow(0 0 10px var(--accent)); animation: leave-bob 2.6s ease-in-out infinite;
+}
+@keyframes leave-bob { 50% { transform: translateY(-5px); } }
+.leave__title { margin: 0 0 8px; font: 400 26px/1.15 var(--serif); }
+.leave__body { margin: 0 0 22px; font-size: 15px; line-height: 1.5; color: var(--muted); }
+.leave__actions { display: flex; justify-content: center; gap: 18px; }
+.leave__btn {
+  display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; cursor: pointer; color: #fff;
+  border: 3px solid rgba(255, 255, 255, 0.85); box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 180ms var(--ease), filter 180ms;
+}
+.leave__btn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.leave__btn--yes { background: linear-gradient(#6fcf7f, #2f9a4a); }
+.leave__btn--no { background: linear-gradient(#f07a6e, #c63c33); }
+.leave__btn:hover { transform: translateY(-2px) scale(1.04); filter: brightness(1.05); }
+.leave__btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+@keyframes leave-fade { from { opacity: 0; } }
+@keyframes leave-pop { from { opacity: 0; transform: translateY(10px) scale(0.96); } }
+
 @media (prefers-reduced-motion: reduce) {
   .room__sim, .room__plumbob { animation: none; }
   .hud-panel, .hud-pips i.on, .hud-segs i.on, .hud-need.is-pop .hud-bar { animation: none; }
+  .leave, .leave__box, .leave__bob { animation: none; }
+  .leave__btn:hover { transform: none; }
 }
