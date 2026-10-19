@@ -93,7 +93,7 @@ export class NeighbourhoodScene {
     this.build(lots);
     this.setClock(8);
 
-    this.sim = { pos: START.clone(), target: null, goal: null, speed: 6.5, keys: new Set(), near: null, step: 0, walk: 0, facing: 0 };
+    this.sim = { pos: START.clone(), target: null, goal: null, speed: 12.4, keys: new Set(), near: null, step: 0, walk: 0, facing: 0 };
     // Intro: hold a close-up of the Sim, then ease out to the street. It starts once the model has
     // loaded (or after 7 s with the cutout, on very slow connections), and is skipped under reduced motion.
     this.intro = reducedMotion || mapOnly ? 0 : 1;
@@ -947,11 +947,11 @@ export class NeighbourhoodScene {
     S.run = (S.run || 0) + (((moving && S.running && S.keys.size) ? 1 : 0) - (S.run || 0)) * Math.min(1, dt * 5);
     if (moving) {
       // Ease into the stride instead of snapping to full speed
-      move.normalize().multiplyScalar(S.speed * (1 + 0.9 * S.run) * (0.35 + 0.65 * S.walk) * dt);
+      move.normalize().multiplyScalar(S.speed * (1 + 0.75 * S.run) * (0.35 + 0.65 * S.walk) * dt);
       const next = this.clampWalkable(S.pos.clone().add(move));
       S.pos.copy(next);
       const before = Math.floor(S.step / Math.PI);
-      S.step += dt * (8.5 + 4.5 * S.run);
+      S.step += dt * (12 + 5 * S.run); // stride keeps pace with the speed
       if (Math.floor(S.step / Math.PI) !== before) this.emit('step'); // one per footfall
     }
     S.walk += ((moving ? 1 : 0) - S.walk) * Math.min(1, dt * 7); // 0 idle → 1 full stride
