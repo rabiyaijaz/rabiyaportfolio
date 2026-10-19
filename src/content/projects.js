@@ -43,7 +43,7 @@ export const PROJECTS = [
   {
     id: 'tamasha', name: 'Tamasha Banao', type: 'Community · Brand and UX', year: '2026',
     headline: 'Design strategy for a talent night at Banao.pk, Pakistan’s builder community',
-    cover: '/img/cs/tamasha/hero.webp', hero: '/img/cs/tamasha/stage-hero.webp', heroEmbed: '/embeds/tamasha-stage.html', tint: '#144a30',
+    cover: '/img/cs/tamasha/stage-hero.webp', hero: '/img/cs/tamasha/stage-hero.webp', heroEmbed: '/embeds/tamasha-stage.html', tint: '#144a30',
     tags: ['Community', 'Brand', 'Research', 'Service design'],
     meta: { Role: 'Banao.pk ambassador, design strategy', Context: 'Banao.pk community (volunteer)', Status: 'Style direction v1 presented, Oct 2026' },
   },
