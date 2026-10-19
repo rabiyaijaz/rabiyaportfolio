@@ -7,6 +7,7 @@ import { reducedMotion } from '../lib/scroll.js';
 import { usePhase } from '../lib/phase.jsx';
 import { PinFace, pinClass, pinStyle } from './Pin.jsx';
 import MapZoom from './MapZoom.jsx';
+import { Plumbob } from './Logo.jsx';
 
 const SKY_HOUR = { day: 10, dusk: 18.9, night: 22.5 };
 
@@ -57,6 +58,7 @@ export default function MapBanner({ highlight }) {
         ))}
       </div>
       <p className="map-banner__hint" aria-hidden="true">Click a house to step inside</p>
+      <Link className="map-banner__play" to="/"><Plumbob size={12} />Walk the street</Link>
       <MapZoom scene={sceneObj} />
     </div>
   );
