@@ -19,7 +19,7 @@ I'm Rabiya, a Lead Product Designer based in Peshawar, Pakistan, designing AI pr
 |---|---|
 | **Crewnity** | Designing human-AI collaboration for small and medium-sized Saudi businesses' finances |
 | **Vettio** | An AI hiring platform that keeps candidates and recruiters in the loop |
-| **Flownet** | Designing shared workspaces for hospital apprenticeships |
+| **Flownet** | Designing shared workspaces for apprenticeships in Swedish government hospitals |
 | **CysterCare** | A lifelong AI detection and care system for PCOS/PMOS |
 | **Tamasha Banao** | Design strategy for a talent night at Banao.pk, Pakistan's builder community |
 | **Access Adda** | An interactive card game translating Peshawar's physical barriers into universal design interventions (playable in the browser) |

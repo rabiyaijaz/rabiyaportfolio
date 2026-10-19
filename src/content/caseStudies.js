@@ -276,7 +276,7 @@ export const CASE_STUDIES = {
       { value: 4, label: 'Months, from first interviews to MVP' },
     ],
     intro: [
-      'Flownet is an MVP for hospital training in Sweden. Doctors in specialist training collect evidence for their milestones, and supervisors review and sign off. I was Lead Product Designer and Advisor from September to December 2025.',
+      'Flownet is an MVP for specialist training in Swedish government hospitals. Doctors in specialist training collect evidence for their milestones, and supervisors review and sign off. I was Lead Product Designer and Advisor from September to December 2025.',
     ],
     sections: [
       {

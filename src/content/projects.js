@@ -21,10 +21,10 @@ export const PROJECTS = [
   },
   {
     id: 'flownet', name: 'Flownet', type: 'Clinical training', year: '2025',
-    headline: 'Designing shared workspaces for hospital apprenticeships',
+    headline: 'Designing shared workspaces for apprenticeships in Swedish government hospitals',
     cover: '/img/cs/flownet/landing.webp', tint: '#eaf3f7',
     tags: ['Healthcare', 'Clinical workflows', 'Research', 'Role-based'],
-    meta: { Role: 'Lead Product Designer & Advisor', Timeline: 'Sep – Dec 2025', Context: 'Hospital training, Sweden', Status: 'MVP' },
+    meta: { Role: 'Lead Product Designer & Advisor', Timeline: 'Sep – Dec 2025', Context: 'Swedish government hospitals', Status: 'MVP' },
   },
   {
     id: 'cystercare', name: 'CysterCare', type: 'Women’s health · AI', year: '2026',
