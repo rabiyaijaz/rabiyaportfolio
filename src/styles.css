@@ -298,6 +298,36 @@ html[data-phase='day'] .sim-menu button { color: #14151b; background: rgba(255, 
 .hero-video__sound[aria-pressed='false'] { animation: nudge 2.4s ease-in-out 1.6s 2; }
 @keyframes nudge { 10%, 30% { transform: translateY(-3px); } 20% { transform: translateY(0); } }
 .hero-video__sound[aria-pressed='true'] { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+/* Seek bar between play and sound: drag or click to jump, arrows skip 5 s */
+.hero-video__controls { gap: 12px; }
+.hero-video__seek {
+  flex: 1; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px; border-radius: 999px;
+  color: #fff; border: 1px solid rgba(255, 255, 255, 0.22); background: rgba(8, 10, 26, 0.5); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.hero-video__time { flex: none; min-width: 3.4ch; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; opacity: 0.9; }
+.hero-video__seek input[type='range'] {
+  flex: 1; min-width: 0; height: 22px; margin: 0; background: none; cursor: pointer; -webkit-appearance: none; appearance: none;
+}
+.hero-video__seek input::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 4px; background: linear-gradient(90deg, var(--accent) var(--p, 0%), rgba(255, 255, 255, 0.28) var(--p, 0%));
+}
+.hero-video__seek input::-moz-range-track { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.28); }
+.hero-video__seek input::-moz-range-progress { height: 4px; border-radius: 4px; background: var(--accent); }
+.hero-video__seek input::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%; border: 0; background: #fff;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 45%, transparent); transition: transform 150ms;
+}
+.hero-video__seek input::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; border: 0; background: #fff; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 45%, transparent); }
+.hero-video__seek input:hover::-webkit-slider-thumb, .hero-video__seek input:active::-webkit-slider-thumb { transform: scale(1.25); }
+.hero-video__seek input:focus-visible { outline: none; }
+.hero-video__seek:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Phones: the sound label hides so the seek bar keeps room */
+@media (max-width: 560px) {
+  .hero-video__controls { left: 8px; right: 8px; bottom: 8px; gap: 6px; }
+  .hero-video__sound span { display: none; }
+  .hero-video__seek { padding: 0 10px; gap: 6px; }
+  .hero-video__time:last-child { display: none; }
+}
 
 .video { position: relative; margin-top: 28px; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: #000; }
 .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }

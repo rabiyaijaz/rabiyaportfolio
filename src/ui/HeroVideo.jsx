@@ -10,6 +10,9 @@ export default function HeroVideo({ src, poster, title }) {
   const frameRef = useRef(null);
   const [muted, setMuted] = useState(true);
   const [paused, setPaused] = useState(false);
+  const [time, setTime] = useState(0);
+  const [dur, setDur] = useState(0);
+  const scrubbing = useRef(false);
   const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
@@ -21,6 +24,35 @@ export default function HeroVideo({ src, poster, title }) {
     document.addEventListener('visibilitychange', tryPlay);
     return () => document.removeEventListener('visibilitychange', tryPlay);
   }, [reduced]);
+
+  // Seek bar: follows playback smoothly (rAF while playing), and jumps wherever the visitor drags or clicks
+  useEffect(() => {
+    const v = ref.current;
+    let raf = 0;
+    const tick = () => { if (!scrubbing.current) setTime(v.currentTime); raf = v.paused ? 0 : requestAnimationFrame(tick); };
+    const onMeta = () => setDur(v.duration || 0);
+    const onPlay = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); };
+    const onSeek = () => { if (!scrubbing.current) setTime(v.currentTime); };
+    if (v.readyState >= 1) onMeta();
+    v.addEventListener('loadedmetadata', onMeta);
+    v.addEventListener('play', onPlay);
+    v.addEventListener('seeked', onSeek);
+    v.addEventListener('timeupdate', onSeek);
+    if (!v.paused) onPlay();
+    return () => { cancelAnimationFrame(raf); ['loadedmetadata', 'play', 'seeked', 'timeupdate'].forEach((n, i) => v.removeEventListener(n, [onMeta, onPlay, onSeek, onSeek][i])); };
+  }, []);
+  const seek = (t) => {
+    const v = ref.current;
+    const to = Math.max(0, Math.min(dur || v.duration || 0, t));
+    v.currentTime = to; setTime(to);
+  };
+  const onSeekKey = (e) => {
+    const step = { ArrowLeft: -5, ArrowDown: -5, ArrowRight: 5, ArrowUp: 5 }[e.key];
+    if (step) { e.preventDefault(); seek(time + step); }
+    else if (e.key === 'Home') { e.preventDefault(); seek(0); }
+    else if (e.key === 'End') { e.preventDefault(); seek(dur - 0.1); }
+  };
+  const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
   const toggleSound = () => {
     const v = ref.current;
@@ -51,6 +83,18 @@ export default function HeroVideo({ src, poster, title }) {
           <button onClick={togglePlay} aria-label={paused ? 'Play video' : 'Pause video'}>
             {paused ? <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg> : <svg viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z" /></svg>}
           </button>
+          <div className="hero-video__seek">
+            <span className="hero-video__time" aria-hidden="true">{clock(time)}</span>
+            <input
+              type="range" min="0" max={dur || 0} step="0.01" value={Math.min(time, dur || 0)}
+              style={{ '--p': `${dur ? (time / dur) * 100 : 0}%` }}
+              aria-label={`Video position`} aria-valuetext={`${clock(time)} of ${clock(dur)}`}
+              onPointerDown={() => { scrubbing.current = true; addEventListener('pointerup', () => { scrubbing.current = false; }, { once: true }); }}
+              onInput={(e) => seek(+e.target.value)} onChange={() => {}}
+              onKeyDown={onSeekKey}
+            />
+            <span className="hero-video__time" aria-hidden="true">{clock(dur)}</span>
+          </div>
           <button onClick={toggleSound} aria-pressed={!muted} className="hero-video__sound">
             {muted
               ? <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM16 9l5 6M21 9l-5 6" /></svg>
