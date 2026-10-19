@@ -190,6 +190,7 @@ html[data-phase='day'] .sim-menu button { color: #14151b; background: rgba(255, 
 /* ---------- case study ---------- */
 .case__head { max-width: 780px; }
 .display--case { max-width: 22ch; font-size: clamp(32px, 4vw, 48px); }
+.display--case strong { font-weight: 500; }
 .case__hero { margin: 48px 0 0; padding: clamp(16px, 3vw, 36px); border-radius: var(--radius); background: color-mix(in srgb, var(--tint) var(--tint-mix), var(--surface)); border: 1px solid var(--line); }
 .case__hero img { margin: 0 auto; border-radius: 10px; max-height: 70vh; width: auto; }
 .case__hero img.is-contain { max-height: 46vh; }

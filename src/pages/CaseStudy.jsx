@@ -58,7 +58,8 @@ export default function CaseStudy() {
     <main id="main" className="page case">
       <header className="case__head">
         <p className="eyebrow">{p.type} • {p.year}</p>
-        <h1 className="display display--case">{titleOf(p)}</h1>
+        {/* The project name stands out; the description after it stays light */}
+        <h1 className="display display--case"><strong>{p.name}:</strong> {titleOf(p).slice(p.name.length + 2)}</h1>
         {p.tags && <ul className="tags">{p.tags.map((t) => <li key={t}>{t}</li>)}</ul>}
       </header>
       {p.heroVideo ? (
