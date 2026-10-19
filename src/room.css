@@ -35,14 +35,6 @@ body.has-room .phase-switch { bottom: auto; top: 84px; }
 .room__simhit { position: absolute; left: 48%; top: 11%; width: 11.5%; height: 78%; border: 0; background: transparent; cursor: pointer; border-radius: 40% 40% 12px 12px; }
 .room__simhit:hover, .room__simhit:focus-visible { background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 14%, transparent), transparent); }
 
-.hotspot { position: absolute; border: 0; padding: 0; background: transparent; cursor: pointer; border-radius: 16px; }
-.hotspot:focus-visible { outline: none; }
-.hotspot__label {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, 4px); opacity: 0; white-space: nowrap;
-  padding: 5px 12px; border-radius: 9px; font-size: 13px; font-weight: 700; color: #1c2768;
-  background: linear-gradient(#c4ccfa, #97a4ea); border: 2px solid #2d3a9c; transition: opacity 200ms, transform 200ms var(--ease);
-}
-.hotspot:hover .hotspot__label, .hotspot:focus-visible .hotspot__label { opacity: 1; transform: translate(-50%, 0); }
 .room__bubble {
   position: absolute; left: 57%; top: 10%; max-width: 280px; padding: 14px 16px; border-radius: 18px 18px 18px 6px;
   font-size: 14px; line-height: 1.5; color: #14151b; background: rgba(255, 255, 255, 0.94); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);

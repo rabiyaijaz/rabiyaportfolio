@@ -35,12 +35,6 @@ const DIAL = [
   { id: 'contact', label: 'Contact', icon: 'social', to: '/contact' },
 ];
 const NEED_ICON = { hunger: 'hunger', fun: 'fun', screen: 'screen', social: 'social', flow: 'flow', energy: 'energy', chai: 'chai', environment: 'environment' };
-// Room objects that open a panel (positions are % of the room image)
-const HOTSPOTS = [
-  { id: 'mirror', panel: 'traits', label: 'Personality', box: [23.5, 7, 14, 74] },
-  { id: 'frames', panel: 'people', label: 'Relationships', box: [62, 8, 10, 30] },
-  { id: 'couch', panel: 'offwork', label: 'Off work', box: [0, 50, 17, 24] },
-];
 
 export default function Room() {
   const navigate = useNavigate();
@@ -101,15 +95,7 @@ export default function Room() {
       <div className="room__stage">
         <img className="room__bg" src={img('room')} alt="" />
         <div className="room__tint" aria-hidden="true" />
-        {HOTSPOTS.map((h) => (
-          <button
-            key={h.id} className={`hotspot${panel === h.panel ? ' is-on' : ''}`}
-            style={{ left: `${h.box[0]}%`, top: `${h.box[1]}%`, width: `${h.box[2]}%`, height: `${h.box[3]}%` }}
-            onClick={() => setPanel(h.panel)} aria-label={h.label}
-          >
-            <span className="hotspot__label">{h.label}</span>
-          </button>
-        ))}
+        {/* The room is backdrop only: the Sim and the HUD are the ways in */}
         <img className="room__sim" src={img('sim-full')} alt="Rabiya's avatar: a green frog bucket hat, long black hair, an oversized black anime tee and black cargo pants" />
         {/* Her mood is good, so the plumbob is green */}
         <span className="room__plumbob" style={{ '--mood': 'var(--accent)' }} aria-hidden="true" />
