@@ -1,0 +1,118 @@
+/* ============================================================
+   404: Lot 404, the empty lot on Rabiya's street (pages/NotFound.jsx)
+   ============================================================ */
+.lost {
+  position: relative; z-index: 1; width: var(--page); min-height: 100svh; margin: 0 auto;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); align-items: center; gap: clamp(24px, 4vw, 64px);
+  padding: clamp(110px, 14vh, 150px) 0 clamp(60px, 10vh, 110px);
+}
+.lost__title { margin: 10px 0 18px; font: 300 clamp(44px, 5.6vw, 82px)/1 var(--serif); letter-spacing: -0.025em; color: var(--ink); }
+.lost__title em { font-style: italic; }
+.lost__lede { max-width: 38ch; margin: 0 0 28px; font-size: 18px; line-height: 1.55; color: var(--muted); }
+.lost__ways { display: flex; flex-wrap: wrap; gap: 12px; }
+/* "Ask for directions": the ways out light up */
+.lost__ways.is-glow > * { animation: lost-glow 1.4s var(--ease) 3; }
+@keyframes lost-glow { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent), 0 0 26px color-mix(in srgb, var(--accent) 55%, transparent); } }
+
+/* ---------- The scene ---------- */
+.lost__scene { position: relative; width: 100%; max-width: 580px; aspect-ratio: 1 / 1; justify-self: center; }
+.lot { position: absolute; inset: 0; }
+.lot__grass {
+  position: absolute; left: 2%; right: 2%; bottom: 3%; height: 46%; border-radius: 50% / 38%;
+  background: radial-gradient(70% 70% at 50% 35%, #a6cf7a, #7fb05a 70%, #6a9a4a);
+  box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.08), 0 30px 60px -30px rgba(0, 0, 0, 0.45);
+}
+.lot__grass::after { /* a soft path from the front edge to where a door would be */
+  content: ''; position: absolute; left: 50%; bottom: 0; width: 16%; height: 46%; transform: translateX(-50%) perspective(200px) rotateX(40deg);
+  transform-origin: bottom; border-radius: 6px 6px 0 0; background: rgba(240, 228, 200, 0.75);
+}
+.lot__fence { position: absolute; left: 8%; right: 8%; top: 52%; width: 84%; height: 7%; fill: #fffaf0; stroke: #d9cdb2; stroke-width: 1.2; }
+.lot__fence path:first-child { fill: none; stroke: #fffaf0; stroke-width: 4; }
+.lot__sign { position: absolute; left: 1%; top: 52%; width: 22%; transform-origin: 50% 100%; animation: lost-sway 4s ease-in-out infinite; }
+.lot__sign svg { display: block; width: 100%; }
+.s-post { fill: #8a5a3a; }
+.s-board { fill: #fffaf0; stroke: #c63c33; stroke-width: 4; }
+.s-small { font: 700 13px var(--sans, system-ui); letter-spacing: 0.12em; fill: #c63c33; }
+.s-big { font: 800 20px var(--sans, system-ui); fill: #2a2a2a; }
+@keyframes lost-sway { 50% { transform: rotate(-2.5deg); } }
+
+/* The tiny placeholder house: hidden until "Build something here", then it pops up piece by piece */
+.lot__house { position: absolute; right: 2%; top: 39%; width: 27%; }
+.lot__house svg { display: block; width: 100%; overflow: visible; }
+.lot__house svg > * { transform-box: fill-box; transform-origin: 50% 100%; transform: scale(0); opacity: 0; }
+.lot__house.is-built svg > * { animation: lost-build 500ms var(--ease) forwards; }
+.lot__house.is-built .h-roof { animation-delay: 220ms; }
+.lot__house.is-built .h-chim { animation-delay: 380ms; }
+.lot__house.is-built .h-door, .lot__house.is-built .h-win { animation-delay: 520ms; }
+.h-wall { fill: #f4ead7; stroke: #d8c8a6; stroke-width: 2; }
+.h-roof { fill: #3d8a5c; }
+.h-door { fill: #8a5a3a; }
+.h-win { fill: #bfe0f2; stroke: #fff; stroke-width: 2; }
+.h-chim { fill: #a8553f; }
+@keyframes lost-build { 60% { transform: scale(1.08); opacity: 1; } to { transform: scale(1); opacity: 1; } }
+
+/* ---------- Rabiya, lost ---------- */
+.lost__sim {
+  position: absolute; left: 47%; bottom: 7%; height: 84%; aspect-ratio: 1024 / 1536; transform: translateX(-50%);
+  padding: 0; border: 0; background: none; cursor: pointer; border-radius: 40% 40% 12px 12px;
+}
+.lost__sim img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 18px 22px rgba(30, 12, 6, 0.35)); transform-origin: 50% 100%; animation: lost-idle 3.2s ease-in-out infinite; }
+.lost__sim:hover img { filter: drop-shadow(0 18px 22px rgba(30, 12, 6, 0.35)) drop-shadow(0 0 18px color-mix(in srgb, var(--accent) 45%, transparent)); }
+.lost__sim:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+@keyframes lost-idle { 50% { transform: rotate(-0.6deg) scaleY(1.006); } }
+/* Plumbob: red when lost (as in the game), green once she's been helped */
+.lost__plumbob {
+  position: absolute; left: 50%; top: -9%; width: 9%; aspect-ratio: 0.62; margin-left: -4.5%; --mood: #e2483d;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.6), transparent 42%), linear-gradient(90deg, transparent 50%, rgba(0, 0, 0, 0.18) 50%), var(--mood);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); filter: drop-shadow(0 0 10px var(--mood));
+  transition: background 600ms, filter 600ms; animation: lost-bob 2.6s ease-in-out infinite;
+}
+.lost__sim.is-helped .lost__plumbob { --mood: var(--accent); }
+@keyframes lost-bob { 50% { transform: translateY(-14%); } }
+.lost__thought {
+  position: absolute; left: 78%; top: 2%; display: grid; place-items: center; width: 54px; height: 46px; border-radius: 50%;
+  font: 700 24px var(--serif); color: var(--ink); background: var(--surface, #fff); border: 1px solid var(--line);
+  box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.4); animation: lost-think 400ms var(--ease) both;
+}
+.lost__thought::before, .lost__thought::after { content: ''; position: absolute; border-radius: 50%; background: inherit; border: inherit; }
+.lost__thought::before { left: -6px; bottom: -8px; width: 14px; height: 14px; }
+.lost__thought::after { left: -16px; bottom: -18px; width: 8px; height: 8px; }
+@keyframes lost-think { from { opacity: 0; transform: scale(0.6); } }
+
+/* ---------- The frog ---------- */
+.lost__frog {
+  position: absolute; width: 11%; aspect-ratio: 64 / 52; padding: 0; border: 0; background: none; cursor: pointer;
+  transform: translate(-50%, -100%); animation: lost-hop 520ms var(--ease) both; transition: left 450ms var(--ease), top 450ms var(--ease);
+}
+.lost__frog svg { display: block; width: 100%; filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.25)); }
+.lost__frog:not(.is-caught):hover svg { animation: lost-wiggle 400ms ease-in-out infinite; }
+.lost__frog:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 12px; }
+.lost__frog.is-caught { cursor: default; animation: lost-hop 520ms var(--ease) both, lost-happy 1.2s 600ms ease-in-out infinite; }
+.f-body { fill: #5fae4f; }
+.f-belly { fill: #c9e6a0; }
+.f-mouth { fill: none; stroke: #2b5a26; stroke-width: 2.5; stroke-linecap: round; }
+.f-blush { fill: #f29a9a; opacity: 0.7; }
+@keyframes lost-hop { 0% { translate: 0 0; } 40% { translate: 0 -60%; } 100% { translate: 0 0; } }
+@keyframes lost-wiggle { 50% { transform: rotate(-6deg); } }
+@keyframes lost-happy { 50% { translate: 0 -18%; } }
+
+/* The pie menu sits over the page here, not inside a full-screen room */
+.lost .sim-menu { position: fixed; z-index: 60; }
+
+/* ---------- Day / Dusk / Night ---------- */
+html[data-phase='dusk'] .lot__grass { background: radial-gradient(70% 70% at 50% 35%, #a9b86a, #7f8f4c 70%, #5f6e3a); }
+html[data-phase='night'] .lot__grass { background: radial-gradient(70% 70% at 50% 35%, #4f7a4a, #355a35 70%, #264426); }
+html[data-phase='night'] .lot__fence, html[data-phase='night'] .s-board { filter: brightness(0.82); }
+html[data-phase='night'] .lost__sim img { filter: drop-shadow(0 18px 22px rgba(0, 0, 0, 0.5)) brightness(0.88); }
+
+/* ---------- Phones ---------- */
+@media (max-width: 820px) {
+  .lost { grid-template-columns: 1fr; padding-top: 104px; text-align: left; }
+  .lost__scene { max-width: 420px; order: 2; }
+  .lost__thought { width: 44px; height: 38px; font-size: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lost *, .lost *::before, .lost *::after { animation: none !important; transition: none !important; }
+  .lot__house.is-built svg > * { transform: none; opacity: 1; }
+}
