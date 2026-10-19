@@ -15,7 +15,7 @@ const SOURCES = {
   crewnity: `${root}/repshep video/crewnity-cover/assets/logo_raw.png`,
   vettio: `${root}/Rabiya's works/vettio/Assets Vettio/Icon Colour Vettio.png`,
   cystercare: `${app}/public/img/logos/cystercare.webp`,
-  flownet: `${app}/scripts/logo-src/flownet.svg`, // redrawn as a vector; the only originals were ~25 px
+  flownet: `${app}/scripts/logo-src/flownet.png`, // Rabiya's original icon, 833×793
   gdsc: `${app}/public/img/logos/gdsc.webp`,
   devmode: `${app}/public/img/logos/devmode.webp`,
 };
