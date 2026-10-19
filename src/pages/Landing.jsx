@@ -36,6 +36,7 @@ function Mailbox() {
   );
 }
 import MapZoom from '../ui/MapZoom.jsx';
+import PageGuide from '../ui/PageGuide.jsx';
 import { sfx } from '../lib/audio.js';
 import { useSim } from '../lib/simState.jsx';
 import { PinFace, pinClass, pinStyle } from '../ui/Pin.jsx';
@@ -45,6 +46,17 @@ import '../story/story.css';
 // `name` is the house sign: Tamasha's house reads Banao.pk
 const LOTS = PROJECTS.map((p) => ({ id: p.id, ...HOUSES[p.id], name: HOUSES[p.id].label || p.name }));
 const byId = Object.fromEntries(PROJECTS.map((p) => [p.id, p]));
+
+// The home page's chapters for the scroll guide (where each one starts, in page scroll)
+const topOf = (sel) => { const el = document.querySelector(sel); return el ? el.getBoundingClientRect().top + scrollY : 0; };
+const hoodAt = (p) => { const el = document.querySelector('.hood'); return el ? topOf('.hood') + p * (el.offsetHeight - innerHeight) : 0; };
+const CHAPTERS = [
+  { id: 'street', label: 'The street', at: () => 0 },
+  { id: 'map', label: 'The map', at: () => hoodAt(0.8) },
+  { id: 'process', label: 'My process', at: () => topOf('.process') },
+  { id: 'skills', label: 'Skills', at: () => topOf('.evening') },
+  { id: 'hello', label: 'Say hello', at: () => topOf('#main > :last-child') },
+];
 
 // The street's sky for each phase of the Day / Dusk / Night switch
 const SKY_HOUR = { day: 11, dusk: 18.9, night: 22.5 };
@@ -199,11 +211,6 @@ export default function Landing() {
               <Link className="button" to="/work">See the work <span aria-hidden="true">→</span></Link>
               <button className="ghost-button" onClick={startPlaying}><Plumbob size={10} /> Walk the street</button>
             </div>
-            <p className="hood__hint" aria-hidden="true">
-              <span className="hood__mouse"><span /></span>
-              Scroll to see the whole neighbourhood
-              <span className="hood__chev">↓</span>
-            </p>
           </div>
 
           <div className={`hood__help${playing ? ' is-on' : ''}${guideOpen ? '' : ' is-mini'}`}>
@@ -263,6 +270,8 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Fixed on screen; kept before the last section so `#main > :last-child` stays the contact band */}
+      <PageGuide chapters={CHAPTERS} hidden={playing || (intro && prologue !== 'done')} />
       <ProcessStory />
       <Skills />
       <NightCta title={<>Got a product in mind? <em>Let’s talk.</em></>} />

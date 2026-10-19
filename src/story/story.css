@@ -64,19 +64,51 @@
 .hood__line { margin: 18px 0 28px; max-width: 34ch; font-size: 18px; line-height: 1.55; font-weight: 450; color: rgba(255, 255, 255, 0.9); }
 .hood__actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .hood__intro .ghost-button { text-shadow: none; }
-.hood__hint {
-  display: inline-flex; align-items: center; gap: 12px; margin: 28px 0 0; padding: 9px 18px 9px 12px; border-radius: 999px;
-  font-size: 12.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #fff;
-  background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.28);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25); animation: hood-hint 2.4s var(--ease) infinite;
+/* ---------- Scroll guide (ui/PageGuide.jsx): chapter rail + "keep scrolling" nudge ---------- */
+.pguide { transition: opacity 300ms var(--ease); }
+.pguide.is-hidden { opacity: 0; pointer-events: none; }
+.pguide.is-hidden * { pointer-events: none; }
+.pguide__rail { position: fixed; right: 14px; top: 50%; z-index: 40; transform: translateY(-50%); --fill: 0; }
+.pguide__rail ol { position: relative; display: flex; flex-direction: column; gap: 22px; margin: 0; padding: 14px 10px; list-style: none; }
+.pguide__track { position: absolute; right: 24px; top: 22px; bottom: 22px; width: 2px; border-radius: 2px; background: color-mix(in srgb, var(--ink) 18%, transparent); }
+.pguide__track i { position: absolute; inset: 0; border-radius: inherit; background: var(--accent); transform-origin: top; transform: scaleY(var(--fill)); }
+.pguide__rail button { display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: var(--ink); }
+.pguide__dot { position: relative; flex: none; width: 10px; height: 10px; margin-right: 0; border-radius: 50%; background: var(--bg); border: 2px solid color-mix(in srgb, var(--ink) 40%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bg) 70%, transparent); transition: transform 250ms var(--ease), background 250ms, border-color 250ms; }
+.pguide__rail .is-past .pguide__dot { background: var(--accent); border-color: var(--accent); }
+.pguide__rail .is-on .pguide__dot { transform: scale(1.5); background: var(--accent); border-color: var(--bg); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent), 0 0 14px var(--accent); }
+.pguide__label {
+  padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap;
+  background: color-mix(in srgb, var(--bg) 78%, transparent); border: 1px solid var(--line);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  opacity: 0; transform: translateX(6px); transition: opacity 200ms, transform 200ms var(--ease);
 }
-.hood__mouse { position: relative; flex: none; width: 18px; height: 26px; border: 2px solid currentColor; border-radius: 10px; }
-.hood__mouse span { position: absolute; left: 50%; top: 4px; width: 3px; height: 6px; margin-left: -1.5px; border-radius: 2px; background: var(--accent); animation: hood-wheel 1.6s ease-in-out infinite; }
-.hood__chev { font-size: 15px;animation: hood-chev 1.6s ease-in-out infinite; }
-@keyframes hood-hint { 50% { transform: translateY(4px); } }
-@keyframes hood-wheel { 0% { opacity: 1; transform: translateY(0); } 70% { opacity: 0; transform: translateY(8px); } 100% { opacity: 0; } }
-@keyframes hood-chev { 50% { transform: translateY(3px); } }
+.pguide__rail .is-on .pguide__label, .pguide__rail:hover .pguide__label, .pguide__rail button:focus-visible .pguide__label { opacity: 1; transform: none; }
+.pguide__rail button:focus-visible { outline: none; }
+.pguide__rail button:focus-visible .pguide__dot { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.pguide__nudge {
+  position: fixed; right: var(--gutter); bottom: 96px; z-index: 40; display: inline-flex; align-items: center; gap: 12px;
+  padding: 10px 18px 10px 14px; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font: inherit; color: var(--ink); text-align: left;
+  background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.45);
+  opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity 350ms var(--ease), transform 350ms var(--ease);
+}
+.pguide__nudge.is-on { opacity: 1; transform: none; pointer-events: auto; animation: pguide-bob 2.4s 0.4s var(--ease) infinite; }
+.pguide__nudge > span:nth-child(2) { display: flex; flex-direction: column; font-size: 14px; font-weight: 700; line-height: 1.25; }
+.pguide__nudge small { font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.pguide__mouse { position: relative; flex: none; width: 18px; height: 26px; border: 2px solid currentColor; border-radius: 10px; }
+.pguide__mouse span { position: absolute; left: 50%; top: 4px; width: 3px; height: 6px; margin-left: -1.5px; border-radius: 2px; background: var(--accent); animation: pguide-wheel 1.6s ease-in-out infinite; }
+.pguide__chev { font-size: 16px; color: var(--accent); }
+@keyframes pguide-bob { 50% { transform: translateY(5px); } }
+@keyframes pguide-wheel { 0% { opacity: 1; transform: translateY(0); } 70% { opacity: 0; transform: translateY(8px); } 100% { opacity: 0; } }
+@media (max-width: 760px) {
+  .pguide__rail { display: none; }
+  .pguide__nudge { right: 12px; bottom: 84px; padding: 8px 14px 8px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pguide__nudge.is-on { animation: none; }
+  .pguide__mouse span { animation: none; }
+}
 
 .hood__mapline { position: absolute; left: var(--gutter); bottom: clamp(88px, 14vh, 150px); margin: 0; max-width: 420px; color: #fff; text-shadow: 0 2px 20px rgba(0, 0, 0, 0.45); opacity: var(--map); transform: translateY(calc((1 - var(--map)) * 14px)); pointer-events: none; }
 .hood__mapline .story-kicker { margin-bottom: 8px; }
@@ -502,7 +534,6 @@ html[data-phase='night'] .socials svg, html[data-phase='dusk'] .socials svg { co
   .hood__veil { background: linear-gradient(0deg, rgba(5, 9, 18, 0.72) 0%, rgba(5, 9, 18, 0.4) 40%, transparent 66%); }
   .hood__intro { left: 20px; right: 20px; bottom: 76px; }
   .hood__line { font-size: 16px; margin: 12px 0 20px; }
-  .hood__hint { display: none; }
   .hood__mapline { bottom: 72px; left: 20px; right: 20px; }
   .hood__mapline-title { font-size: 22px; }
   .pin--small { display: none; }
@@ -540,7 +571,7 @@ html[data-phase='night'] .socials svg, html[data-phase='dusk'] .socials svg { co
   .chapter__shot .deliver img { max-height: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hood__hint, .hood__mouse span, .hood__chev, .pin { animation: none !important; }
+  .pin { animation: none !important; }
   .pin { transition: opacity 200ms; scale: 1; }
   .process__chapters .chapter { transition: none; }
   .tl-item { opacity: 1; transform: none; transition: none; }
