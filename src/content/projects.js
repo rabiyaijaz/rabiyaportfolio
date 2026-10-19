@@ -50,7 +50,8 @@ export const PROJECTS = [
   {
     id: 'repshep', name: 'RepShep', type: 'Gym management · AI', year: 'Personal', passion: true,
     headline: 'An all-in-one gym system with AI retention on WhatsApp',
-    cover: '/img/work/repshep.webp', tint: '#eef0f7',
+    // Card: the reel's 16:9 cover, padded top and bottom with its own edge colour to fit the 16:11 card uncropped
+    cover: '/img/work/repshep.webp', hero: '/img/cs/repshep/cover.webp', heroVideo: '/video/repshep-intro.mp4', tint: '#2b2b9c',
     tags: ['Human–AI', 'AI workflows', 'WhatsApp', 'Personal'],
     meta: { Role: 'Designer', Context: 'Personal project', Status: 'In progress' },
   },
