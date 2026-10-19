@@ -52,7 +52,8 @@ const MARKS = {
 
 // Real logo files live in public/img/logos/<name>.webp (made by scripts/optimize.mjs from assets-raw/logos).
 // Each one is tried first; a missing file falls back to the drawing or monogram below.
-const HAS_FILE = new Set(['vettio', 'cystercare', 'crewnity', 'flownet', 'apptex', 'tyut', 'gdsc', 'mlsa', 'lincoln', 'banao']);
+// (Banao uses its crisp drawn brick B below rather than its blurry file.)
+const HAS_FILE = new Set(['vettio', 'cystercare', 'crewnity', 'flownet', 'apptex', 'tyut', 'gdsc', 'mlsa', 'lincoln']);
 
 export default function OrgLogo({ name, size = 44 }) {
   const [broken, setBroken] = useState(false);

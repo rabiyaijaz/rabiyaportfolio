@@ -11,12 +11,19 @@ import { usePhase } from '../lib/phase.jsx';
 import NightCta from '../ui/NightCta.jsx';
 import OrgLogo from '../ui/Logos.jsx';
 
-/** "Open to work", Sims-style: a little mailbox with its flag up and a letter peeking out.
- *  Hovering the card pops the letter up and wiggles the flag. */
+/** "Open to work", Sims-style: every few seconds a little envelope flies in and drops into the mailbox,
+ *  which bounces, pops its flag and lets out a couple of hearts. Hovering the card speeds it up. */
 function Mailbox() {
   return (
     <span className="mailbox" aria-hidden="true">
-      <svg viewBox="5 -9 44 55" width="38" height="44">
+      <svg className="mailbox__fly" viewBox="0 0 18 13" width="18" height="13">
+        <rect x=".5" y=".5" width="17" height="12" rx="2" fill="#fffdf6" stroke="#cbbf9f" />
+        <path d="M1 1.3 9 7.6l8-6.3" fill="none" stroke="#cbbf9f" strokeWidth="1.1" />
+        <path d="M9 10.4c-1.4-1-2.3-1.8-2.3-2.7a1.2 1.2 0 0 1 2.3-.7 1.2 1.2 0 0 1 2.3.7c0 .9-.9 1.7-2.3 2.7z" fill="#e2483d" />
+      </svg>
+      <span className="mailbox__heart mailbox__heart--a">♥</span>
+      <span className="mailbox__heart mailbox__heart--b">♥</span>
+      <svg className="mailbox__box" viewBox="5 -9 44 55" width="38" height="44">
         <rect x="21.5" y="26" width="5" height="18" rx="1.5" fill="#8a5a3a" />
         <rect x="14" y="42" width="20" height="3" rx="1.5" fill="#5e3b25" opacity=".5" />
         <g className="mailbox__letter">
@@ -343,7 +350,7 @@ function Skills() {
             </ul>
             <div className="status__open">
               <Mailbox />
-              <p><strong>Open to new product design work</strong><span>Remote, or in Peshawar</span></p>
+              <p><strong>Open to new product design work</strong><span>Remote, hybrid or on-site, anywhere</span></p>
               <Link className="button status__cta" to="/contact">Say hello</Link>
             </div>
           </aside>
