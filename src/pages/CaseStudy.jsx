@@ -61,9 +61,15 @@ export default function CaseStudy() {
         {/* The project name stands out; the description after it stays light */}
         <h1 className="display display--case"><strong>{p.name}:</strong> {titleOf(p).slice(p.name.length + 2)}</h1>
         {p.tags && <ul className="tags">{p.tags.map((t) => <li key={t}>{t}</li>)}</ul>}
+        {/* A working build people can try for themselves */}
+        {p.live && (
+          <a className="button case__live" href={p.live.href} target="_blank" rel="noopener noreferrer">
+            {p.live.label} <span aria-hidden="true">↗</span><span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        )}
       </header>
       {p.heroVideo ? (
-        <HeroVideo src={p.heroVideo} poster={p.hero || p.cover} title={`${p.name} product video`} />
+        <HeroVideo src={p.heroVideo} poster={p.heroPoster || p.hero || p.cover} title={`${p.name} product video`} />
       ) : p.heroEmbed ? (
         <StageEmbed src={p.heroEmbed} tint={p.tint} title={`${p.name}: the live stage hero. The curtains open, and Replay the parda plays it again.`} />
       ) : (

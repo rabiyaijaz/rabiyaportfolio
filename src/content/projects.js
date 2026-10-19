@@ -30,6 +30,8 @@ export const PROJECTS = [
     id: 'cystercare', name: 'CysterCare', type: 'Women’s health · AI', year: '2026',
     headline: 'A lifelong AI detection and care system for PCOS/PMOS',
     cover: '/img/work/cystercare-card.webp', hero: '/img/cs/cystercare/prototype.webp', tint: '#f4ecff',
+    heroVideo: '/video/cystercare-intro.mp4', heroPoster: '/img/cs/cystercare/video-poster.webp',
+    live: { href: 'https://cystercare-eqfs.vercel.app/', label: 'Try the live app' },
     tags: ['Healthcare', 'Research', 'Service design', 'Hackathon'],
     meta: { Role: 'Service Design Lead', Timeline: 'Research 2025 · Build Jan – Apr 2026', Context: 'Team Peshawar × Imaginathon', Status: 'Hackathon MVP, 5th prize' },
   },
