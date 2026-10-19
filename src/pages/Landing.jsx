@@ -157,14 +157,22 @@ export default function Landing() {
   useEffect(() => {
     const WALK = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD']);
     const typing = (t) => t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName);
-    const onStreet = () => sceneRef.current?.onStreet() && heroRef.current.getBoundingClientRect().top > -80;
+    // Any walk key starts walking while the street is on screen, however far it has scrolled.
+    // Up/Down still scroll the page once the camera has risen into the map, so the keyboard can get past it;
+    // sideways keys bring the camera back down to the street from anywhere in the neighbourhood.
+    const SIDE = new Set(['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD']);
+    const inHood = () => { const r = heroRef.current.getBoundingClientRect(); return r.top <= 1 && r.bottom > innerHeight * 0.6; };
     const down = (e) => {
       const s = sceneRef.current, { playing: on, near: at } = keyState.current;
       if (!s || typing(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
       if (on && e.key === 'Escape') { setPlaying(false); return; }
       if (on && e.key === 'Enter' && at && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') { e.preventDefault(); navigate(`/work/${at}`); return; }
-      if (!WALK.has(e.code) || e.shiftKey || !onStreet()) return;
+      if (!WALK.has(e.code) || e.shiftKey || !inHood()) return;
+      if (!s.onStreet() && !SIDE.has(e.code)) return;
       e.preventDefault(); // the street, not the page, gets the arrows
+      // Ease the page back to the street view if it had scrolled
+      const top = heroRef.current.getBoundingClientRect().top + scrollY;
+      if (scrollY - top > 2) scrollTo({ top, behavior: reducedMotion() ? 'auto' : 'smooth' });
       if (!on) startPlaying();
       s.key(e.code, true);
     };
