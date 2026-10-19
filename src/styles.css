@@ -286,11 +286,24 @@ html[data-phase='day'] .sim-menu button { color: #14151b; background: rgba(255, 
 }
 .hero-video__frame:hover .hero-video__controls { opacity: 1; }
 /* Play and seek only appear while the video is hovered, focused or tapped; the mute button always stays, as a small icon */
-.hero-video__controls > :not(.hero-video__sound) { opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 250ms var(--ease), transform 250ms var(--ease); }
+.hero-video__controls > :not(.hero-video__audio), .hero-video__vol { opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 250ms var(--ease), transform 250ms var(--ease), width 250ms var(--ease), padding 250ms var(--ease); }
 /* (Hover only counts on devices with a real pointer; on touch a tap leaves :hover stuck, so taps use .is-awake) */
-.hero-video__frame:is(:focus-visible, :has(:focus-visible), .is-awake) .hero-video__controls > * { opacity: 1; transform: none; pointer-events: auto; }
-@media (hover: hover) { .hero-video__frame:hover .hero-video__controls > * { opacity: 1; transform: none; pointer-events: auto; } }
-.hero-video__controls .hero-video__sound { margin-left: auto; }
+.hero-video__frame:is(:focus-visible, :has(:focus-visible), .is-awake) :is(.hero-video__controls > *, .hero-video__vol) { opacity: 1; transform: none; pointer-events: auto; }
+@media (hover: hover) { .hero-video__frame:hover :is(.hero-video__controls > *, .hero-video__vol) { opacity: 1; transform: none; pointer-events: auto; } }
+/* Sound group: the volume slider tucks away beside the always-visible mute icon */
+.hero-video__audio { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.hero-video__vol {
+  width: 0; height: 40px; margin: 0; padding: 0; border-radius: 999px; cursor: pointer; -webkit-appearance: none; appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.22); background: rgba(8, 10, 26, 0.5); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.hero-video__frame:is(:has(:focus-visible), .is-awake) .hero-video__vol { width: 110px; padding: 0 14px; }
+@media (hover: hover) { .hero-video__frame:hover .hero-video__vol { width: 110px; padding: 0 14px; } }
+.hero-video__vol::-webkit-slider-runnable-track { height: 4px; border-radius: 4px; background: linear-gradient(90deg, #fff var(--p, 100%), rgba(255, 255, 255, 0.28) var(--p, 100%)); }
+.hero-video__vol::-moz-range-track { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.28); }
+.hero-video__vol::-moz-range-progress { height: 4px; border-radius: 4px; background: #fff; }
+.hero-video__vol::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; margin-top: -4px; border-radius: 50%; border: 0; background: #fff; }
+.hero-video__vol::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; border: 0; background: #fff; }
+.hero-video__vol:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .hero-video__frame:not(:has(:focus-visible), .is-awake) .hero-video__sound span { display: none; }
 .hero-video__frame:not(:has(:focus-visible), .is-awake) .hero-video__sound { padding: 0; width: 40px; justify-content: center; }
 @media (hover: hover) {
@@ -339,6 +352,7 @@ html[data-phase='day'] .sim-menu button { color: #14151b; background: rgba(255, 
   .hero-video__sound span { display: none; }
   .hero-video__seek { padding: 0 10px; gap: 6px; }
   .hero-video__time:last-child { display: none; }
+  .hero-video__frame:is(:has(:focus-visible), .is-awake) .hero-video__vol { width: 72px; padding: 0 10px; }
 }
 
 .video { position: relative; margin-top: 28px; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: #000; }

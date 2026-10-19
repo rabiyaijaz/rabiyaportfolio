@@ -60,11 +60,28 @@ export default function HeroVideo({ src, poster, title }) {
   };
   const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
+  // Volume: the slider sets the level; 0 means muted, and raising it from 0 unmutes
+  const [vol, setVol] = useState(1);
+  const unmute = (v) => { v.muted = false; setMuted(false); if (v.paused && !v.dataset.userPaused) { v.play(); setPaused(false); } };
   const toggleSound = () => {
     const v = ref.current;
-    v.muted = !v.muted;
-    setMuted(v.muted);
-    if (!v.muted && v.paused) { v.play(); setPaused(false); }
+    if (v.muted) {
+      if (vol === 0) { v.volume = 0.6; setVol(0.6); } // unmuting from a dragged-to-zero slider brings back a sensible level
+      unmute(v);
+    } else { v.muted = true; setMuted(true); }
+  };
+  const setVolume = (x) => {
+    const v = ref.current;
+    const to = Math.round(Math.max(0, Math.min(1, x)) * 100) / 100;
+    v.volume = to; setVol(to);
+    if (to === 0) { v.muted = true; setMuted(true); } else if (v.muted) unmute(v);
+  };
+  const level = muted ? 0 : vol;
+  const onVolKey = (e) => {
+    const step = { ArrowLeft: -0.1, ArrowDown: -0.1, ArrowRight: 0.1, ArrowUp: 0.1 }[e.key];
+    if (step) { e.preventDefault(); setVolume(level + step); }
+    else if (e.key === 'Home') { e.preventDefault(); setVolume(0); }
+    else if (e.key === 'End') { e.preventDefault(); setVolume(1); }
   };
   const togglePlay = () => {
     const v = ref.current;
@@ -105,12 +122,22 @@ export default function HeroVideo({ src, poster, title }) {
             />
             <span className="hero-video__time" aria-hidden="true">{clock(dur)}</span>
           </div>
-          <button onClick={toggleSound} aria-pressed={!muted} className="hero-video__sound">
-            {muted
-              ? <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM16 9l5 6M21 9l-5 6" /></svg>
-              : <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>}
-            <span>{muted ? 'Tap for sound' : 'Sound on'}</span>
-          </button>
+          <div className="hero-video__audio">
+            <input
+              className="hero-video__vol" type="range" min="0" max="1" step="0.01" value={level}
+              style={{ '--p': `${level * 100}%` }}
+              aria-label="Volume" aria-valuetext={`${Math.round(level * 100)}%`}
+              onInput={(e) => setVolume(+e.target.value)} onChange={() => {}} onKeyDown={onVolKey}
+            />
+            <button onClick={toggleSound} aria-pressed={!muted} aria-label={muted ? 'Unmute' : 'Mute'} className="hero-video__sound">
+              {muted
+                ? <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM16 9l5 6M21 9l-5 6" /></svg>
+                : vol < 0.5
+                  ? <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7" /></svg>
+                  : <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>}
+              <span aria-hidden="true">{muted ? 'Tap for sound' : 'Sound on'}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
