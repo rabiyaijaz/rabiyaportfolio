@@ -15,6 +15,7 @@ const SOURCES = {
   crewnity: `${root}/repshep video/crewnity-cover/assets/logo_raw.png`,
   vettio: `${root}/Rabiya's works/vettio/Assets Vettio/Icon Colour Vettio.png`,
   cystercare: `${app}/public/img/logos/cystercare.webp`,
+  flownet: `${app}/scripts/logo-src/flownet.svg`, // redrawn as a vector; the only originals were ~25 px
   gdsc: `${app}/public/img/logos/gdsc.webp`,
   devmode: `${app}/public/img/logos/devmode.webp`,
 };
@@ -37,7 +38,13 @@ async function knockout(buf) {
 
 for (const [name, src] of Object.entries(SOURCES)) {
   // Read into memory first, since some sources are the outputs being rewritten
-  let input = await sharp(fs.readFileSync(src)).ensureAlpha().png().toBuffer();
+  // A source that is already a finished tile (it was normalised before) is left alone, so re-runs don't re-compress it
+  if (src.includes('/public/img/logos/')) {
+    const m = await sharp(fs.readFileSync(src)).metadata();
+    if (m.width === BOX && m.height === BOX) { console.log(`${name.padEnd(11)} already a ${BOX}×${BOX} tile, skipped`); continue; }
+  }
+  // SVGs render at a high density so they're sharp before being sized down
+  let input = await sharp(fs.readFileSync(src), src.endsWith('.svg') ? { density: 1200 } : {}).ensureAlpha().png().toBuffer();
   input = await knockout(input);
   const trimmed = await sharp(input).trim({ threshold: 10 }).toBuffer();
   const mark = await sharp(trimmed).resize(MARK, MARK, { fit: 'inside', kernel: 'lanczos3' }).toBuffer();
