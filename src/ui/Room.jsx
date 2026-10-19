@@ -9,6 +9,7 @@ import Icon from '../about/icons.jsx';
 import { sfx } from '../lib/audio.js';
 import '../room.css';
 import '../hud.css';
+import Arrow from './Arrow.jsx';
 
 const img = (n) => `/img/about/${n}.webp`;
 
@@ -106,7 +107,7 @@ export default function Room() {
         {bubble && (
           <div className="room__bubble" role="status">
             <p><strong>Sul sul!</strong> Thanks for stopping by. Want to see what I’ve been building?</p>
-            <Link to="/work">See my work →</Link>
+            <Link to="/work">See my work <Arrow dir="right" /></Link>
           </div>
         )}
       </div>
@@ -394,7 +395,7 @@ function ItemsPanel() {
       </ul>
       {item && (
         <p className="hud-note" role="status">
-          <strong>{item.label}.</strong> {item.note || 'A favourite from the inventory.'} {item.link && <Link to={item.link}>See the case study →</Link>}
+          <strong>{item.label}.</strong> {item.note || 'A favourite from the inventory.'} {item.link && <Link to={item.link}>See the case study <Arrow dir="right" /></Link>}
         </p>
       )}
     </>

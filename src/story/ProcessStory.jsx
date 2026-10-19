@@ -5,6 +5,7 @@ import { progressOf, reducedMotion, useScrollFrame } from '../lib/scroll.js';
 import Lightbox from '../ui/Lightbox.jsx';
 import StoryHeader from '../ui/StoryHeader.jsx';
 import PlumbobCanvas from '../ui/PlumbobCanvas.jsx';
+import Arrow from '../ui/Arrow.jsx';
 
 /**
  * My design process, told by the plumbob.
@@ -43,7 +44,7 @@ function Chapter({ c, i, active, onOpen }) {
           ? <DeliverStage />
           : <img src={c.img} alt={c.alt} loading="lazy" width="1600" height="1040" />}
       </button>
-      {c.link && <Link className="chapter__link" to={c.link.to} tabIndex={hidden ? -1 : 0}>{c.link.label} →</Link>}
+      {c.link && <Link className="chapter__link" to={c.link.to} tabIndex={hidden ? -1 : 0}>{c.link.label} <Arrow dir="right" /></Link>}
     </article>
   );
 }

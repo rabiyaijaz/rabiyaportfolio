@@ -64,7 +64,7 @@ export default function CaseStudy() {
         {/* A working build people can try for themselves */}
         {p.live && (
           <a className="button case__live" href={p.live.href} target="_blank" rel="noopener noreferrer">
-            {p.live.label} <span aria-hidden="true">↗</span><span className="sr-only"> (opens in a new tab)</span>
+            {p.live.label} <Arrow dir="out" /><span className="sr-only"> (opens in a new tab)</span>
           </a>
         )}
       </header>
@@ -154,7 +154,7 @@ export default function CaseStudy() {
           )}
           <nav className="case__next" aria-label="Next project" ref={endRef}>
             <span className="muted">Next lot</span>
-            <Link to={`/work/${next.id}`}>{titleOf(next)} →</Link>
+            <Link to={`/work/${next.id}`}>{titleOf(next)} <Arrow dir="right" /></Link>
           </nav>
         </article>
       </div>
@@ -180,7 +180,7 @@ function LiveApp({ live, name }) {
         <h2 id="try-title" className="case__playtitle">{live.headline}</h2>
         <p className="muted">{live.note}</p>
         <a className="ghost-button" href={live.href} target="_blank" rel="noopener noreferrer">
-          Open in a new tab <span aria-hidden="true">↗</span><span className="sr-only"> (opens in a new tab)</span>
+          Open in a new tab <Arrow dir="out" /><span className="sr-only"> (opens in a new tab)</span>
         </a>
       </div>
       <div className="case__phone">

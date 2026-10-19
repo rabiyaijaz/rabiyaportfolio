@@ -10,6 +10,7 @@ import NightCta from '../ui/NightCta.jsx';
 
 import { COMMUNITY, EDUCATION, EXPERIENCE, PROJECTS } from '../content/career.js';
 import OrgLogo from '../ui/Logos.jsx';
+import Arrow from '../ui/Arrow.jsx';
 
 const SECTIONS = [
   ['experience', 'Experience', EXPERIENCE],
@@ -67,7 +68,7 @@ export default function Resume() {
                       <span className="muted">{x.when}{x.where ? ` · ${x.where}` : ''}</span>
                     </div>
                     {x.what && <p>{x.what}</p>}
-                    {x.link && <Link className="tl-item__link" to={x.link}>See the work →</Link>}
+                    {x.link && <Link className="tl-item__link" to={x.link}>See the work <Arrow dir="right" /></Link>}
                   </li>
                 ))}
               </ol>

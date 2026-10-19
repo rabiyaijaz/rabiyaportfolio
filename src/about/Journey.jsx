@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import StoryHeader from '../ui/StoryHeader.jsx';
 import OrgLogo from '../ui/Logos.jsx';
 import { COMMUNITY, EXPERIENCE, PROJECTS } from '../content/career.js';
+import Arrow from '../ui/Arrow.jsx';
 
 const ALL = [...EXPERIENCE, ...PROJECTS, ...COMMUNITY];
 const FILTERS = [
@@ -45,7 +46,7 @@ export default function Journey() {
               <p className="jcard__org">{x.org}</p>
               <p className="jcard__when">{x.when}{x.where ? ` · ${x.where}` : ''}</p>
               {x.what && <p className="jcard__what">{x.what}</p>}
-              {x.link && <Link className="chapter__link" to={x.link}>See the work →</Link>}
+              {x.link && <Link className="chapter__link" to={x.link}>See the work <Arrow dir="right" /></Link>}
             </li>
           ))}
         </ul>

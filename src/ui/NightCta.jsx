@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import StoryHeader from './StoryHeader.jsx';
 import PlumbobCanvas from './PlumbobCanvas.jsx';
 import Socials from './Socials.jsx';
+import Arrow from './Arrow.jsx';
 
 /** The day ends the same way on every page: lights out, a green plumbob, a note on the doorstep.
  *  Its plumbob is in "ending" mode: nothing scrolls past it, so it animates on time and on input. */
@@ -12,7 +13,7 @@ export default function NightCta({ title = <>Let’s build something <em>people 
         <div>
           <StoryHeader label="Contact" id="cta-title" title={title} lede="Open to new product design projects in human–AI collaboration." />
           <div className="hood__actions">
-            <Link className="button" to="/contact">Send me a message <span aria-hidden="true">→</span></Link>
+            <Link className="button" to="/contact">Send me a message <Arrow dir="right" /></Link>
             <Socials compact />
           </div>
         </div>

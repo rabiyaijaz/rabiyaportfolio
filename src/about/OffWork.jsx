@@ -7,6 +7,7 @@ import StoryHeader from '../ui/StoryHeader.jsx';
 import { OFF_WORK } from '../content/about.js';
 import { useSim } from '../lib/simState.jsx';
 import { holdMusic, sfx } from '../lib/audio.js';
+import Arrow from '../ui/Arrow.jsx';
 
 /** Off work, Sims-style: each thing has an action you can take, and a reason it's here. */
 export default function OffWork() {
@@ -67,7 +68,7 @@ export default function OffWork() {
               <p>{o.why}</p>
               <div className="odd__actions">
                 {o.action && <button className="ghost-button" onClick={() => act(o.id)}>{label(o)}</button>}
-                {o.cta.to ? <Link className="chapter__link" to={o.cta.to}>{o.cta.label} →</Link> : <a className="chapter__link" href={o.cta.href} target="_blank" rel="noreferrer">{o.cta.label} ↗</a>}
+                {o.cta.to ? <Link className="chapter__link" to={o.cta.to}>{o.cta.label} <Arrow dir="right" /></Link> : <a className="chapter__link" href={o.cta.href} target="_blank" rel="noreferrer">{o.cta.label} <Arrow dir="out" /></a>}
               </div>
             </li>
           ))}

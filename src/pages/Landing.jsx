@@ -49,6 +49,7 @@ import { useSim } from '../lib/simState.jsx';
 import { PinFace, pinClass, pinStyle } from '../ui/Pin.jsx';
 import { progressOf, reducedMotion, seg, useScrollFrame } from '../lib/scroll.js';
 import '../story/story.css';
+import Arrow from '../ui/Arrow.jsx';
 
 // `name` is the house sign: Tamasha's house reads Banao.pk
 const LOTS = PROJECTS.map((p) => ({ id: p.id, ...HOUSES[p.id], name: HOUSES[p.id].label || p.name }));
@@ -228,7 +229,7 @@ export default function Landing() {
             <h1>{PROFILE.name}</h1>
             <p className="hood__line">Product designer for human–AI collaboration. Every house on this street is something I designed.</p>
             <div className="hood__actions">
-              <Link className="button" to="/work">See the work <span aria-hidden="true">→</span></Link>
+              <Link className="button" to="/work">See the work <Arrow dir="right" /></Link>
               <button className="ghost-button" onClick={startPlaying}><Plumbob size={10} /> Walk the street</button>
             </div>
           </div>
@@ -337,14 +338,14 @@ function Skills() {
                 <Link to="/work/crewnity">
                   <OrgLogo name="crewnity" size={36} />
                   <span><small>Job</small>Lead Product Designer, Crewnity</span>
-                  <b aria-hidden="true">→</b>
+                  <b><Arrow dir="right" /></b>
                 </Link>
               </li>
               <li>
                 <Link to="/work/tamasha">
                   <OrgLogo name="banao" size={36} />
                   <span><small>Community</small>Ambassador, Banao.pk</span>
-                  <b aria-hidden="true">→</b>
+                  <b><Arrow dir="right" /></b>
                 </Link>
               </li>
             </ul>

@@ -6,6 +6,7 @@ import { sfx } from '../lib/audio.js';
 import { reducedMotion } from '../lib/scroll.js';
 import SimMenu from '../ui/SimMenu.jsx';
 import '../notfound.css';
+import Arrow from '../ui/Arrow.jsx';
 
 // Where the frog can hop to on the lot (% of the lot), away from the Sim and the sign
 const HOPS = [[16, 84], [78, 86], [26, 93], [88, 74], [10, 72], [70, 94]];
@@ -81,7 +82,7 @@ export default function NotFound() {
         <h1 className="lost__title">This lot is <em>still empty.</em></h1>
         <p className="lost__lede">The page you were looking for hasn’t been built yet, or it moved house. Click Rabiya and she’ll help you find your way.</p>
         <div className={`lost__ways${glow ? ' is-glow' : ''}`}>
-          <Link className="button" to="/">Back to the street <span aria-hidden="true">→</span></Link>
+          <Link className="button" to="/">Back to the street <Arrow dir="right" /></Link>
           <Link className="ghost-button" to="/work">See the work</Link>
           <Link className="ghost-button" to="/contact">Say hello</Link>
         </div>

@@ -226,11 +226,14 @@ html[data-phase='day'] .sim-menu button { color: #14151b; background: rgba(255, 
 .case__toc ul { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
 .case__toc a { color: var(--muted); text-decoration: none; transition: color 200ms; }
 .case__toc a[aria-current='true'], .case__toc a:hover { color: var(--ink); }
-.arrow-ico { width: 1.15em; height: 1.15em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.arrow-ico { display: inline-block; width: 1.15em; height: 1.15em; flex: none; vertical-align: -0.2em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s ease; }
+.arrow-ico--out { width: 1em; height: 1em; vertical-align: -0.12em; }
+/* Inside any link or button, the arrow nudges the way it points */
+:is(a, button):hover > .arrow-ico--right, :is(a, button):focus-visible > .arrow-ico--right { transform: translateX(3px); }
+:is(a, button):hover > .arrow-ico--out, :is(a, button):focus-visible > .arrow-ico--out { transform: translate(2px, -2px); }
+:is(a, button):hover > .arrow-ico--left, :is(a, button):focus-visible > .arrow-ico--left { transform: translateX(-3px); }
+@media (prefers-reduced-motion: reduce) { .arrow-ico { transition: none; } :is(a, button):hover > .arrow-ico { transform: none !important; } }
 .case__back { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
-.case__back .arrow-ico { transition: transform 0.2s ease; }
-.case__back:hover .arrow-ico { transform: translateX(-3px); }
-@media (prefers-reduced-motion: reduce) { .case__back .arrow-ico { transition: none; } }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); align-items: start; gap: 24px; margin: 0 0 40px; }
 /* Number on top, label below; top-aligned so long labels never push numbers down */
 .stats div { display: flex; flex-direction: column; justify-content: flex-start; gap: 6px; }

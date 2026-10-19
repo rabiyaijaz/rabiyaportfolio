@@ -5,6 +5,7 @@ import ROUNDS from '../content/addaRounds.json';
 import { ICONS, WIDE } from './icons.jsx';
 import './adda.css';
 import { getAudio } from '../lib/audio.js';
+import Arrow from '../ui/Arrow.jsx';
 
 /*
  * Access Adda: a three-round card game about accessibility in real Peshawar places.
@@ -284,7 +285,7 @@ function Result({ refEl, ui, t, played, revealed, onReveal, last, onNext }) {
             {t.wcag && <p className="adda__wcag" dir="ltr">{t.wcag}</p>}
           </div>
         )}
-        <button className="adda__cta" onClick={onNext}>{last ? ui.finish : ui.next} →</button>
+        <button className="adda__cta" onClick={onNext}>{last ? ui.finish : ui.next} <Arrow dir="right" /></button>
       </div>
     </div>
   );
