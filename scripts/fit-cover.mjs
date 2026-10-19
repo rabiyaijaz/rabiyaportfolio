@@ -3,7 +3,8 @@
 //     centred on top with soft top/bottom edges.
 //   --bottom (light covers whose bottom runs off the edge by design): the cover sits on the card's bottom edge and
 //     the space above is filled with the cover's own background colour, sampled from its top edge.
-// Usage: node scripts/fit-cover.mjs <source.png> <public/img/work/name.webp> [--bottom]
+//   --solid (light covers with plain top and bottom edges): centred, padded with those edges' own colours.
+// Usage: node scripts/fit-cover.mjs <source.png> <public/img/work/name.webp> [--bottom | --solid]
 import sharp from 'sharp';
 
 const [src, out, mode] = process.argv.slice(2);
@@ -15,7 +16,17 @@ const h = Math.round((W * meta.height) / meta.width);
 if (h > H) { console.error(`Cover is taller than 16:11 (${meta.width}×${meta.height}); this script only pads wide covers.`); process.exit(1); }
 const cover = await sharp(src).resize(W, h).toBuffer();
 
-if (mode === '--bottom') {
+if (mode === '--solid') {
+  // Light covers with plain edges: centred, padded with each edge's own colour (top strip above, bottom strip below)
+  const edge = async (y) => {
+    const { data } = await sharp(cover).extract({ left: 0, top: y, width: W, height: 4 }).resize(1, 1).raw().toBuffer({ resolveWithObject: true });
+    return { r: data[0], g: data[1], b: data[2] };
+  };
+  const top = Math.round((H - h) / 2);
+  const above = await sharp(cover).extend({ top, background: await edge(0) }).toBuffer();
+  await sharp(above).extend({ bottom: H - h - top, background: await edge(h - 4) }).webp({ quality: 88 }).toFile(out);
+  console.log(`${out}: ${W}×${H}, cover centred on its own edge colours`);
+} else if (mode === '--bottom') {
   // Average a strip along the top edge for the fill, so it matches the cover's own background exactly
   const { data } = await sharp(cover).extract({ left: 0, top: 0, width: W, height: 4 }).resize(1, 1).raw().toBuffer({ resolveWithObject: true });
   const background = { r: data[0], g: data[1], b: data[2] };
