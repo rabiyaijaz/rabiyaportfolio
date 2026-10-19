@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tamasha stage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Satisfy&family=Space+Grotesk:wght@400;600&family=Noto+Nastaliq+Urdu:wght@400&display=swap">
+<style>
+:root { --body: 'Space Grotesk', system-ui, sans-serif; --script: 'Satisfy', 'Brush Script MT', cursive; --urdu: 'Noto Nastaliq Urdu', serif; --ease: cubic-bezier(.2,.6,.2,1); --eo: cubic-bezier(.22,1,.36,1); }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #081F14; font-family: var(--body); line-height: 1.6; -webkit-font-smoothing: antialiased; overflow: hidden; }
+.btn { display: inline-flex; align-items: center; gap: 11px; font: 600 15px var(--body); text-decoration: none; padding: 13px 22px; border-radius: 12px; border: 0; cursor: pointer; transition: transform .14s var(--ease), background-color .14s var(--ease); }
+.btn::before { content: ""; width: 9px; height: 9px; border-radius: 3px; background: #CDB878; transition: transform .14s var(--ease); flex: none; }
+.btn:hover { transform: translateY(-1px); } .btn:hover::before { transform: rotate(12deg) scale(1.1); }
+.btn .ar { transition: transform .14s var(--ease); } .btn:hover .ar { transform: translateX(4px); }
+.btn-gold { background: #CDB878; color: #0F2318; } .btn-gold::before { background: #144A30; } .btn-gold:hover { background: #D9C78E; }
+.btn-ghost { background: transparent; color: #F1EEE5; box-shadow: inset 0 0 0 1.5px rgba(241,238,229,.35); } .btn-ghost::before { background: rgba(241,238,229,.5); }
+.stagehero { position: relative; overflow: hidden; background: radial-gradient(80% 90% at 50% 10%, #1D6A43 0%, #0F3A25 55%, #081F14 100%); color: #F1EEE5; text-align: center; padding-block: 64px 0; }
+.stagehero .valance { position: absolute; z-index: 3; inset: 0 0 auto 0; height: 46px; background: radial-gradient(circle at 30px -10px, #0A2418 38px, transparent 39px) 0 0 / 60px 46px repeat-x; }
+.stagehero .valance::after { content: ""; position: absolute; left: 0; right: 0; top: 38px; height: 9px; background: repeating-linear-gradient(90deg, #CDB878 0 10px, transparent 10px 16px); }
+.curtain { position: absolute; z-index: 2; top: 0; bottom: 0; width: 52%; background: repeating-linear-gradient(90deg, #0E3523 0 6px, #1E6440 22px, #155234 34px, #0E3523 44px); transition: transform 1.1s var(--eo); }
+.curtain.l { left: 0; transform: translateX(-80%); border-right: 6px solid #CDB878; }
+.curtain.r { right: 0; transform: translateX(80%); border-left: 6px solid #CDB878; }
+.stagehero.closed .curtain.l, .stagehero.closed .curtain.r { transform: translateX(0); transition-duration: .5s; }
+.stagehero .troupe { position: relative; z-index: 1; display: flex; justify-content: center; align-items: flex-start; gap: clamp(0px, 3vw, 40px); height: 270px; margin-top: -24px; }
+.stagehero .troupe svg { height: 100%; width: auto; max-width: 33%; transition: transform .9s var(--eo); }
+.stagehero .troupe svg:nth-child(2) { transition-delay: .12s; } .stagehero .troupe svg:nth-child(3) { transition-delay: .24s; }
+.stagehero.closed .troupe svg { transform: translateY(-110%); transition-duration: .3s; transition-delay: 0s; }
+.stagehero .copy { position: relative; z-index: 1; padding-inline: 16px; }
+.stagehero h1 { font-family: var(--script); font-weight: 400; font-size: clamp(64px, 10vw, 112px); line-height: 1; margin: 0; }
+.stagehero .ur { font-family: var(--urdu); color: #CDB878; font-size: clamp(24px, 3vw, 34px); line-height: 2.1; direction: rtl; }
+.stagehero p { max-width: 560px; margin: 8px auto 26px; opacity: .88; font-size: 17px; }
+.stagehero .ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.stagehero .floor { position: relative; z-index: 1; height: 54px; margin-top: 40px; background: repeating-linear-gradient(90deg, #4A3420 0 120px, #3E2B1A 120px 122px); border-top: 4px solid #CDB878; }
+.replay { position: absolute; z-index: 4; right: 14px; bottom: 66px; font: 600 12.5px var(--body); color: #F1EEE5; background: rgba(8,31,20,.7); border: 1px solid rgba(205,184,120,.5); border-radius: 999px; padding: 7px 12px; cursor: pointer; }
+.replay:focus-visible, .btn:focus-visible { outline: 2px solid #CDB878; outline-offset: 2px; }
+.sway { transform-origin: 0 0; animation: sway var(--dur, 3.4s) ease-in-out infinite alternate; }
+@keyframes sway { from { transform: rotate(calc(var(--amp, 3deg) * -1)); } to { transform: rotate(var(--amp, 3deg)); } }
+.bob { animation: bob 1.8s ease-in-out infinite alternate; }
+@keyframes bob { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+.floaty { animation: floaty 2.6s ease-in-out infinite; }
+@keyframes floaty { 0%,100% { transform: translateY(0); opacity: .95; } 50% { transform: translateY(-8px); opacity: .6; } }
+@media (max-width: 640px) { .stagehero .troupe { height: 190px; } .stagehero p { font-size: 15px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="stagehero closed" id="stageHero">
+  <div class="valance" aria-hidden="true"></div>
+  <div class="curtain l" aria-hidden="true"></div><div class="curtain r" aria-hidden="true"></div>
+  <div class="troupe" id="troupe" aria-hidden="true"></div>
+  <div class="copy">
+    <h1>Tamasha</h1>
+    <div class="ur" lang="ur">تماشا</div>
+    <p>Banao's first talent show. Builders have more than one trick. Show us the other one.</p>
+    <div class="ctas"><button class="btn btn-gold" type="button" data-replay>Enter your act <span class="ar">→</span></button><button class="btn btn-ghost" type="button" data-replay>See the acts</button></div>
+  </div>
+  <div class="floor" aria-hidden="true"></div>
+  <button class="replay" type="button" data-replay>↻ Replay the parda</button>
+</div>
+<script>
+(() => {
+const P = { forest:'#144A30', forestL:'#2E6E52', deep:'#0C2C1D', gold:'#CDB878', goldD:'#A88E4E', goldDeep:'#7D6526', alab:'#F1EEE5', ink:'#0F2318', sindoor:'#B5432F', genda:'#E0A23A', ajrak:'#2B3A67', wood:'#7A5230', woodD:'#5A3B21' };
+const sn = d => Math.sin(d * Math.PI / 180), cs = d => Math.cos(d * Math.PI / 180);
+const f = n => Math.round(n * 10) / 10;
+
+/* ---------- puppet rig ---------- */
+function arm(side, sx, sy, a1, a2, color) {
+  const dir = side === 'L' ? -1 : 1, k = side === 'L' ? 1 : -1;
+  const ex = sx + dir * 22 * sn(a1), ey = sy + 22 * cs(a1);
+  const hx = ex + dir * 21 * sn(a1 + a2), hy = ey + 21 * cs(a1 + a2);
+  const svg = `<g transform="translate(${sx} ${sy}) rotate(${k * a1})"><rect x="-5" y="-4" width="10" height="29" rx="5" fill="${color}"/><g transform="translate(0 22) rotate(${k * a2})"><rect x="-4.5" y="-3" width="9" height="24" rx="4.5" fill="${color}"/><rect x="-5" y="12" width="10" height="3" rx="1" fill="${P.gold}"/><circle cx="0" cy="21" r="5.6" fill="${P.gold}"/></g></g>`;
+  return { svg, hx, hy };
+}
+function skirt(o) {
+  const w0 = 17, y0 = 76, W = 44 * o.flare, H = 70 * o.len, yb = y0 + H, n = 7, step = 2 * W / n;
+  let d = `M ${-w0} ${y0} L ${w0} ${y0} L ${f(W)} ${f(yb)}`;
+  for (let i = 0; i < n; i++) { const x1 = W - step * i, x2 = W - step * (i + 1); d += ` Q ${f((x1 + x2) / 2)} ${f(yb + 9)} ${f(x2)} ${f(yb)}`; }
+  d += ' Z';
+  const at = t => ({ y: y0 + H * t, w: w0 + (W - w0) * t });
+  const band = (t, sw) => { const a = at(t); return `<line x1="${f(-a.w)}" y1="${f(a.y)}" x2="${f(a.w)}" y2="${f(a.y)}" stroke="${P.gold}" stroke-width="${sw}"/>`; };
+  let pleats = '';
+  for (let i = 1; i < 5; i++) { const t = i / 5; pleats += `<line x1="${f(-w0 + 2 * w0 * t)}" y1="${y0}" x2="${f(-W + 2 * W * t)}" y2="${f(yb)}" stroke="${P.ink}" stroke-opacity=".16" stroke-width="1.4"/>`; }
+  let dots = ''; const m = at(.72);
+  for (let i = 0; i < 7; i++) dots += `<circle cx="${f(-m.w + 2 * m.w * (i + .5) / 7)}" cy="${f(m.y)}" r="2.2" fill="${P.alab}"/>`;
+  let bells = '';
+  if (o.bells) for (let i = 0; i <= n; i++) bells += `<circle cx="${f(W - step * i)}" cy="${f(yb + 3)}" r="2.6" fill="${P.gold}" stroke="${P.goldDeep}" stroke-width=".8"/>`;
+  return `<g transform="rotate(${o.twirl} 0 ${y0})"><path d="${d}" fill="${o.skirt}"/>${pleats}${band(.48, 2.5)}${band(.9, 4)}${dots}${bells}</g>`;
+}
+function headSvg(o) {
+  const m = o.stache ? 2 : 0;
+  let s = `<rect x="-5" y="38" width="10" height="10" fill="${P.goldD}"/><rect x="-20" y="0" width="40" height="42" rx="10" fill="${P.gold}"/>`;
+  const eye = q => `<path d="M ${q * 2} 20 Q ${q * 8} 13 ${q * 15} 20 Q ${q * 8} 25 ${q * 2} 20 Z" fill="${P.alab}" stroke="${P.ink}" stroke-width="1.6" stroke-linejoin="round"/><circle cx="${q * 8 + o.look}" cy="${19.6 + o.lookY}" r="2.5" fill="${P.ink}"/><path d="M ${q * 15} 20 L ${q * 18.5} 17.2" stroke="${P.ink}" stroke-width="1.6" stroke-linecap="round"/><path d="M ${q * 2} 12 Q ${q * 8} 7.5 ${q * 15} 11.5" fill="none" stroke="${P.ink}" stroke-width="1.8" stroke-linecap="round"/>`;
+  s += eye(-1) + eye(1);
+  s += `<path d="M 0 22 L -2 28.5 L 1.5 28.5" fill="none" stroke="${P.ink}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>`;
+  s += `<circle cx="-12.5" cy="29" r="3.2" fill="${P.sindoor}" opacity=".45"/><circle cx="12.5" cy="29" r="3.2" fill="${P.sindoor}" opacity=".45"/>`;
+  if (o.mouth === 'sing') s += `<ellipse cx="0" cy="${35 + m}" rx="3.6" ry="4.4" fill="${P.ink}"/><ellipse cx="0" cy="${37 + m}" rx="2" ry="1.4" fill="${P.sindoor}"/>`;
+  else if (o.mouth === 'grin') s += `<path d="M -7 ${32.5 + m} Q 0 ${40.5 + m} 7 ${32.5 + m} Z" fill="${P.ink}"/><path d="M -5 ${33.4 + m} H 5" stroke="${P.alab}" stroke-width="1.6"/>`;
+  else s += `<path d="M -5 ${33.5 + m} Q 0 ${37.5 + m} 5 ${33.5 + m}" fill="none" stroke="${P.sindoor}" stroke-width="2.2" stroke-linecap="round"/>`;
+  if (o.stache) s += `<path d="M 0 31 C -4 29 -9 29.5 -11.5 32 C -13 33.6 -12.6 35.4 -10.8 35 C -11.6 33.8 -10.4 32.6 -8.6 32.8 C -5.6 33.1 -2.6 33.4 0 32.8 C 2.6 33.4 5.6 33.1 8.6 32.8 C 10.4 32.6 11.6 33.8 10.8 35 C 12.6 35.4 13 33.6 11.5 32 C 9 29.5 4 29 0 31 Z" fill="${P.ink}"/>`;
+  if (o.specs) s += `<g fill="none" stroke="${P.ink}" stroke-width="1.7"><rect x="-17" y="13.5" width="15" height="12" rx="3.5"/><rect x="2" y="13.5" width="15" height="12" rx="3.5"/><path d="M -2 18 H 2"/></g>`;
+  if (o.nath) s += `<circle cx="4.6" cy="28.4" r="3.3" fill="none" stroke="${P.goldDeep}" stroke-width="1.5"/>`;
+  if (o.hat === 'dupatta') s += `<circle cx="-21" cy="31" r="2.8" fill="${P.goldDeep}"/><circle cx="21" cy="31" r="2.8" fill="${P.goldDeep}"/>`;
+  // headwear front
+  const c = o.hatC;
+  if (o.hat === 'pagri') s += `<path d="M -23 6 Q -25 -15 0 -17 Q 25 -15 23 6 Q 0 -1 -23 6 Z" fill="${c}"/><path d="M -22 -2 Q 0 -10 22 -2 M -19 -9 Q 2 -15 21 -8" stroke="${P.ink}" stroke-opacity=".28" stroke-width="1.5" fill="none"/><path d="M 9 -13 Q 18 -28 9 -37 Q 4 -25 9 -13 Z" fill="${P.gold}"/><circle cx="8" cy="-9" r="3.3" fill="${P.gold}" stroke="${P.ink}" stroke-width="1"/>`;
+  if (o.hat === 'topi') s += `<path d="M -21 6 L -21 -9 Q 0 -13.5 21 -9 L 21 6 L 7.5 6 Q 0 -3.5 -7.5 6 Z" fill="${c}"/><polyline points="-20,-6 -16,-9 -12,-6 -8,-9 -4,-6 0,-9 4,-6 8,-9 12,-6 16,-9 20,-6" fill="none" stroke="${P.gold}" stroke-width="1.4"/><circle cx="-15" cy="0" r="1.9" fill="${P.alab}"/><circle cx="-10" cy="1" r="1.6" fill="${P.gold}"/><circle cx="10" cy="1" r="1.6" fill="${P.gold}"/><circle cx="15" cy="0" r="1.9" fill="${P.alab}"/>`;
+  if (o.hat === 'dupatta') s += `<path d="M -25 11 Q -24 -9 0 -10 Q 24 -9 25 11 Q 0 -2 -25 11 Z" fill="${c}"/><path d="M -24.5 10 Q 0 -2.5 24.5 10" stroke="${P.gold}" stroke-width="2" fill="none" stroke-dasharray="2 2.5"/>`;
+  if (o.hat === 'hair') s += `<path d="M -20 11 Q -22 -3 -8 -3 Q 0 -9 8 -3 Q 22 -3 20 11 Q 14 3 0 4 Q -14 3 -20 11 Z" fill="${P.ink}"/>`;
+  return `<g transform="rotate(${o.headTilt} 0 44)">${s}</g>`;
+}
+const HATTOP = { pagri: -16, topi: -11, dupatta: -9, hair: -5, none: 1 };
+
+function micAt(h, tx, ty) {
+  const a = Math.atan2(tx - h.hx, -(ty - h.hy)) * 180 / Math.PI;
+  return `<g transform="translate(${f(h.hx)} ${f(h.hy)}) rotate(${f(a)})"><rect x="-3.2" y="-6" width="6.4" height="19" rx="2.4" fill="${P.ink}"/><circle cx="0" cy="-10" r="6.6" fill="${P.alab}" stroke="${P.ink}" stroke-width="1.4"/><path d="M -6 -10 H 6 M 0 -16 V -4" stroke="${P.ink}" stroke-opacity=".35" stroke-width="1"/></g>`;
+}
+function note(x, y, d, col) {
+  return `<g transform="translate(${x} ${y})"><g class="floaty" style="animation-delay:${d}s"><ellipse cx="0" cy="0" rx="4.4" ry="3.2" transform="rotate(-22)" fill="${col}"/><rect x="2.9" y="-15" width="1.9" height="15" fill="${col}"/><path d="M 4.8 -15 q 6.5 2 5.4 8.5" stroke="${col}" fill="none" stroke-width="1.9" stroke-linecap="round"/></g></g>`;
+}
+function bubble(x, y, text, urdu, flip) {
+  const w = urdu ? 56 : 46;
+  const tail = flip ? `M ${w - 8} 6 L ${w - 2} 14 L ${w - 16} 6` : 'M 8 6 L 2 14 L 16 6';
+  const t = urdu ? `<text x="${w / 2}" y="2" font-family="'Noto Nastaliq Urdu', serif" font-size="11" text-anchor="middle" fill="${P.ink}" direction="rtl">${text}</text>` : `<text x="${w / 2}" y="-1" font-family="'Space Grotesk', sans-serif" font-size="10.5" font-weight="700" text-anchor="middle" fill="${P.ink}">${text}</text>`;
+  return `<g transform="translate(${x} ${y})"><g class="bob"><path d="${tail}" fill="${P.alab}" stroke="${P.ink}" stroke-width="1.3" stroke-linejoin="round"/><rect x="0" y="-16" width="${w}" height="${urdu ? 25 : 22}" rx="8" fill="${P.alab}" stroke="${P.ink}" stroke-width="1.3"/><rect x="3" y="3" width="${w - 6}" height="${urdu ? 5 : 2}" fill="${P.alab}"/>${t}</g></g>`;
+}
+
+function puppet(cfg) {
+  const o = Object.assign({ x: 0, y: 0, s: 1, L: 100, top: P.forest, skirt: P.sindoor, hat: 'pagri', hatC: P.sindoor, stache: false, mouth: 'smile', look: 0, lookY: 0, aL: [18, 8], aR: [18, 8], flare: 1, len: 1, twirl: 0, bells: false, specs: false, nath: false, headTilt: 0, prop: null, bar: P.forest, barMid: P.gold, string: P.ink, strOp: .55, amp: 3, dur: 3.4, delay: 0, noBar: false, barW: 44, extra: '' }, cfg);
+  const L = o.L;
+  const A = arm('L', -15, 52, o.aL[0], o.aL[1], o.top), B = arm('R', 15, 52, o.aR[0], o.aR[1], o.top);
+  let back = '', mid = '', front = '';
+  if (o.hat === 'dupatta') back += `<path d="M -25 12 Q -27 -9 0 -10 Q 27 -9 25 12 L 33 98 Q 26 106 19 98 L 16 30 L -16 30 L -19 98 Q -26 106 -33 98 Z" fill="${o.hatC}"/>`;
+  if (o.twirl || o.flare > 1.4) back += `<g fill="none" stroke="${P.gold}" stroke-width="2" stroke-linecap="round" opacity=".7"><path d="M ${f(-44 * o.flare - 10)} 130 Q ${f(-44 * o.flare + 6)} 168 ${f(-10)} 172"/><path d="M ${f(44 * o.flare + 12)} 118 Q ${f(44 * o.flare + 4)} 150 ${f(44 * o.flare - 22)} 165" stroke-dasharray="3 5"/></g>`;
+  if (o.prop === 'tabla') mid += `<ellipse cx="-17" cy="112" rx="18" ry="15" fill="${P.wood}"/><ellipse cx="-17" cy="98" rx="15" ry="4.8" fill="${P.alab}" stroke="${P.woodD}" stroke-width="1.2"/><circle cx="-17" cy="98" r="3.2" fill="${P.ink}"/><rect x="5" y="95" width="24" height="31" rx="6" fill="${P.woodD}"/><path d="M 8 100 L 13 124 M 17 100 L 17 125 M 26 100 L 21 124" stroke="${P.gold}" stroke-width="1" opacity=".7"/><ellipse cx="17" cy="95" rx="12" ry="4" fill="${P.alab}" stroke="${P.woodD}" stroke-width="1.2"/><circle cx="17" cy="95" r="2.8" fill="${P.ink}"/>`;
+  if (o.prop === 'mic') front += micAt(o.micHand === 'L' ? A : B, 0, 35);
+  if (o.prop === 'micL') front += micAt(A, 0, 35);
+  if (o.prop === 'book') front += `<g transform="translate(${f(A.hx + 4)} ${f(A.hy + 2)}) rotate(-8)"><path d="M -15 -11 L 0 -7.5 L 15 -11 L 15 7 L 0 10.5 L -15 7 Z" fill="${P.alab}" stroke="${P.ink}" stroke-width="1.3" stroke-linejoin="round"/><path d="M 0 -7.5 V 10.5 M -12 -5 L -3 -3 M -12 -1 L -3 1 M 3 -3 L 12 -5 M 3 1 L 12 -1" stroke="${P.ink}" stroke-width=".9" opacity=".6"/></g>`;
+  if (o.prop === 'juggle') front += [[-36, -22, P.alab, -14, 0], [0, -46, P.sindoor, 12, .4], [36, -20, P.alab, 24, .8]].map(([x, y, c, r, d]) => `<g transform="translate(${x} ${y})"><g class="floaty" style="animation-delay:${d}s"><rect x="-6.5" y="-6.5" width="13" height="13" rx="3.5" fill="${c}" transform="rotate(${r})"/></g></g>`).join('') + `<path d="M -36 -10 Q -24 -52 0 -56 Q 26 -52 38 -8" fill="none" stroke="${P.gold}" stroke-width="1.2" stroke-dasharray="2 4" opacity=".7"/>`;
+  front += o.extra;
+  const ht = HATTOP[o.hat];
+  const sw = (0.9 / o.s).toFixed(2), bw = o.barW;
+  const strings = `<g stroke="${o.string}" stroke-width="${sw}" opacity="${o.strOp}" fill="none" stroke-linecap="round"><line x1="0" y1="6" x2="0" y2="${f(L + ht)}"/><line x1="${-bw}" y1="6" x2="${f(A.hx)}" y2="${f(A.hy + L)}"/><line x1="${bw}" y1="6" x2="${f(B.hx)}" y2="${f(B.hy + L)}"/></g>`;
+  const bar = o.noBar ? '' : `<rect x="-6" y="-30" width="12" height="24" rx="4" fill="${o.bar}"/><rect x="-51" y="-7" width="31" height="14" rx="4.5" fill="${o.bar}"/><rect x="-15.5" y="-7" width="31" height="14" rx="4.5" fill="${o.barMid}"/><rect x="20" y="-7" width="31" height="14" rx="4.5" fill="${o.bar}"/>`;
+  const body = back + skirt(o) + `<rect x="-17" y="46" width="34" height="34" rx="7" fill="${o.top}"/><path d="M -9 47 Q 0 58 9 47" fill="none" stroke="${P.gold}" stroke-width="2.4"/><circle cx="0" cy="54.5" r="2.5" fill="${P.sindoor}" stroke="${P.gold}" stroke-width="1"/><circle cx="-9" cy="68" r="1.8" fill="${P.alab}" opacity=".8"/><circle cx="9" cy="68" r="1.8" fill="${P.alab}" opacity=".8"/>` + mid + A.svg + B.svg + headSvg(o) + front;
+  return `<g transform="translate(${o.x} ${o.y}) scale(${o.s})"><g class="sway" style="--amp:${o.amp}deg;--dur:${o.dur}s;animation-delay:-${o.delay}s">${strings}${bar}<g transform="translate(0 ${L})">${body}</g></g></g>`;
+}
+
+/* ---------- cast ---------- */
+const CAST = {
+  singer: { name: 'Gulu', act: 'Singers', line: 'Ghazal, pop, qawwali, shower-tier. All welcome.', hat: 'pagri', hatC: P.sindoor, top: P.forestL, skirt: P.sindoor, stache: true, mouth: 'sing', aL: [62, 58], aR: [40, -190], prop: 'mic', headTilt: -4, extraFn: c => note(40, 18, 0, c) + note(56, -6, .9, c) + note(30, -18, 1.6, c) },
+  dancer: { name: 'Rani', act: 'Dancers', line: 'Kathak, bhangra, TikTok choreo, wedding-floor legend.', hat: 'dupatta', hatC: P.sindoor, top: P.ajrak, skirt: P.genda, nath: true, aL: [150, 30], aR: [118, -40], flare: 1.7, twirl: -6, bells: true, look: 2, headTilt: 6 },
+  tabla: { name: 'Ustad Taal', act: 'Musicians', line: 'Tabla, guitar, harmonium, a spoon on a steel glass.', hat: 'topi', hatC: P.ajrak, top: P.genda, skirt: P.ajrak, stache: true, aL: [12, -20], aR: [12, -20], prop: 'tabla', lookY: 1.2, mouth: 'smile' },
+  comic: { name: 'Chacha Chutkula', act: 'Comedy', line: 'Stand-up, roasts, one-liners about your manager.', hat: 'hair', specs: true, top: P.genda, skirt: P.forestL, mouth: 'grin', aL: [40, -190], aR: [140, 10], prop: 'micL', headTilt: 3, extraFn: () => bubble(-96, -18, 'ha ha', false, true) },
+  poet: { name: 'Bano Baji', act: 'Shayari', line: 'Ghazals, nazms, spoken word, roman Urdu welcome.', hat: 'dupatta', hatC: P.genda, top: P.forestL, skirt: P.ajrak, nath: true, aL: [30, -150], aR: [150, 20], prop: 'book', look: -1.5, extraFn: () => bubble(36, -26, 'واہ واہ', true) },
+  juggler: { name: 'Jugnu', act: 'Wildcards', line: 'Juggling, magic, Rubik’s cubes, speed-typing. Surprise us.', hat: 'topi', hatC: P.genda, top: P.sindoor, skirt: P.forestL, aL: [130, 20], aR: [130, 20], prop: 'juggle', lookY: -2, mouth: 'smile' }
+};
+function mk(key, extra, noteCol) {
+  const c = Object.assign({}, CAST[key], extra);
+  if (c.extraFn) c.extra = c.extraFn(noteCol || P.gold);
+  return puppet(c);
+}
+const onDark = { string: P.alab, strOp: .5, bar: P.forestL };
+
+document.getElementById('troupe').innerHTML = [['comic', 92, .3], ['singer', 40, 0], ['poet', 92, 1.4]].map(([k, L, d]) =>
+  `<svg viewBox="-105 -40 210 330">${mk(k, Object.assign({ x: 0, y: -10, s: .95, L, delay: d }, onDark), P.gold)}</svg>`).join('');
+
+const hero = document.getElementById('stageHero');
+const open = () => hero.classList.remove('closed');
+const replay = () => { hero.classList.add('closed'); setTimeout(open, 650); };
+document.querySelectorAll('[data-replay]').forEach((b) => b.addEventListener('click', replay));
+
+// The parda rises the first time the stage scrolls into view
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) open();
+else {
+  const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { io.disconnect(); setTimeout(open, 350); } }, { threshold: 0.15 });
+  io.observe(hero);
+}
+
+// Tell the case study page how tall the stage is, so the frame never scrolls
+const report = () => parent.postMessage({ tamashaStage: hero.offsetHeight }, location.origin);
+new ResizeObserver(report).observe(hero);
+document.fonts && document.fonts.ready.then(report);
+})();
+</script>
+</body>
+</html>

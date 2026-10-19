@@ -1,0 +1,22 @@
+# Dependencies and build output
+node_modules/
+dist/
+
+# Secrets (set VITE_FORMSPARK_ID in Vercel's environment variables instead)
+.env
+.env.local
+.env.*.local
+
+# Raw source files (large; only the optimised versions in public/ are needed)
+assets-raw/
+
+# Unused 21 MB character models (not referenced by the site)
+public/models/rabiya.glb
+public/models/rabiya character.glb
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

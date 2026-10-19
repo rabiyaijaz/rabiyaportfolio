@@ -1,0 +1,219 @@
+/* ============================================================
+   About: the Sims HUD, redrawn from Rabiya's Figma (assets-raw/hud-left.png)
+   in the site's own language: one frosted-glass bar, the phase tokens
+   (--bg, --surface, --ink, --muted, --line, --accent), plumbob green for "active".
+   Layout:  [ mode dial ][ Sim card ][ wants & fears ][ open panel ]
+   ============================================================ */
+.household img { border-color: var(--accent); box-shadow: 0 0 0 1px var(--line), 0 10px 24px -10px rgba(0, 0, 0, 0.5); background: var(--surface); }
+
+.hud {
+  --glass: color-mix(in srgb, var(--bg) 74%, transparent);
+  --tile: color-mix(in srgb, var(--surface) 70%, transparent);
+  /* Each part is its own glass card, bottom-aligned, so nothing stretches when a tall panel opens */
+  --tile: var(--glass);
+  position: absolute; left: var(--gutter); bottom: 20px; z-index: 5; display: flex; align-items: flex-end; gap: 8px;
+  color: var(--ink); transform-origin: 0 100%;
+}
+.hud > * {
+  backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 24px 50px -26px rgba(0, 0, 0, 0.6);
+}
+.hud-card { border-radius: 24px; background: var(--tile); border: 1px solid var(--line); }
+
+/* ---------- Mode dial ---------- */
+.hud-dial { position: relative; flex: none; width: 214px; height: 214px; border-radius: 50%; background: var(--tile); border: 1px solid var(--line); }
+.hud-dial__ring { position: absolute; inset: 18px; border-radius: 50%; border: 1.5px dashed color-mix(in srgb, var(--ink) 16%, transparent); pointer-events: none; }
+.hud-dial__btn {
+  --r: 80px; position: absolute; left: 50%; top: 50%; display: grid; place-items: center; width: 44px; height: 44px; margin: -22px 0 0 -22px;
+  border-radius: 50%; cursor: pointer; text-decoration: none; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.5);
+  transform: rotate(var(--a)) translate(var(--r)) rotate(calc(var(--a) * -1));
+  transition: background 200ms, color 200ms, box-shadow 200ms, scale 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hud-dial__btn:hover, .hud-dial__btn:focus-visible { scale: 1.12; z-index: 2; }
+.hud-dial__btn[aria-pressed='true'] { color: var(--accent-ink); background: var(--accent); border-color: transparent; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent), 0 8px 18px -8px var(--accent); }
+/* Live mode: the big plumbob-green button in the middle */
+.hud-dial__btn--live { --r: 0px; width: 82px; height: 82px; margin: -41px 0 0 -41px; color: #fff; border: 0;
+  background: radial-gradient(circle at 35% 28%, #b8ffc9, #35c45a 55%, #188a3a); box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.15), 0 12px 26px -10px rgba(24, 138, 58, 0.8); transform: none; }
+.hud-dial__btn--live[aria-pressed='true'] { color: #fff; background: radial-gradient(circle at 35% 28%, #c8ffd5, #3fd066 55%, #1b9a41); box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 30%, transparent), 0 12px 26px -10px rgba(24, 138, 58, 0.8); }
+/* A slow, staggered breathing glow says "these are buttons"; Relationships glows a little brighter
+   and carries a small green dot, since it hides the testimonials */
+.hud-dial__btn:not(.hud-dial__btn--live):not([aria-pressed='true']) { animation: dial-glow 3.2s ease-in-out infinite; animation-delay: calc(var(--k, 0) * 0.45s); }
+@keyframes dial-glow { 50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent), 0 0 16px color-mix(in srgb, var(--accent) 30%, transparent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); } }
+.hud-dial__btn--people:not([aria-pressed='true']) { animation-name: dial-glow-strong; color: var(--accent); }
+@keyframes dial-glow-strong { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 24%, transparent), 0 0 22px color-mix(in srgb, var(--accent) 50%, transparent); border-color: var(--accent); } }
+.hud-dial__btn--people::after { content: ''; position: absolute; top: 1px; right: 1px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); }
+.hud-dial__btn--people[aria-pressed='true']::after { display: none; }
+/* Inside Relationships, the cards glow in turn to say "hover me" */
+.hud-people li { --n: 0; }
+.hud-people li:nth-child(2) { --n: 1; } .hud-people li:nth-child(3) { --n: 2; } .hud-people li:nth-child(4) { --n: 3; } .hud-people li:nth-child(5) { --n: 4; } .hud-people li:nth-child(6) { --n: 5; }
+.hud-people button:not(.is-on) { animation: card-glow 4.8s ease-in-out infinite; animation-delay: calc(var(--n) * 0.8s); }
+@keyframes card-glow { 0%, 30%, 100% { box-shadow: none; } 15% { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent), 0 0 14px -2px color-mix(in srgb, var(--accent) 40%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .hud-dial__btn, .hud-people button { animation: none !important; } }
+/* A label that appears beside the hovered / focused button */
+.hud-dial__tip {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; translate: -50% 4px; opacity: 0; pointer-events: none; white-space: nowrap;
+  padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--bg); background: var(--ink); transition: opacity 160ms, translate 160ms var(--ease);
+}
+.hud-dial__btn:hover .hud-dial__tip, .hud-dial__btn:focus-visible .hud-dial__tip { opacity: 1; translate: -50% 0; }
+
+/* ---------- Sim card ---------- */
+.hud-sim { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; width: 290px; padding: 10px; }
+.hud-sim { border-radius: 24px; background: var(--tile); border: 1px solid var(--line); }
+.hud-sim__face { padding: 0; width: 96px; height: 120px; border: 0; border-radius: 18px; overflow: hidden; cursor: pointer; background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 22%, var(--surface)), var(--surface)); transition: transform 200ms var(--ease); }
+.hud-sim__face:hover { transform: translateY(-2px) rotate(-1.5deg); }
+.hud-sim__face img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+.hud-sim__meta { display: grid; gap: 4px; min-width: 0; }
+.hud-sim__meta strong { font: 500 19px/1.15 var(--serif); }
+.hud-sim__meta > span:not(.hud-sim__mood) { font-size: 12.5px; color: var(--muted); }
+.hud-sim__mood { display: block; height: 8px; margin: 6px 0 2px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+.hud-sim__mood i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #35c45a, var(--accent)); }
+.hud-sim__clock { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+
+/* ---------- Wants & fears (opens its panel) ---------- */
+.hud-wants {
+  display: grid; gap: 6px; padding: 10px 12px 12px; cursor: pointer; text-align: left; color: inherit; font: inherit;
+  border-radius: 24px; background: var(--tile); border: 1px solid var(--line); transition: border-color 200ms, transform 200ms var(--ease);
+}
+.hud-wants:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.hud-wants[aria-pressed='true'] { border-color: var(--accent); }
+.hud-wants__label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.hud-wants__row { display: flex; gap: 6px; }
+.hud-wants__row img { width: 44px; height: 44px; padding: 5px; border-radius: 13px; }
+.hud-wants__row--want img { background: color-mix(in srgb, #35c45a 22%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #35c45a 40%, transparent); }
+.hud-wants__row--fear img { background: color-mix(in srgb, #e8483d 18%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #e8483d 35%, transparent); }
+
+/* ---------- The open panel ---------- */
+.hud-panel {
+  width: 430px; max-height: calc(100svh - 150px); overflow-y: auto; padding: 14px 16px 16px;
+  border-radius: 24px; background: var(--tile); border: 1px solid var(--line); animation: hud-panel-in 260ms var(--ease) both;
+}
+@keyframes hud-panel-in { from { opacity: 0; transform: translateY(8px); } }
+.hud-panel__head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.hud-panel__head h2 { margin: 0; font: 400 21px/1.2 var(--serif); }
+.hud-panel__icon { display: grid; place-items: center; width: 30px; height: 30px; color: var(--accent-ink); background: var(--accent); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.hud-sub { margin: 4px 0 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+/* bars: green / amber / red, like the game */
+.hud-bar { position: relative; display: block; height: 9px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+.hud-bar i { display: block; height: 100%; border-radius: inherit; transition: width 800ms var(--ease); }
+.hud-bar--good i { background: linear-gradient(90deg, #2fbf48, #5fe08a); }
+.hud-bar--mid i { background: linear-gradient(90deg, #e3a83a, #f2c94c); }
+.hud-bar--low i { background: linear-gradient(90deg, #e2483d, #ff7a6b); }
+.hud-trend { width: 16px; font-size: 8px; letter-spacing: -2px; text-align: center; }
+.hud-trend--good { color: #2fbf48; } .hud-trend--mid { color: #d99a1e; } .hud-trend--low { color: #e2483d; }
+
+.hud-needs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; margin: 0; padding: 0; list-style: none; }
+.hud-need { display: grid; gap: 5px; width: 100%; padding: 4px 6px; border: 0; border-radius: 12px; background: none; color: inherit; font: inherit; text-align: left; }
+.hud-need__label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+.hud-need__row { display: grid; grid-template-columns: 16px 1fr 16px; align-items: center; }
+/* Needs fill from the pie menu around the Sim; this line points the way */
+.hud-needs__hint { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 12px; padding: 9px 12px; border: 1px dashed color-mix(in srgb, var(--accent) 45%, var(--line)); border-radius: 12px; background: color-mix(in srgb, var(--accent) 7%, transparent); color: var(--muted); font: 500 12.5px/1.4 var(--sans); text-align: left; cursor: pointer; transition: color 160ms, background 160ms; }
+.hud-needs__hint span { color: var(--accent); }
+.hud-needs__hint:hover, .hud-needs__hint:focus-visible { color: var(--ink); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.hud-need.is-pop .hud-bar { animation: need-pop 600ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes need-pop { 30% { transform: scaleY(1.6); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 70%, transparent); } }
+
+.hud-traits, .hud-skills, .hud-people, .hud-offwork { margin: 0; padding: 0; list-style: none; }
+.hud-traits li { display: grid; grid-template-columns: 124px 1fr 40px; align-items: center; gap: 10px; padding: 5px 0; font-size: 13.5px; font-weight: 600; }
+.hud-traits__name { display: inline-flex; align-items: center; gap: 7px; }
+.hud-pips { display: flex; gap: 5px; }
+.hud-pips i { width: 12px; height: 12px; border-radius: 50%; background: color-mix(in srgb, var(--ink) 10%, transparent); }
+.hud-pips i.on { background: radial-gradient(circle at 35% 30%, #d6ffdf, #35c45a 60%, #1f8a36); box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent); animation: pip 300ms var(--ease) both; animation-delay: calc(var(--i) * 40ms); }
+@keyframes pip { from { transform: scale(0.3); opacity: 0; } }
+.hud-traits b, .hud-skills b { text-align: right; font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); }
+
+.hud-facts { margin: 0 0 12px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--ink) 5%, transparent); display: grid; gap: 4px; }
+.hud-facts div { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; }
+.hud-facts dt { color: var(--muted); } .hud-facts dd { margin: 0; text-align: right; font-weight: 600; }
+.hud-skills li { display: grid; grid-template-columns: 1fr auto 36px; align-items: center; gap: 10px; padding: 3px 0; font-size: 12.5px; font-weight: 600; }
+.hud-segs { display: flex; gap: 2px; }
+.hud-segs i { width: 7px; height: 12px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 10%, transparent); }
+.hud-segs i.on { background: linear-gradient(#5fe08a, #2fbf48); animation: pip 300ms var(--ease) both; animation-delay: calc(var(--i) * 25ms); }
+
+.hud-people { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hud-people button, .hud-offwork li { display: grid; grid-template-columns: 42px 1fr; gap: 10px; align-items: center; padding: 8px; border-radius: 14px; background: color-mix(in srgb, var(--ink) 5%, transparent); }
+/* Same cards as before; they're buttons now so they can open a testimonial */
+.hud-people button { width: 100%; height: 100%; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background 160ms; }
+.hud-people button:hover, .hud-people button.is-on { background: color-mix(in srgb, var(--ink) 9%, transparent); }
+.hud-people img { width: 42px; height: 42px; border-radius: 12px; object-fit: cover; object-position: 50% 15%; background: var(--surface-2); }
+.hud-people button > span { display: grid; gap: 2px; min-width: 0; }
+
+/* ---------- Testimonial bubble (opened by hovering a person) ---------- */
+.testimonial {
+  position: fixed; z-index: 60; width: 320px; margin: 0; padding: 20px 20px 16px; pointer-events: none;
+  border-radius: 22px; color: var(--ink); background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.55);
+  animation: bubble-in 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.testimonial--right { transform: translateY(-50%); transform-origin: 0 50%; }
+.testimonial--top { transform: translateY(-100%); transform-origin: var(--tail, 50%) 100%; }
+/* the tail points back at the person */
+.testimonial::after { content: ''; position: absolute; width: 14px; height: 14px; background: inherit; border: inherit; border-radius: 3px; }
+.testimonial--right::after { left: -8px; top: calc(50% - 7px); border-top-color: transparent; border-right-color: transparent; transform: rotate(45deg); }
+.testimonial--top::after { left: calc(var(--tail, 50%) - 7px); bottom: -8px; border-top-color: transparent; border-left-color: transparent; transform: rotate(45deg); }
+@keyframes bubble-in { from { opacity: 0; scale: 0.88; } }
+/* The big quote mark drops in like a plumbob */
+.testimonial__mark { position: absolute; top: -20px; left: 18px; font: 400 58px/1 var(--serif); color: var(--accent); text-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 45%, transparent); animation: mark-drop 520ms cubic-bezier(0.34, 1.56, 0.64, 1) 80ms both; }
+@keyframes mark-drop { from { opacity: 0; transform: translateY(-14px) rotate(-14deg); } }
+/* Word by word: each one floats up out of a soft blur, then a green glint passes over it */
+.testimonial blockquote { margin: 0; font: italic 400 17px/1.5 var(--serif); }
+.testimonial__w { display: inline-block; white-space: pre; animation: word-in 460ms var(--ease) both, word-glint 900ms ease-out both; animation-delay: calc(var(--w) * 26ms + 120ms), calc(var(--w) * 26ms + 260ms); }
+@keyframes word-in { from { opacity: 0; filter: blur(6px); transform: translateY(8px); } }
+@keyframes word-glint { 0% { color: var(--ink); } 30% { color: var(--accent); text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent); } 100% { color: var(--ink); } }
+.testimonial figcaption { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); animation: word-in 420ms var(--ease) both; animation-delay: calc(var(--w) * 26ms + 220ms); }
+.testimonial figcaption img { width: 32px; height: 32px; border-radius: 10px; object-fit: cover; object-position: 50% 15%; }
+.testimonial figcaption span { display: grid; gap: 1px; }
+.testimonial figcaption strong { font-size: 13px; }
+.testimonial figcaption small { font-size: 11.5px; color: var(--muted); }
+/* Friends and family get a slightly tilted, more playful bubble */
+.testimonial--personal { rotate: -1.2deg; }
+@media (prefers-reduced-motion: reduce) { .testimonial, .testimonial__mark, .testimonial__w, .testimonial figcaption { animation: none; } }
+.hud-people strong, .hud-offwork strong { font-size: 12.5px; font-weight: 700; }
+.hud-people small, .hud-offwork small { font-size: 11px; color: var(--muted); }
+.hud-people .hud-bar { height: 6px; margin-top: 3px; }
+.hud-offwork { display: grid; gap: 8px; }
+.hud-offwork li > span:last-child { display: grid; gap: 2px; }
+.hud-offwork__icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; color: var(--accent-ink); background: var(--accent); }
+
+.hud-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.hud-items button { display: grid; justify-items: center; gap: 5px; width: 100%; padding: 8px 4px; border: 0; border-radius: 14px; cursor: pointer; background: none; color: inherit; font-size: 12px; font-weight: 600; }
+.hud-items button:hover, .hud-items button[aria-pressed='true'] { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.hud-items__icon { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 16px; background: color-mix(in srgb, var(--ink) 6%, transparent); transition: transform 200ms var(--ease); }
+.hud-items button:hover .hud-items__icon { transform: translateY(-3px) rotate(-4deg); }
+.hud-items__icon img { width: 42px; height: 42px; object-fit: contain; }
+.hud-note { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); }
+.hud-note strong { color: var(--ink); }
+.hud-note a { color: var(--accent); font-weight: 700; }
+
+.hud-wantlist ul { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+.hud-wantlist li { display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border-radius: 14px; font-size: 13px; font-weight: 600; }
+.hud-wantlist li img { width: 38px; height: 38px; padding: 4px; border-radius: 11px; }
+.hud-wantlist .is-want { background: color-mix(in srgb, #35c45a 12%, transparent); } .hud-wantlist .is-want img { background: color-mix(in srgb, #35c45a 22%, var(--surface)); }
+.hud-wantlist .is-fear { background: color-mix(in srgb, #e8483d 10%, transparent); } .hud-wantlist .is-fear img { background: color-mix(in srgb, #e8483d 18%, var(--surface)); }
+
+/* ---------- sizes ---------- */
+@media (max-width: 1500px) { .hud { transform: scale(0.9); } .household { bottom: 270px; } }
+@media (max-width: 1340px) { .hud { transform: scale(0.8); } .household { bottom: 245px; } }
+@media (max-width: 1160px) { .hud-wants { display: none; } }
+/* Phones and tablets: the panel on top, the dial's sections as a row of buttons below */
+@media (max-width: 900px) {
+  .household, .hud-sim, .hud-wants { display: none; }
+  .hud { left: 8px; right: 8px; bottom: 8px; transform: none; flex-direction: column-reverse; align-items: stretch; gap: 8px; }
+  body.has-room .sound { bottom: auto; top: 70px; }
+  .hud-dial { width: auto; height: auto; border-radius: 18px; display: flex; justify-content: space-between; padding: 6px; overflow-x: auto; }
+  .hud-dial__ring { display: none; }
+  .hud-dial__btn, .hud-dial__btn--live { position: static; flex: none; width: 42px; height: 42px; margin: 0; transform: none; }
+  .hud-dial__btn--live svg { width: 22px; height: 22px; }
+  .hud-dial__tip { display: none; }
+  .hud-panel { width: auto; max-height: 50svh; }
+  .hud-needs { gap: 6px 14px; }
+  .hud-people, .hud-wantlist ul { grid-template-columns: 1fr; }
+  .hud-traits li { grid-template-columns: 104px 1fr 36px; }
+  .hud-pips i { width: 10px; height: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .room__sim, .room__plumbob { animation: none; }
+  .hud-panel, .hud-pips i.on, .hud-segs i.on, .hud-need.is-pop .hud-bar { animation: none; }
+}

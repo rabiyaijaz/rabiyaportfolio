@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#f5f4ee"><title>Rabiya — Character Studio</title><link rel="stylesheet" href="./style.css"></head>
+<body>
+  <header><a class="brand" href="./"><span class="diamond">◇</span> rabiya<span class="brand-divider">/</span><span class="brand-sub">character studio</span></a><span class="version">EXPERIMENT 01 <i></i> LIVE IN 3D</span></header>
+  <main>
+    <section class="viewport" aria-label="Interactive 3D character preview">
+      <div class="intro"><p class="eyebrow">A LITTLE MORE HUMAN</p><h1>Meet your<br><em>digital self.</em></h1><p>A familiar face.<br>A little personality.<br>A world to explore.</p></div>
+      <div id="stage" tabindex="0" role="application" aria-label="3D character. Drag to rotate the view. In Explore mode, click the floor or use arrow keys to walk."></div>
+      <div class="scene-top"><span class="scene-pill"><i></i> <span id="status" aria-live="polite">At ease</span></span><div class="view-buttons"><button id="front" aria-label="Front camera view">Front</button><button id="portrait" aria-label="Close-up camera view">Close-up</button><button id="reset" aria-label="Reset position and camera">↺ Reset</button></div></div>
+      <div class="scene-bottom"><span id="hint">Drag to orbit · Scroll to zoom</span><span class="small-label">STYLIZED PROTOTYPE / v0.1</span></div>
+      <div id="arrival" class="arrival" hidden><span class="eyebrow">YOU’VE ARRIVED</span><strong id="arrival-title"></strong><span>Portfolio navigation demo</span><button id="dismiss">Keep exploring ↗</button></div>
+      <div id="failure" hidden><h2>The 3D view couldn’t start.</h2><p>Please try a browser with WebGL enabled. Your model and animation files are still available in this project.</p></div>
+    </section>
+    <aside>
+      <div class="panel-heading"><p class="eyebrow">CHARACTER 001</p><h2>Rabiya<span>✳</span></h2><p>Curious by nature. Designer at heart.</p></div>
+      <div class="mode-switch" role="group" aria-label="Studio mode"><button data-mode="studio" aria-pressed="true">Character studio</button><button data-mode="explore" aria-pressed="false">Explore a little ↗</button></div>
+      <section class="actions-section"><div class="section-title"><h3>A little personality</h3><span>07 ACTIONS</span></div><div id="actions" class="actions"></div><p id="action-description">A little breathing. A gentle shift in weight.</p></section>
+      <section id="destinations" hidden><div class="section-title"><h3>Walk to a project</h3><span>DEMO</span></div><div class="destinations"><button data-destination="0">01 &nbsp; CysterCare <span>↗</span></button><button data-destination="1">02 &nbsp; Vettio <span>↗</span></button><button data-destination="2">03 &nbsp; Access Adda <span>↗</span></button></div><p class="helper">Click the floor, use WASD / arrow keys, or choose a destination above.</p></section>
+      <div class="playback"><button id="pause" aria-pressed="false" aria-label="Pause animation">Ⅱ</button><label for="speed">Tempo <output id="speed-value">1×</output><input id="speed" type="range" min="0.5" max="1.5" step="0.1" value="1"></label><button id="motion" aria-pressed="true" title="Toggle automatic idle movement">Auto idle <span>●</span></button></div>
+      <label class="timeline" for="timeline">Inspect a pose <input id="timeline" type="range" min="0" max="100" step="1" value="0" aria-label="Animation progress"></label>
+      <section class="reference"><img src="./references/portrait.png" alt="Original character reference: chestnut wavy hair, black glasses, and a black turtleneck"><div><span class="eyebrow">THE STARTING POINT</span><p>Your reference, reimagined.</p><button id="reference-open">View original ↗</button></div></section>
+      <div class="export"><a class="export-button" href="./rabiya-prototype.glb" download>↓ &nbsp; Download 3D character <span>.GLB</span></a><p>Includes all 7 animations. Simplified likeness.<br>Ready for your next experiment.</p></div>
+      <details><summary>How this becomes your game</summary><p>The model is her appearance. The rig is the set of joints that move her. Animation clips describe each gesture. The controller decides when to play them.</p><p>This prototype uses articulated parts. For a closer likeness and smoother elbows, the next step is a sculpted mesh with a weighted skeleton. Your portfolio can keep the same action names.</p><a href="./GUIDE.html" target="_blank" rel="noopener">Read the beginner’s guide ↗</a></details>
+    </aside>
+  </main>
+  <dialog id="reference-dialog"><button id="reference-close" aria-label="Close reference">×</button><img src="./references/full-body.png" alt="Full-body original character reference"><p>Original reference · target for the finished model</p></dialog>
+  <script type="module" src="./main.js"></script>
+</body></html>

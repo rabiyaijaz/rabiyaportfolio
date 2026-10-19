@@ -1,0 +1,125 @@
+{
+ "places": [
+  {
+   "title": "Islamia College Peshawar",
+   "body": "Founded in 1913, Islamia College is an architectural masterpiece of red-brick Islamic-colonial design, crowned with elegant cupolas, clock towers, arched arcades, and sprawling manicured lawns flanked by cypress trees.",
+   "art": "/img/adda/islamia_college.webp"
+  },
+  {
+   "title": "Qissa Khwani Bazaar",
+   "body": "The legendary 'Street of Storytellers' in Peshawar's Old City, famed for traditional multi-story carved wooden havelis, steaming brass samovars of Peshawari Kahwa green tea, copper artisans, and vibrant fabric merchants.",
+   "art": "/img/adda/qissa_khwani.webp"
+  },
+  {
+   "title": "Zu Peshawar (BRT)",
+   "body": "Peshawar's 27-kilometer modern rapid transit network with clean electric-diesel hybrid buses, raised island stations, glass fare turnstiles, illuminated passenger information displays, and dedicated level-boarding bridges.",
+   "art": "/img/adda/brt_peshawar.webp"
+  },
+  {
+   "title": "Sethi House & Mohallah",
+   "body": "Built in 1884 by wealthy merchant traders, Sethi Haveli showcases Central Asian Bukhara-inspired architecture, intricate deodar wooden jharokas, hand-carved balconies, a courtyard with a turquoise fountain, and a sunken basement.",
+   "art": "/img/adda/sethi_house.webp"
+  },
+  {
+   "title": "All Saints Church",
+   "body": "Consecrated in 1883 inside Kohati Gate, this historic church is internationally famous for its unique Saracenic/Mughal mosque-like architecture—featuring minarets, cupolas, pointed arches, and Christian scriptures inscribed in Persian, Arabic, and Urdu calligraphy.",
+   "art": "/img/adda/all_saints_church.webp"
+  },
+  {
+   "title": "Jahaz Chowk (Aircraft Roundabout)",
+   "body": "An iconic urban roundabout crowned by a mounted fighter jet monument surrounded by concentric marigold beds, bustling with continuous flows of white cars, yellow taxis, green rickshaws, and pedestrians crossing towards the Cantt.",
+   "art": "/img/adda/jahaz_chowk.webp"
+  },
+  {
+   "title": "Bala Hisar Fort",
+   "body": "Standing on a commanding high mound overlooking the entire Peshawar valley for centuries, Bala Hisar ('High Fort') features massive rammed-earth and brick ramparts, defensive bastions, and a museum of Frontier Corps and Pashtun history.",
+   "art": "/img/adda/bala_hisar.webp"
+  }
+ ],
+ "people": [
+  {
+   "title": "Dawood Kaka, 69",
+   "sub": "Monocular telescope, white support cane, high-contrast smartphone",
+   "body": "Severe low vision (macular degeneration)",
+   "art": "/img/adda/dawood.webp"
+  },
+  {
+   "title": "Bilal, 23",
+   "sub": "White navigation cane, TalkBack screen reader with bone-conduction headphones",
+   "body": "Total blindness",
+   "art": "/img/adda/bilal.webp"
+  },
+  {
+   "title": "Mehwish, 26",
+   "sub": "Pakistan Sign Language (PSL), bilingual text messenger",
+   "body": "Deaf / Profound hearing loss",
+   "art": "/img/adda/mehwish.webp",
+   "icon": "sign"
+  },
+  {
+   "title": "Yousaf, 68",
+   "sub": "Bilateral digital hearing aids with Telecoil (T-coil)",
+   "body": "Severe sensorineural hearing loss",
+   "art": "/img/adda/yousaf.webp",
+   "icon": "ear"
+  },
+  {
+   "title": "Parveen Bibi, 67",
+   "sub": "Bifocals, cash purse",
+   "body": "First-time digital touchscreen user + motor tremor",
+   "art": "/img/adda/parveen.webp",
+   "icon": "elder"
+  },
+  {
+   "title": "Kamran, 29",
+   "sub": "Motorized electric wheelchair",
+   "body": "Wheelchair user (spinal cord injury)",
+   "art": "/img/adda/kamran.webp",
+   "icon": "wheel"
+  }
+ ],
+ "situations": [
+  {
+   "title": "Locating the Sir Sahibzada Abdul Qayyum Hall",
+   "body": "Dawood Kaka must find the historic lecture hall in the east quadrangle for a 10:00 AM centenary lecture. The symmetrical red-brick arches look identical.",
+   "icon": "hall"
+  },
+  {
+   "title": "Boarding the Direct Express Line During Peak Hour",
+   "body": "Bilal arrives on the platform where two different buses stop at the same bay: Route 01 (All Stops) and Route 02 (Express Direct). He needs Route 02.",
+   "icon": "boarding"
+  },
+  {
+   "title": "Ordering Custom Green Tea with Dietary Needs",
+   "body": "Mehwish wants to order signature Peshawari Kahwa with cardamom and crushed almonds, but explicitly without added sugar due to diabetes.",
+   "icon": "tea"
+  },
+  {
+   "title": "Purchasing a Single Trip Token with Cash",
+   "body": "Parveen Bibi is selecting 'Hayatabad Mall' on the touch kiosk and inserting two crisp 50-rupee notes into the bill validator.",
+   "icon": "ticketMachine"
+  }
+ ],
+ "barriers": [
+  {
+   "title": "Low-Contrast Symmetrical Architecture & Lack of Landmarks",
+   "body": "All corridors look uniform. The historic wooden door plaques feature carved dark brown letters on dark brown timber with zero visual contrast, positioned 2.5 meters above ground level.",
+   "icon": "eye"
+  },
+  {
+   "title": "Silent Bus Arrival & Digital Display Only",
+   "body": "The electronic destination screen on the bus windshield updates in LED pixels, but the bus makes almost zero engine noise (electric-hybrid) and there is no station audio broadcast specifying which route has docked.",
+   "icon": "ear"
+  },
+  {
+   "title": "Verbal-Only Shouted Order Culture",
+   "body": "The tea house has no written menu or prices. The head tea-master shouts orders to boys at the stoves behind boiling steam, and calls out names when tea is ready.",
+   "icon": "speech"
+  },
+  {
+   "title": "15-Second Aggressive Session Timeout",
+   "body": "While Parveen unzips her purse to extract the cash, the kiosk counts down 15 seconds without audio warning. The session abruptly cancels, resets the screen to the Urdu/English landing page, and ejects nothing.",
+   "icon": "clock"
+  }
+ ]
+}

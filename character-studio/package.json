@@ -1,0 +1,11 @@
+{
+  "name": "rabiya-character-studio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node ../node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5192 --strictPort",
+    "build": "node ../node_modules/vite/bin/vite.js build",
+    "export": "node export-model.js",
+    "check": "node check-model.js"
+  }
+}

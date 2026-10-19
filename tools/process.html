@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Process artefacts</title>
+<!-- Dev-only: five artboards for the landing's design-process story, captured to /img/process/*.webp.
+     Every word comes from the CysterCare case study, its user flows and its service blueprint. No invented quotes or results. -->
+<script type="module">
+  import '@fontsource-variable/geist';
+  import '@fontsource-variable/newsreader';
+  document.fonts.ready.then(() => { window.ready = true; });
+</script>
+<style>
+  :root{--paper:#f6f5f0;--ink:#16201a;--muted:#6c736c;--line:#dedbd0;--green:#1f8a4c;--mint:#dff3e6;--card:#fffefb}
+  *{box-sizing:border-box;margin:0}
+  body{background:#ddd;font-family:'Geist Variable',system-ui,sans-serif;color:var(--ink);padding:40px;display:grid;gap:40px;justify-content:center}
+  .board{width:1200px;height:780px;background:var(--paper);border-radius:28px;position:relative;overflow:hidden;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:32px 32px;background-position:-1px -1px}
+  .board::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(246,245,240,.9));pointer-events:none}
+  .serif{font-family:'Newsreader Variable',Georgia,serif}
+  .label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .card{background:var(--card);border:1px solid #e4e1d6;border-radius:14px;box-shadow:0 1px 0 rgba(0,0,0,.03),0 12px 28px -14px rgba(30,40,30,.25)}
+  .bar{height:7px;border-radius:4px;background:#e7e4da;margin:7px 0}
+  .bar.hl{background:linear-gradient(90deg,#c9f0d6 0 62%,#e7e4da 62%)}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;font-size:11.5px;border:1px solid #e1ded3;background:#fff}
+  .abs{position:absolute}
+
+  /* 1 · Listen */
+  .papers{left:60px;top:90px;width:330px}
+  .paper{position:absolute;width:300px;height:390px;padding:26px 24px}
+  .paper h3{font-size:19px;line-height:1.2;font-weight:500;margin:10px 0 16px}
+  .count{left:62px;top:560px}
+  .count b{font-size:64px;font-weight:400;letter-spacing:-.02em;display:block;line-height:1}
+  .people{left:425px;top:90px;width:395px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .person{padding:17px 12px;display:flex;gap:10px;align-items:center}
+  .ava{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:600;flex:none}
+  .wave{display:flex;gap:2px;align-items:center;height:18px;margin-top:5px}
+  .wave i{display:block;width:3px;border-radius:2px;background:#b9d9c4}
+  .guide{left:850px;top:90px;width:300px;padding:24px}
+  .guide li{list-style:none;padding:12px 0;border-bottom:1px dashed #e1ded3;font-size:14px}
+  .guide li span{display:block;margin-top:6px}
+
+  /* 2 · Make sense */
+  .clusters{left:50px;top:70px;right:50px;display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+  .theme{font-size:20px;font-weight:500;margin:0 0 14px;padding-bottom:10px;border-bottom:2px solid var(--ink)}
+  .note{padding:20px 18px 26px;font-size:16px;line-height:1.35;margin-bottom:12px;border-radius:4px;box-shadow:0 10px 18px -12px rgba(0,0,0,.35)}
+  .y{background:#fdf1a8}.g{background:#cdeedb}.p{background:#f9d6dc}.b{background:#d6e4fb}
+  .insight{left:50px;right:50px;bottom:48px;background:var(--ink);color:#f1f5ef;border-radius:18px;padding:22px 26px;display:grid;grid-template-columns:1fr 1fr;gap:30px}
+  .insight p{font-size:20px;line-height:1.3}
+  .insight .label{color:#9fb7a6}
+
+  /* 3 · Map */
+  .bp{left:40px;top:66px;right:40px}
+  .lane{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;margin-bottom:10px}
+  .lane .name{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:14px 12px;border-radius:12px;color:#fff;line-height:1.25}
+  .lane .cells{display:grid;grid-template-columns:repeat(13,1fr);gap:6px}
+  .cell{min-height:58px;border-radius:9px;font-size:10px;line-height:1.2;padding:7px 5px;display:grid;place-items:center;text-align:center;font-weight:500}
+  .divider{border-top:1.5px dashed #b9b5a8;margin:6px 0 10px 164px;position:relative}
+  .divider span{position:absolute;left:-160px;top:-8px;font-size:10px;color:var(--muted);background:var(--paper);padding-right:6px}
+
+  /* 4 · Shape */
+  .phone{position:absolute;width:250px;height:520px;border-radius:36px;border:2px solid #2a2f2b;background:#fff;padding:22px 16px;top:120px}
+  .phone::before{content:"";position:absolute;top:9px;left:50%;width:70px;height:16px;border-radius:10px;background:#2a2f2b;transform:translateX(-50%)}
+  .wf{border:1.5px solid #c9c6bb;border-radius:10px;background:#faf9f5}
+  .wf-t{height:9px;border-radius:5px;background:#d4d1c6}
+  .days{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:10px 0}
+  .days i{height:34px;border-radius:8px;border:1.5px solid #d4d1c6;display:block}
+  .days i.on{background:var(--mint);border-color:var(--green)}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .chips i{display:block;height:20px;border-radius:99px;border:1.5px solid #d4d1c6}
+  .note-call{position:absolute;font-size:12.5px;line-height:1.3;width:170px;color:#2b3a30}
+  .note-call::before{content:"";position:absolute;width:8px;height:8px;border-radius:50%;background:var(--green);left:-14px;top:5px}
+  .arrow{position:absolute;height:2px;background:#9a978c;top:380px}
+  .arrow::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:8px solid #9a978c}
+  .final{position:absolute;right:40px;top:96px;width:330px;height:600px;border-radius:22px;overflow:hidden;background:#fff}
+  .final img{position:absolute;height:100%;left:-540px;top:0}
+
+  /* 4 · Shape, v2: real screens beside matching wireframes */
+  .pair-h{position:absolute;top:76px;margin:0;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;color:var(--ink)}
+  .pair-h b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px}
+  .pair-split{position:absolute;left:600px;top:60px;bottom:60px;border-left:1.5px dashed #c9c6bb}
+  .ph{position:absolute;top:136px;width:236px;height:512px;border-radius:34px;border:2px solid #2a2f2b;background:#fff;overflow:hidden;box-shadow:0 24px 40px -26px rgba(20,30,20,.45)}
+  .ph.lo{padding:30px 14px 18px}
+  .ph.lo::before{content:"";position:absolute;top:9px;left:50%;width:64px;height:15px;border-radius:10px;background:#2a2f2b;transform:translateX(-50%)}
+  .ph.hi img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
+  .ph .row{display:flex;align-items:center;gap:8px}
+  .ph .circ{width:20px;height:20px;border-radius:50%;border:1.5px solid #d4d1c6;flex:none}
+  .ph .circ.big{width:28px;height:28px;background:#ece9df}
+  .ph .circ.dark{width:26px;height:26px;background:var(--ink);border-color:var(--ink)}
+  .ph .tick{width:8px;height:8px;border-top:1.5px solid #b9b5a8;border-left:1.5px solid #b9b5a8;transform:rotate(-45deg);display:block}
+  .ph .tick+.tick{transform:rotate(135deg)}
+  .ph .sq{width:20px;height:20px;border-radius:6px;background:#ece6fd;display:block}
+  .ph .pill{border-radius:99px;margin-top:10px}
+  .days7{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:12px 0 2px}
+  .days7 i{height:30px;border-radius:7px;border:1.5px solid #e1ded3;display:block}
+  .days7 i.on{background:var(--mint);border-color:var(--green)}
+  .ph .chips i{height:17px}
+  .ph .bottom{display:flex;gap:8px;align-items:center;margin-top:16px}
+  .ph .bubble{display:grid;gap:6px;margin-top:12px;padding:10px;border-radius:12px 12px 12px 4px;background:#f2f0e9}
+  .ph .bubble.me{margin-left:auto;width:48%;border-radius:12px 12px 4px 12px;background:var(--mint)}
+  .arrow2{position:absolute;top:390px;width:22px;height:2px;background:#9a978c}
+  .arrow2::after{content:"";position:absolute;right:-2px;top:-4px;border:5px solid transparent;border-left:8px solid #9a978c}
+  .ph-l{position:absolute;top:666px;width:236px;text-align:center;margin:0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+
+  /* 5 · Ship */
+  .frame{position:absolute;border-radius:14px;overflow:hidden;background:#fff;border:1px solid #d9d6cb;box-shadow:0 30px 60px -30px rgba(20,30,20,.45)}
+  .frame .top{height:26px;background:#efede6;display:flex;gap:6px;align-items:center;padding:0 10px}
+  .frame .top i{width:9px;height:9px;border-radius:50%;background:#d0cdc2;display:block}
+  .frame img{display:block;width:100%}
+  .badge{position:absolute;background:var(--card);border:1px solid #e1ded3;border-radius:14px;padding:12px 16px;font-size:13.5px;box-shadow:0 14px 30px -16px rgba(0,0,0,.4);display:flex;gap:10px;align-items:center}
+  .badge b{font-size:22px;font-weight:500;font-family:'Newsreader Variable',serif}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--green);flex:none}
+</style>
+</head>
+<body>
+
+<!-- 1 · LISTEN -->
+<section class="board" id="listen">
+  <div class="abs papers">
+    <div class="paper card" style="transform:rotate(-5deg) translate(-8px,16px)"></div>
+    <div class="paper card" style="transform:rotate(3deg) translate(12px,6px)"></div>
+    <div class="paper card">
+      <p class="label">Clinical guideline · 2023</p>
+      <h3 class="serif">International evidence-based guideline for the assessment and management of PCOS</h3>
+      <div class="bar"></div><div class="bar hl"></div><div class="bar" style="width:80%"></div>
+      <div class="bar"></div><div class="bar hl" style="width:90%"></div><div class="bar" style="width:70%"></div>
+      <div class="bar"></div><div class="bar" style="width:85%"></div><div class="bar hl" style="width:60%"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:18px">
+        <span class="chip">Gynaecology</span><span class="chip">Endocrinology</span><span class="chip">Dermatology</span><span class="chip">Mental health</span>
+      </div>
+    </div>
+  </div>
+  <div class="abs count">
+    <b class="serif">15+</b>
+    <p class="label" style="margin-top:6px">papers reviewed first</p>
+  </div>
+
+  <div class="abs people" id="people"></div>
+
+  <div class="abs guide card">
+    <p class="label">Themes to listen for</p>
+    <ul style="padding:0;margin-top:8px">
+      <li>Cognitive overload<span class="bar" style="width:80%"></span></li>
+      <li>Fragmented journeys<span class="bar" style="width:65%"></span></li>
+      <li>Low trust<span class="bar" style="width:75%"></span></li>
+      <li style="border:0">Emotional vulnerability<span class="bar" style="width:55%"></span></li>
+    </ul>
+    <p style="margin-top:14px;font-size:13px;color:var(--muted);line-height:1.4">Literature first, so the interviews could go deeper.</p>
+  </div>
+</section>
+
+<!-- 2 · MAKE SENSE -->
+<section class="board" id="synthesis">
+  <div class="abs clusters">
+    <div>
+      <p class="theme serif">Cognitive overload</p>
+      <div class="note y" style="transform:rotate(-2deg)">Information is everywhere, and hard to trust</div>
+      <div class="note y" style="transform:rotate(1.5deg)">Advice comes generic</div>
+      <div class="note y" style="transform:rotate(-1deg)">Partial explanations from every visit</div>
+    </div>
+    <div>
+      <p class="theme serif">Fragmented journeys</p>
+      <div class="note g" style="transform:rotate(2deg)">Gynaecology, endocrinology, dermatology, mental health</div>
+      <div class="note g" style="transform:rotate(-1.5deg)">Every specialist sees one part</div>
+      <div class="note g" style="transform:rotate(1deg)">Diagnosis comes late</div>
+    </div>
+    <div>
+      <p class="theme serif">Low trust</p>
+      <div class="note b" style="transform:rotate(-1deg)">Explanation is often missing</div>
+      <div class="note b" style="transform:rotate(2deg)">Online posts and guidelines blur together</div>
+    </div>
+    <div>
+      <p class="theme serif">Emotional vulnerability</p>
+      <div class="note p" style="transform:rotate(1.5deg)">People learn from other women, more than from leaflets</div>
+      <div class="note p" style="transform:rotate(-2deg)">Nobody holds the whole picture</div>
+    </div>
+  </div>
+  <svg class="abs" style="left:0;top:0" width="1200" height="780" aria-hidden="true">
+    <g fill="none" stroke="#16201a" stroke-width="1.5" stroke-dasharray="4 6" opacity=".45">
+      <path d="M180 470 C180 560 420 560 520 628" /><path d="M465 470 C465 560 520 580 560 628" />
+      <path d="M745 410 C745 540 680 580 640 628" /><path d="M1025 410 C1025 560 780 560 680 628" />
+    </g>
+    <circle cx="600" cy="628" r="5" fill="#16201a" />
+  </svg>
+  <div class="abs insight">
+    <div><p class="label">Insight</p><p class="serif" style="margin-top:8px">People learn from each other. But a post isn’t a guideline.</p></div>
+    <div><p class="label">Decision</p><p class="serif" style="margin-top:8px">Keep lived experience and evidence side by side, never mixed.</p></div>
+  </div>
+</section>
+
+<!-- 3 · MAP -->
+<section class="board" id="blueprint">
+  <div class="abs bp" id="bp"></div>
+</section>
+
+<!-- 4 · SHAPE -->
+<section class="board" id="wireframes">
+  <!-- Two steps of the add-symptoms flow, each as a lo-fi wireframe beside the real screen
+       (cut from Rabiya's exports in "png of screens"), same size, same baseline -->
+  <p class="pair-h" style="left:52px"><b>1</b>Pick a date, then the symptoms</p>
+  <p class="pair-h" style="left:640px"><b>2</b>Saved, with room to correct it</p>
+  <div class="pair-split"></div>
+
+  <!-- 1 · lo-fi: mirrors Symptoms-1 block for block -->
+  <div class="ph lo" style="left:52px">
+    <div class="row" style="margin-top:6px"><i class="circ"></i><span class="wf-t" style="width:44%;margin:0 auto"></span><i class="circ"></i></div>
+    <div class="row" style="margin-top:14px"><span class="wf-t" style="width:34%"></span><span style="margin-left:auto;display:flex;gap:8px"><i class="tick"></i><i class="tick"></i></span></div>
+    <div class="days7"><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i></div>
+    <div class="wf pill" style="height:24px"></div>
+    <div class="wf" style="height:46px;margin-top:10px;padding:9px;display:flex;gap:8px;align-items:center"><i class="sq"></i><span class="wf-t" style="width:34%"></span></div>
+    <span class="wf-t" style="width:42%;margin-top:14px;display:block"></span>
+    <div class="chips"><i style="width:56px"></i><i style="width:50px"></i><i style="width:48px"></i><i style="width:58px"></i></div>
+    <span class="wf-t" style="width:26%;margin-top:12px;display:block"></span>
+    <div class="chips"><i style="width:84px;background:var(--mint);border-color:var(--green)"></i><i style="width:46px"></i><i style="width:52px"></i><i style="width:70px"></i></div>
+    <span class="wf-t" style="width:32%;margin-top:12px;display:block"></span>
+    <div class="chips"><i style="width:60px"></i><i style="width:46px"></i><i style="width:76px"></i></div>
+    <div class="bottom"><div class="wf pill" style="height:24px;flex:1"></div><i class="circ dark"></i></div>
+    <div class="wf" style="height:30px;margin-top:8px;background:var(--ink);border-color:var(--ink);border-radius:99px"></div>
+  </div>
+  <div class="arrow2" style="left:286px"></div>
+  <div class="ph hi" style="left:316px"><img src="/img/process/screens/symptoms.webp" alt="" /></div>
+
+  <!-- 2 · lo-fi: mirrors Chat Page-1, "Your symptoms are all set" -->
+  <div class="ph lo" style="left:640px">
+    <div class="row" style="margin-top:6px"><i class="circ"></i><i class="circ big"></i><span style="display:grid;gap:5px;width:46%"><span class="wf-t" style="width:80%"></span><span class="wf-t" style="width:55%;opacity:.6"></span></span></div>
+    <span class="wf-t" style="width:24%;margin:14px auto 0;display:block;opacity:.6"></span>
+    <div class="wf" style="margin-top:12px;padding:11px">
+      <span class="wf-t" style="width:62%;display:block"></span>
+      <div class="chips" style="margin-top:12px"><i style="width:54px;background:var(--mint);border-color:var(--green)"></i><i style="width:58px;background:var(--mint);border-color:var(--green)"></i><i style="width:38px;background:var(--mint);border-color:var(--green)"></i></div>
+      <div class="wf pill" style="height:22px;margin-top:12px;background:#fff;border-color:var(--green)"></div>
+    </div>
+    <div class="bubble" style="width:72%"><span class="wf-t" style="width:90%"></span><span class="wf-t" style="width:70%"></span></div>
+    <div class="bubble" style="width:78%"><span class="wf-t" style="width:95%"></span><span class="wf-t" style="width:60%"></span></div>
+    <div class="bubble me"><span class="wf-t" style="width:80%;background:#9fd3b2"></span></div>
+    <div class="bottom" style="position:absolute;left:14px;right:14px;bottom:20px"><div class="wf pill" style="height:26px;flex:1"></div><i class="circ dark"></i></div>
+  </div>
+  <div class="arrow2" style="left:874px"></div>
+  <div class="ph hi" style="left:904px"><img src="/img/process/screens/symptoms-set.webp" alt="" /></div>
+
+  <p class="ph-l" style="left:52px">Lo-fi wireframe</p><p class="ph-l" style="left:316px">Hi-fi UI</p>
+  <p class="ph-l" style="left:640px">Lo-fi wireframe</p><p class="ph-l" style="left:904px">Hi-fi UI</p>
+</section>
+
+<!-- 5 · SHIP -->
+<section class="board" id="ship">
+  <!-- Same layout as the live Deliver scene in ProcessStory.jsx (DELIVER) -->
+  <div class="frame" style="left:48px;top:70px;width:564px;transform:rotate(-1.5deg)"><div class="top"><i></i><i></i><i></i></div><img src="/img/cs/vettio/ph-1.webp" alt="" /></div>
+  <div class="frame" style="left:636px;top:117px;width:180px;border-radius:31px;border:2px solid #2a2f2b;transform:rotate(-5deg)"><img src="/img/process/screens/welcome.webp" alt="" /></div>
+  <div class="frame" style="left:804px;top:55px;width:186px;border-radius:31px;border:2px solid #2a2f2b"><img src="/img/process/screens/home.webp" alt="" /></div>
+  <div class="frame" style="left:978px;top:109px;width:180px;border-radius:31px;border:2px solid #2a2f2b;transform:rotate(5deg)"><img src="/img/process/screens/agent.webp" alt="" /></div>
+  <div class="badge" style="left:60px;top:491px"><span class="dot"></span><span><b>+30%</b><br />recruiter efficiency · Vettio</span></div>
+  <div class="badge" style="left:60px;top:608px"><span class="dot" style="background:#da552f"></span><span><b>Launched</b><br />on Product Hunt · Vettio</span></div>
+  <div class="badge" style="left:648px;top:616px"><span class="dot" style="background:#7b5cf0"></span><span><b>5th prize</b><br />Imaginathon · CysterCare</span></div>
+  <div class="badge" style="left:912px;top:593px;width:228px;background:#fdf1a8;border-color:#efe08a;transform:rotate(3deg)"><span><span class="label" style="color:#7a6a1a">Next</span><br />A usability study with people managing PCOS/PMOS</span></div>
+</section>
+
+<script>
+  // Interview roster: 7 people living with PCOS, 3 specialists (anonymised, no quotes)
+  const people = document.getElementById('people');
+  const tones = ['#f9d6dc', '#d6e4fb', '#fdf1a8', '#cdeedb'];
+  for (let i = 0; i < 10; i++) {
+    const spec = i >= 7, id = spec ? `S${i - 6}` : `P${i + 1}`;
+    const bars = Array.from({ length: 20 }, (_, k) => `<i style="height:${4 + Math.abs(Math.sin(i * 3.1 + k * 0.9)) * 14}px"></i>`).join('');
+    people.insertAdjacentHTML('beforeend', `<div class="card person"><span class="ava" style="background:${spec ? '#16201a' : tones[i % 4]};color:${spec ? '#dff3e6' : '#16201a'}">${id}</span>
+      <div style="flex:1"><div style="font-size:13.5px;font-weight:600">${spec ? 'Specialist' : 'Living with PCOS/PMOS'}</div><div class="wave">${bars}</div></div>
+      <span style="color:var(--green);font-size:15px">✓</span></div>`);
+  }
+  people.insertAdjacentHTML('beforeend', `<p class="label" style="grid-column:1/-1;margin-top:6px">10 interviews · 7 people living with PCOS/PMOS · 3 specialists</p>`);
+
+  // Service blueprint, recreated from Service Blueprint.pdf
+  const lanes = [
+    ['User actions', '#3f8be8', '#dbe9fb', ['Search symptoms online', 'See awareness campaign', 'Download app', 'Complete onboarding', 'Track symptoms daily', 'Chat with the AI care assistant', 'Interact with community', 'Book specialist', 'Receive diagnosis', 'Receive subsidised care', 'Follow treatment', 'Long-term monitoring']],
+    ['Physical evidence', '#5aa9e6', '#e3f1fb', ['Ads & landing page', 'PCOS/PMOS AI assessment', 'Tracking dashboard', 'AI insights', 'Community section', 'Verified specialists page', 'Booking consult system', 'Care dashboard']],
+    ['line', 'Line of interaction'],
+    ['Frontstage', '#8a6ff0', '#ece6fd', ['Campus / media awareness', 'Telehealth onboarding help', 'Doctor consultation', 'Insurance support']],
+    ['line', 'Line of visibility'],
+    ['Backstage', '#6f55d6', '#e4defb', ['AI risk scoring', 'Doctor portal review', 'Hospital integration', 'Care plan generation', 'Gov policy generation', 'Data analytics', 'Moderation & support']],
+    ['line', 'Line of internal interaction'],
+    ['Supporting actions', '#2f9d62', '#d8f0e2', ['Insurance verification', 'Gov subsidy checks', 'Lab integrations', 'Pharmacy integrations', 'Compliance & security', 'Public health campaigns', 'University health programs', 'Insurance partnerships', 'Research partnerships', 'Women’s health advocacy']],
+  ];
+  const bp = document.getElementById('bp');
+  bp.insertAdjacentHTML('beforeend', `<p class="serif" style="font-size:26px;margin:0 0 18px">Lifelong PCOS/PMOS care, as a service</p>`);
+  for (const l of lanes) {
+    if (l[0] === 'line') { bp.insertAdjacentHTML('beforeend', `<div class="divider"><span>${l[1]}</span></div>`); continue; }
+    const [name, c, bg, cells] = l;
+    bp.insertAdjacentHTML('beforeend', `<div class="lane"><div class="name" style="background:${c}">${name}</div><div class="cells">${cells.map((t) => `<div class="cell" style="background:${bg};color:#1d2a40">${t}</div>`).join('')}</div></div>`);
+  }
+  // One of the user flows that came out of it (Userflows.pdf: Symptoms)
+  const flow = ['Entry', 'Calendar', 'Select date', 'Symptoms form', 'Physical symptoms', 'Emotional / mood symptoms', 'Save changes', 'Cycle summary'];
+  bp.insertAdjacentHTML('beforeend', `<p class="label" style="margin:34px 0 12px">User flow · Symptoms</p><div style="display:flex;align-items:center;gap:0">${flow.map((s, i) =>
+    `<span style="padding:10px 14px;border-radius:${i === 0 || i === flow.length - 1 ? '99px' : '10px'};background:${i === 0 || i === flow.length - 1 ? '#f9d6dc' : '#ece6fd'};font-size:12.5px;font-weight:500;white-space:nowrap">${s}</span>${i < flow.length - 1 ? '<span style="flex:1;min-width:14px;height:1.5px;background:#16201a;position:relative"><span style="position:absolute;right:-1px;top:-4px;border:4.5px solid transparent;border-left:7px solid #16201a"></span></span>' : ''}`).join('')}</div>`);
+
+</script>
+</body>
+</html>

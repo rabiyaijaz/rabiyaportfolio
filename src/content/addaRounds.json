@@ -1,0 +1,491 @@
+[
+ {
+  "id": "im_sciences_stairs",
+  "placeArt": "/img/adda/im_sciences.webp",
+  "personArt": "/img/adda/areeba.webp",
+  "placeName": {
+   "en": "IM|Sciences Peshawar",
+   "ur": "آئی ایم سائنسز پشاور",
+   "ps": "آئی ایم سائنسز پېښور"
+  },
+  "en": {
+   "id": "im_sciences_stairs",
+   "locationId": "im_sciences",
+   "place": {
+    "title": "IM|Sciences Main Academic Block",
+    "desc": "Modern university campus with a grand central entrance staircase leading to lecture halls.",
+    "icon": "icon"
+   },
+   "person": {
+    "name": "Areeba",
+    "age": 21,
+    "role": "Management Sciences Student",
+    "assistiveTech": "Manual lightweight wheelchair",
+    "contextType": "Permanent mobility impairment",
+    "avatarKey": "areeba",
+    "bio": "Areeba is a high-achieving 3rd-year student who manages student debate forums and values independent, dignified movement across campus."
+   },
+   "situation": {
+    "title": "8 Minutes to Semester Exam",
+    "desc": "Areeba has 8 minutes to travel from the entrance lobby to Examination Hall C on the elevated 1st tier. The central staircase is the primary path used by walking students."
+   },
+   "barrier": {
+    "title": "Staircase Default on Campus Wayfinding",
+    "desc": "The digital campus wayfinding kiosks and app only calculate distance, directing all students up 18 concrete steps. No step-free route, ramp slope, or elevator status is visible."
+   },
+   "options": [
+    {
+     "id": "A",
+     "title": "Profile Badge Fix",
+     "desc": "Add a static wheelchair icon beside Areeba's name in the student database and tell her to ask security guards for manual assistance at the entrance.",
+     "isBest": false,
+     "critique": "This creates dependency and undermines student dignity. Physical access must support unassisted, independent autonomy rather than forcing people to repeatedly ask for personal favors.",
+     "impactScores": {
+      "independence": 0,
+      "perceivability": 1,
+      "understandability": 0,
+      "operability": 0
+     }
+    },
+    {
+     "id": "B",
+     "title": "Multi-Path Accessible Wayfinding",
+     "desc": "Encode step-free topology in the campus wayfinding system: show the continuous smooth ramp corridor via West Wing, elevator availability, door clearance, and precise travel time (6 mins).",
+     "isBest": true,
+     "critique": "Outstanding! This treats accessibility as a foundational property of spatial navigation. Areeba can plan her trip independently with predictable timing.",
+     "impactScores": {
+      "independence": 2,
+      "perceivability": 2,
+      "understandability": 2,
+      "operability": 1
+     }
+    },
+    {
+     "id": "C",
+     "title": "Emergency Phone Hotline",
+     "desc": "Place a printed phone number at the base of the stairs for wheelchair users to call the administration building to request a portable ramp.",
+     "isBest": false,
+     "critique": "A reactive phone hotline causes unacceptable delays, requires network connectivity, and fails when staff are occupied during class changeovers.",
+     "impactScores": {
+      "independence": 0,
+      "perceivability": 1,
+      "understandability": 1,
+      "operability": 0
+     }
+    }
+   ],
+   "consequence": {
+    "beforeText": "Areeba arrives at the base of 18 steep concrete steps with only 8 minutes remaining. She must wait awkwardly hoping another student or guard can carry her wheelchair.",
+    "afterText": "The campus app immediately routes Areeba via the West Ramp and Academic Lift 2. Visual wayfinding markers illuminate the step-free path. She rolls into Exam Hall C with 2 minutes to spare, completely unassisted.",
+    "visualBefore": "blocked_stairs",
+    "visualAfter": "smooth_ramp_green"
+   },
+   "principle": {
+    "category": "INCLUSIVE DESIGN PRINCIPLE",
+    "title": "Equivalent Access & Independent Mobility",
+    "description": "Services and spaces should enable every individual to participate independently with dignity. Accessibility fails when it forces people into submissive, delayed, or reliant protocols to access standard services.",
+    "digitalConnection": "Digital mapping tools must not assume uniform human locomotion. Wayfinding datasets must model incline grades, elevator operational telemetry, threshold heights, and surface textures.",
+    "wcag": null
+   },
+   "portfolioAnalysis": {
+    "hciConcept": "Affordance & Spatial Independence",
+    "designConstraint": "Physical architectural barriers cannot always be demolished instantly, requiring digital coordination of existing accessible assets.",
+    "serviceTouchpoint": "Physical Campus Pathways ↔ Real-Time Kiosk / Mobile Navigation Layer"
+   }
+  },
+  "ur": {
+   "placeTitle": "مرکزی تعلیمی بلاک، آئی ایم سائنسز",
+   "placeDesc": "یونیورسٹی کا مرکزی تعلیمی بلاک جہاں اوپر کلاس رومز تک جانے کے لیے صرف چوڑی سیڑھیاں ہیں۔",
+   "personName": "اریبہ",
+   "personRole": "طالبہ شعبہ مینجمنٹ سائنسز",
+   "personBio": "اریبہ تیسرے سال کی باصلاحیت طالبہ ہیں جو طلبا مباحثوں کی منتظم ہیں اور کیمپس میں باوقار و خود مختار نقل و حرکت چاہتی ہیں۔",
+   "personTech": "دستی ہلکی وہیل چیئر",
+   "personContext": "مستقل جسمانی معذوری",
+   "situationTitle": "امتحان شروع ہونے میں 8 منٹ باقی",
+   "situationDesc": "اریبہ کو داخلہ لابی سے پہلی منزل پر واقع امتحانی ہال 'سی' تک پہنچنا ہے۔ عام راستے پر صرف سیڑھیاں ہیں۔",
+   "barrierTitle": "کیمپس نیویگیشن میں صرف سیڑھیوں کا راستہ",
+   "barrierDesc": "یونیورسٹی کی ڈیجیٹل اسکرینیں صرف فاصلہ ناپتی ہیں اور تمام طلبا کو 18 سیڑھیاں چڑھنے کا کہتی ہیں۔ ریمپ یا لفٹ کا کوئی اشارہ نہیں۔",
+   "options": {
+    "A": {
+     "title": "گارڈ سے مدد مانگنا",
+     "desc": "ڈیٹا بیس میں وہیل چیئر کا نشان لگا دیں اور اریبہ سے کہیں کہ داخلے پر سیکیورٹی گارڈ کو بلا کر مدد لیں۔",
+     "critique": "یہ دوسروں پر انحصار بڑھاتا ہے اور طالب علم کے وقار کے خلاف ہے۔ حقیقی رسائی کا مطلب ہے کہ انسان بغیر کسی کی منت کے خود جا سکے۔"
+    },
+    "B": {
+     "title": "متبادل ہموار راستے کی رہنمائی",
+     "desc": "کیمپس نیویگیشن سسٹم میں ریمپ اور لفٹ کا راستہ شامل کریں: مغربی ونگ کا ہموار ریمپ، لفٹ کی معلومات اور پہنچنے کا درست وقت (6 منٹ)۔",
+     "critique": "شاندار! یہ رسائی کو نیویگیشن کا بنیادی حصہ بناتا ہے۔ اریبہ خود اعتمادی کے ساتھ وقت پر پہنچ سکتی ہیں۔"
+    },
+    "C": {
+     "title": "ہنگامی فون نمبر کا بورڈ",
+     "desc": "سیڑھیوں کے پاس ایک بورڈ لگا دیں کہ وہیل چیئر صارف عارضی ریمپ کے لیے انتظامیہ کو فون کریں۔",
+     "critique": "فون پر کال کرنے سے امتحان میں تاخیر ہوگی، موبائل سگنل کا مسئلہ ہو سکتا ہے اور عملہ مصروف ہو تو مدد نہیں ملتی۔"
+    }
+   },
+   "beforeText": "اریبہ 18 کھڑی سیڑھیوں کے سامنے مجبور کھڑی ہیں جبکہ امتحان میں صرف 8 منٹ باقی ہیں۔",
+   "afterText": "ایپ فوری طور پر اریبہ کو مغربی ریمپ اور تعلیمی لفٹ 2 کا راستہ دکھاتی ہے۔ وہ کسی کے سہارے کے بغیر 2 منٹ پہلے ہال میں پہنچ جاتی ہیں۔",
+   "principleTitle": "مساوی رسائی اور خود مختار نقل و حرکت",
+   "principleDesc": "ڈیزائن کو ہر انسان کو باوقار اور آزادانہ شرکت کا موقع دینا چاہیے۔ جب کسی کو بنیادی سروس کے لیے دوسروں کی مدد کا محتاج بنایا جائے تو یہ ڈیزائن کی ناکامی ہے۔"
+  },
+  "ps": {
+   "placeTitle": "مرکزي تعلیمي بلاک، آئی ایم سائنسز",
+   "placeDesc": "د پوهنتون اصلي وداني چیرته چې لومړي پوړ ته یوازې زینې ختلې دي.",
+   "personName": "اریبه",
+   "personRole": "د اداري علومو محصله",
+   "personBio": "اریبه یوه فعاله محصله ده چې غواړي په خپلواکه توګه او په عزت سره پوهنتون ته لاړه شي.",
+   "personTech": "لاسي ویلچیر",
+   "personContext": "فزیکي معذوري",
+   "situationTitle": "د ازموینې پیل ته ۸ دقیقې پاتې دي",
+   "situationDesc": "اریبه باید په ۸ دقیقو کې لومړي پوړ ته ورسیږي، خو په لار کې یوازې زینې دي.",
+   "barrierTitle": "په لارښود کې یوازې زینې ښودل شوي",
+   "barrierDesc": "د پوهنتون په ډیجیټل لارښود کې د ریمپ یا لِفټ هېڅ نښه نشته.",
+   "options": {
+    "A": {
+     "title": "له ساتونکي نه مرسته غوښتل",
+     "desc": "اریبه مجبوره کول چې د دروازې ساتونکي ته انتظار وباسي.",
+     "critique": "دا د انسان عزت نفس ته زیان رسوي. اصلي اسانتیا هغه ده چې سړی پخپله لاړ شي."
+    },
+    "B": {
+     "title": "د ریمپ او لِفټ روښانه لارښود",
+     "desc": "په سیسټم کې د لویدیځ ریمپ او لفټ اسانه لار او دقیقه موده ورزیاتول.",
+     "critique": "ډېر غوره! دا اریبه ته پوره خپلواکي او باور ورکوي."
+    },
+    "C": {
+     "title": "د مرستې لپاره د تلیفون شمیره لګول",
+     "desc": "د زینې سره یوه نښه لګول چې د ریمپ لپاره ادارې ته زنګ ووهي.",
+     "critique": "زنګ وهل وخت ضایع کوي او ازموینه ترې پاتې کیږي."
+    }
+   },
+   "beforeText": "اریبه د ۱۸ زینو مخې ته په خفګان سره ولاړه ده او وخت تیريږي.",
+   "afterText": "سیسټم اریبه ته سمدلاسه د ریمپ لار ښيي او هغه بې له کومې مرستې دوه دقیقې مخکې ازموینې ته رسیږي.",
+   "principleTitle": "برابره او خپلواکه لاسرسی (Independent Mobility)",
+   "principleDesc": "ډیزاین باید داسې وي چې هر انسان بې له دې چې بل ته اړ شي، خپله لار ومومي."
+  }
+ },
+ {
+  "id": "board_bazar_payment",
+  "placeArt": "/img/adda/board_bazar.webp",
+  "personArt": "/img/adda/rahim.webp",
+  "placeName": {
+   "en": "Board Bazar Fruit & Veg Market",
+   "ur": "بورڈ بازار پھل و سبزی منڈی",
+   "ps": "بورډ بازار د میوو او سبزیو منډۍ"
+  },
+  "en": {
+   "id": "board_bazar_payment",
+   "locationId": "board_bazar",
+   "place": {
+    "title": "Rahim's Fresh Fruit Cart (Thela)",
+    "desc": "Bustling roadside stall with stacked crates of Swat oranges and seasonal strawberries on Board Bazar.",
+    "icon": "icon"
+   },
+   "person": {
+    "name": "Rahim",
+    "age": 38,
+    "role": "Fruit Vendor & Small Business Owner",
+    "assistiveTech": "Basic Android phone, hands-free audio preference",
+    "contextType": "Situational impairment (busy hands, bright glare, street noise)",
+    "avatarKey": "rahim",
+    "bio": "Rahim is an experienced entrepreneur who takes pride in the quality of his fruit. He handles cash with ease and adopted digital payments to serve university students."
+   },
+   "situation": {
+    "title": "Rush Hour Digital Payment Confirmation",
+    "desc": "A customer scans Rahim's printed QR code to pay Rs 1,450 for a crate of oranges while Rahim's hands are sticky weighing apples for another customer."
+   },
+   "barrier": {
+    "title": "Ephemeral Green Checkmark",
+    "desc": "The current payment app flashes a tiny green checkmark icon for 1.2 seconds, plays no sound, and immediately reverts to the empty QR scan screen. Rahim cannot verify the amount or whether the transaction succeeded."
+   },
+   "options": [
+    {
+     "id": "A",
+     "title": "Make the Green Checkmark Larger",
+     "desc": "Scale the green checkmark icon up by 50% on the screen, keeping the duration at 1.5 seconds.",
+     "isBest": false,
+     "critique": "This relies entirely on the visual channel and color perception. If Rahim is looking away or his screen is tilted away in sunlight, he still has zero confirmation.",
+     "impactScores": {
+      "independence": 0,
+      "perceivability": 1,
+      "understandability": 0,
+      "operability": 0
+     }
+    },
+    {
+     "id": "B",
+     "title": "Persistent State + Spoken Audio + Distinct Haptic",
+     "desc": "Keep a persistent confirmation receipt card on screen showing exact amount ('Rs 1,450 — Received') until dismissed, accompanied by a loud dual-tone audio chime and Pashto/Urdu voice announcement ('Chaudah sau pachaas rupay mosool huay') with a double haptic pulse.",
+     "isBest": true,
+     "critique": "Exemplary multimodal HCI design! Rahim doesn't even need to wash his hands or look at his phone; the redundant audio, haptic, and persistent visual card give him 100% confidence.",
+     "impactScores": {
+      "independence": 2,
+      "perceivability": 2,
+      "understandability": 2,
+      "operability": 2
+     }
+    },
+    {
+     "id": "C",
+     "title": "Send an SMS 10 Minutes Later",
+     "desc": "Send an end-of-hour SMS summary listing batch transactions.",
+     "isBest": false,
+     "critique": "A fruit vendor cannot let a customer walk away with merchandise without real-time settlement verification. Delayed summaries cause financial anxiety.",
+     "impactScores": {
+      "independence": 0,
+      "perceivability": 0,
+      "understandability": 1,
+      "operability": 0
+     }
+    }
+   ],
+   "consequence": {
+    "beforeText": "Rahim wipes his sticky hands on his apron to squint at his sun-bleached phone screen. The screen is already back to the blank home screen. He has to awkwardly ask the customer to show their phone screen.",
+    "afterText": "While weighing fruit, Rahim's phone emits a crisp melodic chime followed by a clear audio announcement: 'Received: Rs 1,450'. His phone screen stays on a bold receipt card with big text. Rahim smiles: 'Shukriya brother, have a great day!'",
+    "visualBefore": "vendor_anxious_glare",
+    "visualAfter": "vendor_happy_sound_receipt"
+   },
+   "principle": {
+    "category": "HCI & SITUATIONAL ACCESSIBILITY",
+    "title": "Redundant Multimodal Feedback & Situational Impairment",
+    "description": "Situational factors (bright sunlight, greasy/wet hands, competing tasks, ambient noise) create functional limitations identical to sensory disabilities. Critical transaction status must NEVER depend on a single sensory mode (vision alone or color alone).",
+    "digitalConnection": "Use Web Audio API / native media speakers, Web Vibration API, and persistent ARIA live regions with role='status' and aria-atomic='true'.",
+    "wcag": "WCAG 2.2 — 1.4.1 Use of Color, 4.1.3 Status Messages"
+   },
+   "portfolioAnalysis": {
+    "hciConcept": "Situational Disability & Distributed Cognition",
+    "designConstraint": "Physical outdoor trade environment with direct 40°C sunlight glare, high ambient traffic noise, and manual multitasking.",
+    "serviceTouchpoint": "QR Payment Gateway ↔ Smartphone Speaker / Vibration Motor ↔ Merchant Trust"
+   }
+  },
+  "ur": {
+   "placeTitle": "رحیم کا پھلوں کا ٹھیلا، بورڈ بازار",
+   "placeDesc": "بورڈ بازار کے کنارے سوات کے میٹھے مالٹوں اور اسٹرابیری سے سجا مصروف ٹھیلا۔",
+   "personName": "رحیم",
+   "personRole": "چھوٹا تاجر و دکاندار",
+   "personBio": "رحیم ایک محنتی دکاندار ہیں جو نقد لین دین کے ساتھ طلبا کی آسانی کے لیے ڈیجیٹل پیمنٹ بھی قبول کرتے ہیں۔",
+   "personTech": "اینڈرائیڈ فون، ہینڈز فری صوتی اشارہ",
+   "personContext": "ہاتھوں کا مصروف ہونا + تیز دھوپ و ٹریفک کا شور",
+   "situationTitle": "رش کے دوران ڈیجیٹل ادائیگی کی تصدیق",
+   "situationDesc": "گاہک نے 1,450 روپے کیو آر کوڈ اسکین کر کے بھیجے جبکہ رحیم دوسرے گاہک کے لیے سیب تول رہے ہیں۔",
+   "barrierTitle": "صرف ایک سیکنڈ کا خاموش سبز نشان",
+   "barrierDesc": "موجودہ ایپ میں صرف ایک سیکنڈ کے لیے چھوٹا سبز نشان آتا ہے، کوئی آواز نہیں آتی۔ رحیم کو پتا نہیں چلتا کہ رقم آئی یا نہیں۔",
+   "options": {
+    "A": {
+     "title": "سبز نشان کا سائز بڑا کرنا",
+     "desc": "اسکرین پر سبز نشان کو تھوڑا بڑا کر دیں لیکن وقت 1.5 سیکنڈ ہی رکھیں۔",
+     "critique": "اگر رحیم کا دھیان ترازُو پر ہے تو نشان بڑا ہونے کے باوجود وہ اسے نہیں دیکھ سکیں گے۔"
+    },
+    "B": {
+     "title": "اسکرین پر رسید + بلند آواز میں اعلان",
+     "desc": "اسکرین پر رقم واضح لکھی رہے اور فون بلند آواز میں بولے: 'چودہ سو پچاس روپے موصول ہوئے' ساتھ ہلکی وائبریشن بھی ہو۔",
+     "critique": "بہترین انسانی تعامل (HCI) ڈیزائن! رحیم کو ہاتھ صاف کر کے فون دیکھنے کی ضرورت ہی نہیں، آواز سن کر تسلی ہو جاتی ہے۔"
+    },
+    "C": {
+     "title": "دس منٹ بعد ایس ایم ایس بھیجنا",
+     "desc": "دن کے اختتام پر یا دس منٹ بعد تمام ٹرانزیکشنز کا ایک ایس ایم ایس بھیجیں۔",
+     "critique": "پھل فروش گاہک کو تصدیق کے بغیر نہیں جانے دے سکتا۔ تاخیر سے شک اور بے چینی پیدا ہوتی ہے۔"
+    }
+   },
+   "beforeText": "رحیم چپچپے ہاتھوں سے پسینے میں فون دیکھتے ہیں مگر اسکرین واپس خالی ہو چکی ہوتی ہے۔ انہیں شرمندگی سے گاہک سے پوچھنا پڑتا ہے۔",
+   "afterText": "سیب تولتے ہوئے رحیم کے فون سے خوشگوار دھن اور آواز آتی ہے: '1450 روپے موصول ہوئے'۔ رحیم مسکرا کر کہتے ہیں: 'شکریہ بھائی!'۔",
+   "principleTitle": "کثیر الجہتی فیڈ بیک (Multimodal Feedback)",
+   "principleDesc": "کسی اہم عمل کی تصدیق کے لیے صرف ایک حس (صرف آنکھ یا صرف رنگ) پر بھروسہ نہ کریں۔ آواز، بصارت اور لمس کا مشترکہ استعمال ہر ماحول میں مددگار ہوتا ہے۔"
+  },
+  "ps": {
+   "placeTitle": "د رحیم د میوو ټیلې، بورډ بازار",
+   "placeDesc": "په بورډ بازار کې د سوات خوږې مالټې او تازه مېوې.",
+   "personName": "رحیم",
+   "personRole": "د میوو پلورونکی",
+   "personBio": "رحیم هڅه کوي چې د زده کوونکو لپاره ډیجیټل پیسې هم واخلي خو لاسونه یې تل په تله بوخت وي.",
+   "personTech": "انډرایډ ټلیفون",
+   "personContext": "بوخت لاسونه + د لمر رڼا او د سړک شور",
+   "situationTitle": "د نغدو پیسو تایید په بیروبار کې",
+   "situationDesc": "پېرودونکي پیسې لېږلې دي، خو رحیم بل چا ته مڼې تلي.",
+   "barrierTitle": "یوازې د یوې ثانیې لپاره پټه شنه نښه",
+   "barrierDesc": "په اپلیکیشن کې هېڅ غږ نشته او رحیم نه پوهیږي چې پیسې راغلې که نه.",
+   "options": {
+    "A": {
+     "title": "شنه نښه لویه کول",
+     "desc": "پر سکرین نښه لویه کړئ خو وخت یې همغه وساتئ.",
+     "critique": "کله چې د رحیم پام بلې خوا وي، لویه نښه هم نه ویني."
+    },
+    "B": {
+     "title": "په لوړ غږ ویل: پیسې راورسېدې",
+     "desc": "ټلیفون دې په پښتو او اردو ووايي: '۱۴۵۰ روپۍ راورسېدې' او زنګ ووهي.",
+     "critique": "ډېر عالي! رحیم اړ نه دی چې لاسونه ووینځي او پر سکرین وګوري، په غږ اورېدو ډاډه کیږي."
+    },
+    "C": {
+     "title": "وروسته پیغام لېږل",
+     "desc": "یو ساعت وروسته لنډ پیغام واستوئ.",
+     "critique": "سوداګر نه شي کولی پېرودونکی بې له تایید نه پریږدي."
+    }
+   },
+   "beforeText": "رحیم په شک کې پاتې کیږي او نه پوهیږي چې پیسې راغلې که نه.",
+   "afterText": "د رحیم له ټلیفون نه خوږ غږ پورته کیږي: '۱۴۵۰ روپۍ ترلاسه شوې'. رحیم په خندا وايي: 'مننه وروره!'",
+   "principleTitle": "څو اړخیزه غبرګون (Multimodal Feedback)",
+   "principleDesc": "مهم تایید باید هېڅکله یوازې پر لیدلو ونه تکیه شي، غږ او لمس هر ځای کار کوي."
+  }
+ },
+ {
+  "id": "local_bus_route_encoding",
+  "placeArt": "/img/adda/local_bus.webp",
+  "personArt": "/img/adda/gul_khan.webp",
+  "placeName": {
+   "en": "Peshawar Local Bus Stop",
+   "ur": "پشاور لوکل بس اسٹاپ",
+   "ps": "د پېښور د لوکل بس تمځای"
+  },
+  "en": {
+   "id": "local_bus_route_encoding",
+   "locationId": "local_bus",
+   "place": {
+    "title": "Hashtnagri Local Bus Terminal",
+    "desc": "Decorated Bedford truck-art buses lined up with hand-painted filigree, roaring diesel engines, and bustling crowds.",
+    "icon": "icon"
+   },
+   "person": {
+    "name": "Gul Khan",
+    "age": 52,
+    "role": "Laborer & Inter-District Commuter",
+    "assistiveTech": "Feature phone",
+    "contextType": "Non-literate in written scripts + mild red-green color deficiency",
+    "avatarKey": "gul_khan",
+    "bio": "Gul Khan works in construction and travels across Peshawar daily. He is intelligent and street-smart but never had formal schooling to read Urdu or English text."
+   },
+   "situation": {
+    "title": "Identifying the Correct Bus to Karkhano Market",
+    "desc": "Three identical decorated buses are parked side by side at dusk under dim streetlights. Gul Khan needs to board the bus to Karkhano, not the one to Charsadda."
+   },
+   "barrier": {
+    "title": "Handwritten Cursive Script & Color-Only Route Bands",
+    "desc": "Bus operators currently distinguish routes using handwritten Urdu calligraphy on wooden placards ('کارخانو مارکیٹ') and subtle green vs red ribbons tied to side mirrors. In the dark, the cursive script is unreadable to Gul Khan, and he cannot distinguish the faded red ribbon from green."
+   },
+   "options": [
+    {
+     "id": "A",
+     "title": "Tell Gul Khan to Ask Other Passengers Every Time",
+     "desc": "Rely on informal verbal inquiry where Gul Khan must shout into each bus window asking the conductor.",
+     "isBest": false,
+     "critique": "Creates constant social friction and embarrassment. In noisy terminals, conductors give contradictory or hasty answers.",
+     "impactScores": {
+      "independence": 0,
+      "perceivability": 0,
+      "understandability": 0,
+      "operability": 0
+     }
+    },
+    {
+     "id": "B",
+     "title": "Redundant Multi-Coded Route Identity (Number + Shape + Color + Audio)",
+     "desc": "Implement redundant route encoding: assign bold numeric route codes ('Bus 7'), a distinct geometric shape badge (e.g., Yellow Star for Karkhano, Blue Diamond for Charsadda), high-contrast reflective lettering, and an external speaker chime that announces destination when boarding doors open.",
+     "isBest": true,
+     "critique": "A classic HCI tenet: Redundant Encoding! Never communicate critical information through color or text alone. Combining numbers, distinct geometric symbols, high-contrast typography, and audio ensures 100% universal comprehension.",
+     "impactScores": {
+      "independence": 2,
+      "perceivability": 2,
+      "understandability": 2,
+      "operability": 2
+     }
+    },
+    {
+     "id": "C",
+     "title": "Install GPS Trackers on Buses with a Mobile App",
+     "desc": "Launch an iOS and Android tracking app showing bus GPS coordinates on a Google Map.",
+     "isBest": false,
+     "critique": "Completely useless to Gul Khan, who uses a basic keypad phone and cannot read digital maps. High-tech solutions that ignore user context fail.",
+     "impactScores": {
+      "independence": 0,
+      "perceivability": 0,
+      "understandability": 0,
+      "operability": 0
+     }
+    }
+   ],
+   "consequence": {
+    "beforeText": "Gul Khan wanders between noisy idling diesel buses, trying to read smudged handwritten signs. He boards the wrong bus and ends up 12 km off course in Charsadda.",
+    "afterText": "From 30 meters away, Gul Khan immediately spots the bold Yellow Star badge and Route Number 7 on the windshield. As he approaches, a clear loudspeaker announces: 'Bus 7 — Karkhano Direct.' He boards confidently without needing to ask anyone.",
+    "visualBefore": "smudged_handwritten_faint_placard",
+    "visualAfter": "bold_star_number_audio_route"
+   },
+   "principle": {
+    "category": "HCI & UNIVERSAL DESIGN",
+    "title": "Redundant Multi-Channel Encoding",
+    "description": "Never rely on a single visual variable (especially color alone or written text alone) to convey critical operational status. Pair text with numbers, distinct geometric silhouettes, high-contrast icons, and auditory announcements.",
+    "digitalConnection": "Dual encoding standards in UI design: icons must accompany color-coded alerts, and visual badges must have screen-reader and audio equivalents.",
+    "wcag": "WCAG 2.2 — 1.4.1 Use of Color, 1.1.1 Non-text Content"
+   },
+   "portfolioAnalysis": {
+    "hciConcept": "Redundant Perceptual Encoding & Semiometrics",
+    "designConstraint": "Low formal literacy, color vision deficiency (protanopia/deuteranopia), and dim evening terminal lighting.",
+    "serviceTouchpoint": "Bus Frontage Signage ↔ Passenger Mental Model ↔ Boarding Audio Announcer"
+   }
+  },
+  "ur": {
+   "placeTitle": "ہشت نگری لوکل بس اڈہ، پشاور",
+   "placeDesc": "رنگ برنگے ٹرک آرٹ سے سجی روایتی بیڈفورڈ بسیں، ڈیزل کے دھویں اور ہارنوں میں گھرا پشاور کا تاریخی اڈہ۔",
+   "personName": "گل خان",
+   "personRole": "محنت کش مزدور",
+   "personBio": "گل خان روزانہ مزدوری کے لیے پشاور بھر کا سفر کرتے ہیں۔ وہ تجربہ کار ہیں لیکن اسکول نہ جانے کی وجہ سے پڑھ نہیں سکتے۔",
+   "personTech": "بنیادی کی پیڈ فون",
+   "personContext": "تحریری اردو سے ناواقفیت + سرخ و سبز رنگ میں ہلکا فرق نہ کر پانا",
+   "situationTitle": "کارخانو مارکیٹ جانے والی بس کی پہچان",
+   "situationDesc": "شام کے دھندلکے میں تین ایک جیسی سجی ہوئی بسیں کھڑی ہیں۔ گل خان کو کارخانو والی بس میں بیٹھنا ہے، چارسدہ والی میں نہیں۔",
+   "barrierTitle": "لکڑی کے تختے پر ہاتھ کی باریک خطاطی اور صرف ربن",
+   "barrierDesc": "ڈرائیوروں نے لکڑی کی تختی پر پیچیدہ خطاطی میں نام لکھا ہے اور شیشے پر سرخ اور سبز فیتے باندھے ہیں جو شام میں گل خان کو سمجھ نہیں آتے۔",
+   "options": {
+    "A": {
+     "title": "ہر بار کنڈکٹر سے چلا کر پوچھنا",
+     "desc": "گل خان سے کہیں کہ وہ ہر بس کی کھڑکی میں سر ڈال کر اندر بیٹھے کنڈکٹر سے چیخ کر پوچھیں۔",
+     "critique": "شور میں کنڈکٹر اکثر غلط یا جلدی میں جواب دیتے ہیں، اور ہر بار پوچھنا محنت کش کے لیے کوفت اور ہچکچاہٹ کا باعث بنتا ہے۔"
+    },
+    "B": {
+     "title": "کثیر الجہتی پہچان: جلی نمبر + ہندسی نشان + بیرونی اسپیکر",
+     "desc": "ہر روٹ کو واضح بڑا نمبر (بس 7)، نمایاں ہندسی نشان (کارخانو کے لیے پیلا ستارہ)، اور دروازہ کھلتے ہی اسپیکر سے اعلان: 'بس 7 برائے کارخانو'۔",
+     "critique": "ہیومن کمپیوٹر انٹرایکشن کا بنیادی اصول: Redundant Encoding! کبھی بھی صرف رنگ یا صرف تحریر پر انحصار نہ کریں۔ علامت، نمبر اور آواز کا ملاپ سب کے لیے آسان ہے۔"
+    },
+    "C": {
+     "title": "موبائل میں گوگل میپ ایپ انسٹال کرنا",
+     "desc": "بسوں میں جی پی ایس لگا کر اسمارٹ فون ایپ پر نقشہ دکھایا جائے۔",
+     "critique": "گل خان کے پاس بٹنوں والا چھوٹا فون ہے اور وہ نقشہ نہیں پڑھ سکتے۔ صارف کے حالات سمجھے بغیر ٹیکنالوجی تھوپنا ناکام رہتا ہے۔"
+    }
+   },
+   "beforeText": "گل خان دھواں چھوڑتی بسوں کے درمیان گھبرا کر کھڑے رہتے ہیں، تختی نہ پڑھ سکنے کی وجہ سے غلط بس میں چڑھ جاتے ہیں اور چارسدہ پہنچ جاتے ہیں۔",
+   "afterText": "دور سے ہی گل خان کو بس کے ماتھے پر چمکتا پیلا ستارہ اور بڑا ہندسہ 7 نظر آ جاتا ہے۔ دروازے کے اسپیکر سے آواز آتی ہے: 'بس 7، کارخانو'۔ وہ پورے اطمینان سے سوار ہوتے ہیں۔",
+   "principleTitle": "کثیر الجہتی علامتی ترسیل (Redundant Multi-Coded Encoding)",
+   "principleDesc": "کسی اہم چیز کی پہچان کے لیے کبھی صرف رنگ یا صرف لکھائی پر انحصار نہ کریں۔ نمبر، ہندسی اشکال، ہائی کنٹراسٹ اور آواز کا ملاپ ہر انسان کو خود مختار بناتا ہے۔"
+  },
+  "ps": {
+   "placeTitle": "هشت نګري بس اډه، پېښور",
+   "placeDesc": "په ټرک آرټ ښکلې شوې دودیزې بېډفورډ بسونه او د مسافرو ګڼه ګوڼه.",
+   "personName": "ګل خان",
+   "personRole": "محنت کښ مزدور",
+   "personBio": "ګل خان هره ورځ د کار لپاره پېښور ته راځي خو د ښوونځي نه لوستلو له امله لیک نه شي لوستلی.",
+   "personTech": "ساده تڼیو والا ټلیفون",
+   "personContext": "بې سوادي + په تیاره کې د رنګونو نه پېژندل",
+   "situationTitle": "کارخانو ته تلونکي بس موندل",
+   "situationDesc": "په ماښام کې درې یو شان بسونه ولاړ دي او ګل خان باید کارخانو ته لاړ شي.",
+   "barrierTitle": "پر لرګي پېچلی لاس لیک او کمزوري پټۍ",
+   "barrierDesc": "پر بسونو یوازې نازک خط لیکل شوی چې په تیاره کې نه لوستل کیږي.",
+   "options": {
+    "A": {
+     "title": "له کنډکټر نه پوښتل",
+     "desc": "ګل خان دې له هر چا پوښتنه وکړي.",
+     "critique": "په شور کې سم ځواب نه ورکول کیږي او سړی شرمیږي."
+    },
+    "B": {
+     "title": "لوی نمبر + نښه (ژیړ ستوری) + د دروازې لوډسپیکر",
+     "desc": "هر روټ ته یو ځانګړی نمبر او نښه (د کارخانو لپاره ژیړ ستوری) او د دروازې سپیکر کې غږ ورکول.",
+     "critique": "د ډیزاین لوی اصل! شمېره، نښه او غږ ټول انسانان باواکه کوي."
+    },
+    "C": {
+     "title": "د ګوګل نقشې اپلیکیشن لګول",
+     "desc": "په انټرنیټ کې نقشه وګورئ.",
+     "critique": "ګل خان سمارټ فون نه لري او نقشه نه شي لوستلی."
+    }
+   },
+   "beforeText": "ګل خان په غلط بس کې کښیني او چارسدې ته ورسیږي.",
+   "afterText": "ګل خان له لرې ځلیدونکی ژیړ ستوری او نمبر ۷ ویني او په ډاډه زړه بس ته خېژي.",
+   "principleTitle": "څو ډوله نښانې او د پوهاوي اسانتیا",
+   "principleDesc": "هېڅکله معلومات یوازې په لیکلو مه پریږدئ؛ رنګ، بڼه او غږ د ټولو لپاره دي."
+  }
+ }
+]
