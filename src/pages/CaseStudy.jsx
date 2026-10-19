@@ -90,6 +90,8 @@ export default function CaseStudy() {
         </section>
       )}
 
+      {p.live?.embed && <LiveApp live={p.live} name={p.name} />}
+
       <div className="case__layout">
         <aside className="case__toc" aria-label="On this page">
           <Link to="/work" className="case__back"><Arrow />Work</Link>
@@ -158,6 +160,37 @@ export default function CaseStudy() {
       </div>
       {lightbox !== null && <Lightbox images={gallery} index={lightbox} onIndex={setLightbox} onClose={() => setLightbox(null)} />}
     </main>
+  );
+}
+
+/** "Try it yourself": the deployed app running inside a phone frame (it's a mobile app), loaded only when
+ *  the section is close to the screen, plus a link to open it full size in a new tab. */
+function LiveApp({ live, name }) {
+  const ref = useRef(null);
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setNear(true); io.disconnect(); } }, { rootMargin: '400px' });
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <section className="case__try" id="try" aria-labelledby="try-title" ref={ref}>
+      <div className="case__try-copy">
+        <p className="case__label">Try it yourself</p>
+        <h2 id="try-title" className="case__playtitle">{live.headline}</h2>
+        <p className="muted">{live.note}</p>
+        <a className="ghost-button" href={live.href} target="_blank" rel="noopener noreferrer">
+          Open in a new tab <span aria-hidden="true">↗</span><span className="sr-only"> (opens in a new tab)</span>
+        </a>
+      </div>
+      <div className="case__phone">
+        <div className="case__phone-screen">
+          {near
+            ? <iframe src={live.href} title={`${name}, the live app`} loading="lazy" allow="clipboard-write" />
+            : <span className="case__phone-wait">Loading the app…</span>}
+        </div>
+      </div>
+    </section>
   );
 }
 
