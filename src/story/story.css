@@ -35,6 +35,9 @@
 }
 .topnav a:not(.logo) { color: var(--ink); opacity: 0.75; }
 .topnav a:not(.logo):hover, .topnav a.active { opacity: 1; }
+/* Five links (Home … Contact) still fit on one line on small phones */
+@media (max-width: 400px) { .topnav ul { gap: 11px; padding: 8px 12px; } .topnav a:not(.logo) { font-size: 12.5px; } }
+@media (max-width: 340px) { .topnav ul { gap: 8px; padding: 8px 10px; } .topnav a:not(.logo) { font-size: 12px; } }
 
 /* ---------- The neighbourhood ---------- */
 .hood { position: relative; height: 320vh; background: var(--bg); }

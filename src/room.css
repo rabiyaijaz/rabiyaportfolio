@@ -9,7 +9,13 @@
 body.has-room .phase-switch { bottom: auto; top: 84px; }
 
 .room { position: relative; height: 100svh; min-height: 600px; overflow: hidden; background: #1a120c; isolation: isolate; }
-.room__stage { position: absolute; left: 50%; top: 50%; width: max(100%, calc(100svh * 1672 / 941)); aspect-ratio: 1672 / 941; transform: translate(-50%, -50%); }
+/* The stage covers the room. When it's wider than the screen (phones, tablets), it slides so the Sim
+   (centred at 53.6% of the image) sits mid-screen, clamped so the image never leaves an empty edge. */
+.room__stage {
+  --w: max(100%, calc(100svh * 1672 / 941));
+  position: absolute; top: 50%; width: var(--w); aspect-ratio: 1672 / 941; transform: translateY(-50%);
+  left: clamp(calc(100% - var(--w)), calc(50% - var(--w) * 0.536), 0px);
+}
 .room__bg { position: absolute; inset: 0; width: 100%; height: 100%; filter: blur(3.5px) saturate(1.05); transform: scale(1.02); }
 .room__tint { position: absolute; inset: 0; pointer-events: none; transition: background 800ms var(--ease); }
 .room--day .room__tint { background: linear-gradient(rgba(255, 244, 222, 0.04), rgba(0, 0, 0, 0.08)); }

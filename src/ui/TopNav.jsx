@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import Logo from './Logo.jsx';
 
 export const NAV = [
+  { to: '/', label: 'Home' },
   { to: '/work', label: 'Work' },
   { to: '/about', label: 'About' },
   { to: '/resume', label: 'Resume' },
@@ -15,7 +16,7 @@ export default function TopNav({ floating = false }) {
       <Logo />
       <nav aria-label="Main">
         <ul>
-          {NAV.map((n) => <li key={n.to}><NavLink to={n.to}>{n.label}</NavLink></li>)}
+          {NAV.map((n) => <li key={n.to}><NavLink to={n.to} end={n.to === '/'}>{n.label}</NavLink></li>)}
         </ul>
       </nav>
     </header>
