@@ -1,10 +1,30 @@
-// Builds app/public/embeds/tamasha-stage.html from the stage hero in the Tamasha style guide.
+// Builds public/embeds/tamasha-stage.html (the playable parda on the Tamasha case study) from the Tamasha
+// style guide on GitHub: https://github.com/rabiyaijaz/tamasha.banao (its index.html).
 // The puppet rig is copied verbatim (const P ... const onDark) so the embed matches the original.
-const fs = require('fs');
-const src = fs.readFileSync('C:/Users/Rabiya/Downloads/portfolio/banao-tamasha/tamasha-style-guide.html', 'utf8').split(/\r?\n/);
+// Runs before every build (npm "prebuild"), so Vercel picks up changes pushed to that repo on the next deploy.
+// If GitHub can't be reached or the guide changed shape, the committed copy is kept and the build carries on.
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const SOURCE = 'https://raw.githubusercontent.com/rabiyaijaz/tamasha.banao/main/index.html';
+const OUT = resolve(dirname(fileURLToPath(import.meta.url)), '../public/embeds/tamasha-stage.html');
+
+let src;
+try {
+  const res = await fetch(SOURCE, { signal: AbortSignal.timeout(15000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  src = (await res.text()).split(/\r?\n/);
+} catch (e) {
+  console.warn(`[tamasha] couldn't fetch ${SOURCE} (${e.message}); keeping the committed stage.`);
+  process.exit(0);
+}
 const start = src.findIndex((l) => l.startsWith('const P = {'));
 const end = src.findIndex((l) => l.startsWith('const onDark'));
-if (start < 0 || end < 0) throw new Error('rig not found');
+if (start < 0 || end < start) {
+  console.warn('[tamasha] puppet rig not found in the guide; keeping the committed stage.');
+  process.exit(0);
+}
 const rig = src.slice(start, end + 1).join('\n');
 
 const html = `<!doctype html>
@@ -97,6 +117,6 @@ document.fonts && document.fonts.ready.then(report);
 </body>
 </html>
 `;
-fs.mkdirSync('C:/Users/Rabiya/Downloads/portfolio/app/public/embeds', { recursive: true });
-fs.writeFileSync('C:/Users/Rabiya/Downloads/portfolio/app/public/embeds/tamasha-stage.html', html);
-console.log('rig lines', end - start + 1);
+mkdirSync(dirname(OUT), { recursive: true });
+writeFileSync(OUT, html);
+console.log(`[tamasha] stage rebuilt from GitHub (${end - start + 1} rig lines).`);

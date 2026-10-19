@@ -95,7 +95,8 @@ const images = [
   [works('access adda game/assets/cards/areeba.jpg'), 'img/cs/access-adda/areeba.webp', 900, 84],
   [works('access adda game/assets/cards/dawood.jpg'), 'img/cs/access-adda/dawood.webp', 900, 84],
 
-  // Banao Tamasha: 2x section captures of banao-tamasha/tamasha-style-guide.html
+  // Banao Tamasha: 2x section captures of the style guide (github.com/rabiyaijaz/tamasha.banao, index.html).
+  // The resulting webps are committed in public/img/cs/tamasha, so the site never needs these PNGs to run.
   ['assets-raw/banao/hero.png', 'img/cs/tamasha/hero.webp', 1600, 86],
   ['assets-raw/banao/brand-audit.png', 'img/cs/tamasha/brand-audit.webp', 1600, 86, { left: 0, top: 150, width: 2176, height: 1640 }],
   ['assets-raw/banao/puppet-roots.png', 'img/cs/tamasha/roots.webp', 1600, 86],

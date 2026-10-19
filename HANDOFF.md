@@ -145,7 +145,7 @@ The wireframes board pairs lo-fi wireframes with real screens cut by `tools/scri
 - `brand.cjs`: regenerates `src/ui/brandIcons.js` from simple-icons (needs `simple-icons` installed). Current set: figma, miro, hotjar, framer, claude, openai, google, gemini, tailwind, shadcn, html5, css3, python, linkedin, behance, upwork, discord, webflow.
 - `cutout-bg.cjs`: removes a plain white background by flood fill (used for `public/img/chai/danedar.webp` and `nurpur.webp`).
 - `insta-pick.cjs`: Instagram photos → `public/img/insta/photo-NN.webp` (4:5). Source: `Downloads/(2) Instagram_files`. Order is set in `about/PhotoTrail.jsx` (`ORDER`, Canon shot first).
-- `build-stage.cjs`: regenerates `public/embeds/tamasha-stage.html` from `portfolio/banao-tamasha/tamasha-style-guide.html`.
+- Tamasha stage: now `scripts/sync-tamasha.mjs` (not in `tools/`). It rebuilds `public/embeds/tamasha-stage.html` from the style guide on GitHub, https://github.com/rabiyaijaz/tamasha.banao (`index.html`). It runs automatically before every build (`prebuild`, so on every Vercel deploy) or by hand with `npm run sync:tamasha`. If GitHub is unreachable it keeps the committed copy. The Tamasha case-study images in `public/img/cs/tamasha/` are committed too; they were captured from the same guide.
 - `themes.cjs`: headless screenshot sheets (`route|scroll|phase`), used for visual checks.
 
 **Plumbob**: transparent frame sequence `public/seq/plumbob-t/000–099.webp` (made with `tools/plumbob.html`). `ui/PlumbobCanvas.jsx` modes: `progress` (scroll-scrubbed), `play`/`loop`, `ending` (the contact-band one: assembles once, breathes, shimmers on hover/overscroll). Frames: 0 whole · 30 shards · 47 threads · 68 wireframe · 97 green glass.
