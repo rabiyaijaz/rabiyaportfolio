@@ -285,6 +285,18 @@ html[data-phase='day'] .sim-menu button { color: #14151b; background: rgba(255, 
   opacity: 0.85; transition: opacity 250ms;
 }
 .hero-video__frame:hover .hero-video__controls { opacity: 1; }
+/* Play and seek only appear while the video is hovered, focused or tapped; the mute button always stays, as a small icon */
+.hero-video__controls > :not(.hero-video__sound) { opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 250ms var(--ease), transform 250ms var(--ease); }
+/* (Hover only counts on devices with a real pointer; on touch a tap leaves :hover stuck, so taps use .is-awake) */
+.hero-video__frame:is(:focus-visible, :has(:focus-visible), .is-awake) .hero-video__controls > * { opacity: 1; transform: none; pointer-events: auto; }
+@media (hover: hover) { .hero-video__frame:hover .hero-video__controls > * { opacity: 1; transform: none; pointer-events: auto; } }
+.hero-video__controls .hero-video__sound { margin-left: auto; }
+.hero-video__frame:not(:has(:focus-visible), .is-awake) .hero-video__sound span { display: none; }
+.hero-video__frame:not(:has(:focus-visible), .is-awake) .hero-video__sound { padding: 0; width: 40px; justify-content: center; }
+@media (hover: hover) {
+  .hero-video__frame:hover .hero-video__sound span { display: inline; }
+  .hero-video__frame:hover .hero-video__sound { padding: 0 12px; width: auto; }
+}
 .hero-video__controls button {
   display: inline-flex; align-items: center; gap: 8px; height: 40px; min-width: 40px; padding: 0 12px; border-radius: 999px; cursor: pointer;
   font-size: 13px; font-weight: 500; color: #fff; border: 1px solid rgba(255, 255, 255, 0.22);

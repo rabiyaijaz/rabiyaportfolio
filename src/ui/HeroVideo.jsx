@@ -13,6 +13,12 @@ export default function HeroVideo({ src, poster, title }) {
   const [time, setTime] = useState(0);
   const [dur, setDur] = useState(0);
   const scrubbing = useRef(false);
+  // Touch screens have no hover: a tap wakes the controls for a few seconds instead
+  const [awake, setAwake] = useState(false);
+  const sleepT = useRef(0);
+  const wasAwake = useRef(false); // were the controls already showing when this tap began?
+  const wake = () => { setAwake(true); clearTimeout(sleepT.current); sleepT.current = setTimeout(() => setAwake(false), 3500); };
+  useEffect(() => () => clearTimeout(sleepT.current), []);
   const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
@@ -77,8 +83,12 @@ export default function HeroVideo({ src, poster, title }) {
   return (
     <div className="hero-video" style={{ '--poster': `url(${poster})` }} onPointerMove={onMove} onPointerLeave={onLeave}>
       <span className="hero-video__glow" aria-hidden="true" />
-      <div className="hero-video__frame" ref={frameRef}>
-        <video ref={ref} src={src} poster={poster} autoPlay={!reduced} muted loop playsInline preload="metadata" aria-label={title} onClick={togglePlay} />
+      <div className={`hero-video__frame${awake ? ' is-awake' : ''}`} ref={frameRef} onPointerDown={(e) => { if (e.pointerType !== 'mouse') { wasAwake.current = awake; wake(); } }}>
+        <video
+          ref={ref} src={src} poster={poster} autoPlay={!reduced} muted loop playsInline preload="metadata" aria-label={title}
+          // On touch, the first tap only shows the controls; a tap while they're showing plays or pauses
+          onPointerUp={(e) => { if (e.pointerType === 'mouse' || wasAwake.current) togglePlay(); }}
+        />
         <div className="hero-video__controls">
           <button onClick={togglePlay} aria-label={paused ? 'Play video' : 'Pause video'}>
             {paused ? <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg> : <svg viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z" /></svg>}
