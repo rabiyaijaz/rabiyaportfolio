@@ -17,7 +17,7 @@ import NotFound from './pages/NotFound.jsx';
 import './story/story.css'; // story headers, buttons and plumbob styles are shared by every page
 
 export default function App() {
-  const { pathname } = useLocation();
+  const { pathname, state } = useLocation();
   const landing = pathname === '/';
   useEffect(() => { if (!location.hash) scrollTo(0, 0); }, [pathname]);
 
@@ -28,7 +28,8 @@ export default function App() {
       {!landing && <Ambient dim={/^\/work\/.+/.test(pathname)} />}
       <TopNav floating={landing || pathname === '/about'} />
       <Routes>
-        <Route path="/" element={<Landing />} />
+        {/* The logo stamps `replay`, which remounts the landing so its intro plays from the start */}
+        <Route path="/" element={<Landing key={state?.replay || 'home'} />} />
         <Route path="/work" element={<Work />} />
         <Route path="/work/:id" element={<CaseStudy />} />
         <Route path="/about" element={<About />} />
