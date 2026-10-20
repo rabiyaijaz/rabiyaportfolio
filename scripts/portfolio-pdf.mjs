@@ -41,10 +41,34 @@ async function inline(text) {
 const open = PROJECTS.filter((p) => !p.wip && STORY[p.id]);
 const SCULPTS = ['left', 'right', 'back', 'close'];
 const n2 = (i) => String(i).padStart(2, '0');
-const run = (p, i, page) => `<div class="run"><span>Rabiya Ijaz</span><span>${n2(i)} — ${esc(p.name)}</span><span>${page}/4</span></div>`;
+const run = (p, i, page, total) => `<div class="run"><span>Rabiya Ijaz</span><span>${n2(i)} — ${esc(p.name)}</span><span>${page}/${total}</span></div>`;
+
+// Highlights pages: captions come from the case study wherever the image is used there; tall images
+// (phones, posters, cards) are shown whole on a tinted panel instead of being cropped.
+const captions = new Map(Object.values(CASE_STUDIES).flatMap((cs) => (cs.sections || []).flatMap((s) => [...(s.images || []), ...(s.iterations || [])]))
+  .map((im) => [im.src, im.caption || im.name || '']));
+const aspect = new Map();
+for (const s of Object.values(STORY)) for (const pg of s.gallery || []) for (const it of pg.items) {
+  const src = typeof it === 'string' ? it : it.src;
+  const m = await sharp(path.join(app, 'public', src)).metadata();
+  aspect.set(src, m.width / m.height);
+}
+function highlights(p, i, pg, page, total) {
+  const items = pg.items.map((it) => (typeof it === 'string' ? { src: it } : it))
+    .map((it) => ({ ...it, caption: it.caption ?? captions.get(it.src) ?? '', tall: aspect.get(it.src) < 0.95 }));
+  return `
+  <section class="page light hl hl--${pg.layout} hl--n${items.length}">
+    ${run(p, i, page, total)}
+    <p class="label green">Highlights</p>
+    <div class="hl__grid">
+      ${items.map((it) => `<figure class="${it.tall ? 'is-tall' : ''}"><div class="hl__img"><img src="${img(it.src)}" alt=""></div>${it.caption ? `<figcaption>${esc(it.caption)}</figcaption>` : ''}</figure>`).join('')}
+    </div>
+  </section>`;
+}
 
 function project(p, i) {
   const s = STORY[p.id];
+  const total = 4 + (s.gallery?.length || 0);
   const cs = CASE_STUDIES[p.id] || {};
   const play = p.live ? { href: p.live.href, label: 'Try the live app' } : cs.play ? { href: `${SITE}/work/${p.id}#play`, label: 'Play it live' } : null;
   const meta = Object.entries(p.meta).filter(([k]) => k !== 'Status').map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
@@ -63,7 +87,7 @@ function project(p, i) {
 
   <!-- ${p.name} · question & method -->
   <section class="page light qm">
-    ${run(p, i, 2)}
+    ${run(p, i, 2, total)}
     <p class="label green">The question</p>
     <h3 class="question">${esc(s.question)}</h3>
     <div class="qm__foot">
@@ -77,7 +101,7 @@ function project(p, i) {
 
   <!-- ${p.name} · finding → decision -->
   <section class="page light fd">
-    ${run(p, i, 3)}
+    ${run(p, i, 3, total)}
     <div class="fd__text">
       <p class="label">${esc(s.findingLabel || 'Finding')}</p>
       <p class="finding">${esc(s.finding)}</p>
@@ -89,7 +113,7 @@ function project(p, i) {
 
   <!-- ${p.name} · outcome & reflection -->
   <section class="page light or">
-    ${run(p, i, 4)}
+    ${run(p, i, 4, total)}
     <p class="label">Outcome</p>
     <h3 class="outcome">${esc(s.outcome)}</h3>
     <div class="or__foot">
@@ -103,7 +127,8 @@ function project(p, i) {
         <p class="more">Full case study → <a href="${SITE}/work/${p.id}">${SITE_SHORT}/work/${p.id}</a></p>
       </div>
     </div>
-  </section>`;
+  </section>
+  ${(s.gallery || []).map((pg, k) => highlights(p, i, pg, 5 + k, total)).join('')}`;
 }
 
 const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Rabiya Ijaz · Portfolio</title>
@@ -197,6 +222,20 @@ a { color: inherit; }
 .more { margin: 0; font-size: 9pt; color: var(--muted); }
 .more a { color: var(--green); text-decoration: none; font-weight: 600; }
 
+/* ---------- highlights (the project's key screens, for context) ---------- */
+.hl__grid { position: absolute; left: 18mm; right: 18mm; top: 34mm; bottom: 14mm; display: grid; gap: 7mm; }
+.hl--bento .hl__grid { grid-template-columns: 1.55fr 1fr; grid-template-rows: 1fr 1fr; }
+.hl--bento figure:first-child { grid-row: 1 / 3; }
+.hl--row .hl__grid { grid-auto-flow: column; grid-auto-columns: 1fr; }
+.hl--grid .hl__grid { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.hl figure { display: flex; flex-direction: column; min-height: 0; margin: 0; }
+.hl__img { flex: 1; min-height: 0; border-radius: 3mm; overflow: hidden; border: 2px solid var(--ink); background: #fff; box-shadow: 5px 5px 0 var(--ink); }
+/* every highlight is shown whole: nothing about the screen is cropped away */
+.hl__img { position: relative; }
+.hl__img img { position: absolute; inset: 3mm; width: calc(100% - 6mm); height: calc(100% - 6mm); object-fit: contain; }
+.hl figure.is-tall .hl__img { background: #e6e1d6; }
+.hl figcaption { margin-top: 3mm; font-size: 9pt; line-height: 1.35; color: #3a3a40; }
+
 /* ---------- closing ---------- */
 .close h2 { position: absolute; left: 18mm; top: 22mm; margin: 0; width: 170mm; font: 800 64pt/.92 Geist, sans-serif; letter-spacing: -.045em; text-transform: uppercase; z-index: 2; }
 .close h2 em { font: 300 italic 64pt/.92 Newsreader, serif; text-transform: none; letter-spacing: -.02em; color: var(--mint); }
@@ -230,7 +269,7 @@ ${open.map((p, i) => project(p, i + 1)).join('')}
 
 <section class="page dark close">
   <h2>Let’s build something people <em>actually use.</em></h2>
-  <img class="sculpt" src="${img('sculpt-back', 'png')}" alt="">
+  <img class="sculpt" src="${img('sculpt-forward', 'png')}" alt="">
   <p class="contact"><b>Say hello</b>${esc(PROFILE.email)}<br><a href="${SITE}">${SITE_SHORT}</a> · <a href="${PROFILE.linkedin}">LinkedIn</a><br>Open to remote, hybrid or on-site work.</p>
 </section>
 </body></html>`;

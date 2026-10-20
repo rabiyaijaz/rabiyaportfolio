@@ -15,12 +15,14 @@ const SHOTS = {
   left: { az: -0.95, el: 0.12, dist: 2.2, look: 0.02 },    // three-quarter, turned away
   right: { az: 1.0, el: -0.06, dist: 2.2, look: 0.02 },    // three-quarter, the other way
   back: { az: 2.6, el: 0.1, dist: 2.3, look: 0.02 },       // over the shoulder
+  forward: { az: -0.45, el: 0.05, dist: 2.35, look: 0.0 }, // facing forward, turned a little to the right (closing page)
 };
 
 fs.mkdirSync(OUT, { recursive: true });
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 try {
-  for (const [name, s] of Object.entries(SHOTS)) {
+  const only = process.argv.slice(2); // e.g. `node scripts/render-sculpt.mjs forward` renders just that one
+  for (const [name, s] of Object.entries(SHOTS).filter(([k]) => !only.length || only.includes(k))) {
     const page = await browser.newPage();
     await page.setViewport({ width: 1200, height: 1600 });
     await page.goto(`http://localhost:5181/tools/sculpt.html?az=${s.az}&el=${s.el}&dist=${s.dist}&look=${s.look}&w=1200&h=1600`);

@@ -8,6 +8,9 @@
 //   finding / decision   one sentence each
 //   image       the one screen that shows the decision ({ src, fit: 'contain' } for phone shots)
 //   outcome / next      where it stands, and what I'd do next
+//   gallery     1–2 "Highlights" pages after the project: the key screens for context.
+//               Each page: { layout: 'bento' (one big + two) | 'row' (2–4 equal columns) | 'grid' (2×2), items: [src | { src, caption }] }.
+//               Captions come from the case study when the image is used there; tall images (phones, posters) sit contained.
 const v = (n) => `/img/cs/vettio/${n}.webp`;
 const c = (n) => `/img/cs/crewnity/${n}.webp`;
 const f = (n) => `/img/cs/flownet/${n}.webp`;
@@ -27,6 +30,10 @@ export const STORY = {
     image: { src: v('interview') },
     outcome: 'Shipped. Recruiter workflow efficiency up 30%.',
     next: 'Measure drop-off per checkpoint from the first release.',
+    gallery: [
+      { layout: 'bento', items: [v('profile'), v('intro'), v('complete')] },
+      { layout: 'bento', items: [v('match'), v('jd-builder'), v('ph-2')] },
+    ],
   },
   crewnity: {
     statement: 'A finance team you can talk to.',
@@ -38,6 +45,10 @@ export const STORY = {
     image: { src: c('review') },
     outcome: 'Ongoing. Not measured yet.',
     next: 'Test whether owners trust Lina with their books.',
+    gallery: [
+      { layout: 'bento', items: [c('dashboard'), c('crew'), c('upload')] },
+      { layout: 'bento', items: [c('recon-report'), c('recon-chat-1'), c('pnl')] },
+    ],
   },
   flownet: {
     statement: 'Sign-off, with the evidence in the room.',
@@ -49,6 +60,10 @@ export const STORY = {
     image: { src: f('sign-off') },
     outcome: 'MVP for Swedish government hospitals.',
     next: 'Prototype the import of paper history first. That’s where adoption is won.',
+    gallery: [
+      { layout: 'bento', items: [f('doctor'), f('paths'), f('supervisor')] },
+      { layout: 'row', items: [f('evidence'), f('milestone')] },
+    ],
   },
   cystercare: {
     statement: 'Nobody holds the whole picture.',
@@ -60,6 +75,10 @@ export const STORY = {
     image: { src: cc('pain-points') },
     outcome: '5th prize at Imaginathon.',
     next: 'A prize isn’t a usability result. Next: a study with people managing PCOS/PMOS.',
+    gallery: [
+      { layout: 'bento', items: [cc('prototype'), cc('research'), cc('specialists')] },
+      { layout: 'row', items: [cc('feed'), cc('research-tab')] },
+    ],
   },
   'access-adda': {
     statement: 'Access is a favour. It should be a feature.',
@@ -71,6 +90,14 @@ export const STORY = {
     image: { src: a('cover') },
     outcome: 'Playable, in three languages.',
     next: 'Not yet played with people. Next: playtests with disabled people in Peshawar.',
+    gallery: [
+      { layout: 'grid', items: [
+        { src: a('areeba'), caption: 'Areeba: a wheelchair user at her university.' },
+        { src: a('brt'), caption: 'A blind commuter at the BRT.' },
+        { src: a('qissa-khwani'), caption: 'A Deaf woman ordering kahwa in Qissa Khwani.' },
+        { src: a('sethi-house'), caption: 'A power-wheelchair user at Sethi House.' },
+      ] },
+    ],
   },
   tamasha: {
     statement: 'Bricks, on strings.',
@@ -82,6 +109,10 @@ export const STORY = {
     image: { src: t('cast') },
     outcome: 'Style direction v1, presented October 2026.',
     next: 'Lock a poster direction, then build the /tamasha page.',
+    gallery: [
+      { layout: 'bento', items: [t('stage-hero'), t('rig'), t('roots')] },
+      { layout: 'row', items: [t('poster-a'), t('poster-b'), t('poster-c'), t('poster-d')] },
+    ],
   },
   repshep: {
     statement: 'Every overdue payment is a person.',
@@ -94,5 +125,8 @@ export const STORY = {
     image: { src: r('poke'), fit: 'contain' },
     outcome: 'In progress.',
     next: 'Test the flows with gym managers before building the AI.',
+    gallery: [
+      { layout: 'row', items: [r('whatsapp'), r('channels'), r('failed'), r('history')] },
+    ],
   },
 };
