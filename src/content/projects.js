@@ -100,4 +100,6 @@ export const PROFILE = {
   ],
   location: 'Peshawar, Pakistan',
   cv: '/cv/Rabiya-Ijaz-CV.pdf',
+  // The downloadable portfolio, made from this site's content by `npm run portfolio:pdf`
+  portfolio: '/cv/Rabiya-Ijaz-Portfolio.pdf',
 };

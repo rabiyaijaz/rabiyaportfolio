@@ -46,7 +46,10 @@ export default function Resume() {
           title={<>The short version, <em>with dates.</em></>}
           lede="4+ years of product design across AI, healthcare, recruitment, finance and education."
         >
-          <p className="resume__cta"><a className="button" href={PROFILE.cv} download onClick={() => fulfil('cv')}>Download the PDF</a></p>
+          <p className="resume__cta">
+            <a className="button" href={PROFILE.cv} download onClick={() => fulfil('cv')}>Download the CV</a>
+            <a className="ghost-button" href={PROFILE.portfolio} download>Download the portfolio (PDF)</a>
+          </p>
         </StoryHeader>
       </div>
 

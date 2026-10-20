@@ -219,7 +219,34 @@ html[data-phase='day'] .sim-menu button { color: #14151b; background: rgba(255, 
 .case__head { max-width: 780px; }
 .display--case { max-width: 22ch; font-size: clamp(32px, 4vw, 48px); }
 .display--case strong { font-weight: 500; }
-.case__live { margin-top: 22px; }
+#play, #try { scroll-margin-top: 96px; } /* clears the floating nav when jumped to */
+/* "Play the game" / "Try the demo": jumps to the live demo further down */
+.case__live { margin-top: 22px; gap: 10px; padding-right: 22px; }
+.case__live-note { font-size: 12.5px; font-weight: 500; opacity: 0.75; padding-left: 10px; border-left: 1px solid currentColor; }
+.play-dot { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent-ink, #062012); color: var(--accent); animation: play-pulse 2s ease-out infinite; }
+.play-dot svg { width: 12px; height: 12px; fill: currentColor; margin-left: 2px; }
+@keyframes play-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-ink, #062012) 45%, transparent); } 70%, 100% { box-shadow: 0 0 0 9px transparent; } }
+/* "● Live · Playable" badge on the demo sections */
+.live-badge {
+  display: inline-flex; align-items: center; gap: 7px; margin-right: 10px; padding: 4px 10px 4px 8px; border-radius: 999px; vertical-align: 1px;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; background: #e2483d;
+  box-shadow: 0 6px 16px -8px rgba(226, 72, 61, 0.8);
+}
+.live-badge i { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: live-blink 1.4s ease-in-out infinite; }
+@keyframes live-blink { 50% { opacity: 0.25; } }
+/* The phone glows and a bubble points at it until the visitor taps in */
+.case__phone { position: relative; animation: phone-glow 2.4s ease-in-out infinite; }
+.case__phone.is-tried { animation: none; }
+@keyframes phone-glow { 50% { box-shadow: 0 40px 70px -30px rgba(0, 0, 0, 0.55), 0 0 0 6px color-mix(in srgb, var(--accent) 35%, transparent), 0 0 46px color-mix(in srgb, var(--accent) 45%, transparent); } }
+.case__tap {
+  position: absolute; z-index: 3; left: 50%; bottom: 22%; display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px;
+  font-size: 14px; font-weight: 700; white-space: nowrap; color: #15201a; background: #fff; box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.6);
+  transform: translateX(-50%); pointer-events: none; animation: tap-bob 1.6s ease-in-out infinite;
+}
+.case__tap span { font-size: 18px; animation: tap-press 1.6s ease-in-out infinite; }
+@keyframes tap-bob { 50% { transform: translate(-50%, -6px); } }
+@keyframes tap-press { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-4px); } 55% { transform: translateY(2px) scale(0.9); } }
+@media (prefers-reduced-motion: reduce) { .play-dot, .live-badge i, .case__phone, .case__tap, .case__tap span { animation: none; } }
 /* "Try it yourself": the live app in a phone frame. The app is built for a 390×844 phone; the frame scales it to fit. */
 .case__try {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: clamp(28px, 6vw, 80px);

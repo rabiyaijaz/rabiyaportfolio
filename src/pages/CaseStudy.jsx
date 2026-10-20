@@ -63,10 +63,12 @@ export default function CaseStudy() {
         {/* The project name stands out; the description after it stays light */}
         <h1 className="display display--case"><strong>{p.name}:</strong> {titleOf(p).slice(p.name.length + 2)}</h1>
         {p.tags && <ul className="tags">{p.tags.map((t) => <li key={t}>{t}</li>)}</ul>}
-        {/* A working build people can try for themselves */}
-        {p.live && (
-          <a className="button case__live" href={p.live.href} target="_blank" rel="noopener noreferrer">
-            {p.live.label} <Arrow dir="out" /><span className="sr-only"> (opens in a new tab)</span>
+        {/* Something people can play right here: the button jumps down to it */}
+        {(cs?.play || p.live?.embed) && (
+          <a className="button case__live" href={cs?.play ? '#play' : '#try'}
+            onClick={(e) => { e.preventDefault(); document.getElementById(cs?.play ? 'play' : 'try')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
+            <PlayDot /> {cs?.play ? 'Play the game' : 'Try the demo'}
+            <span className="case__live-note">Live, right on this page</span>
           </a>
         )}
       </header>
@@ -92,7 +94,7 @@ export default function CaseStudy() {
 
       {cs?.play && (
         <section className="case__play" id="play" aria-labelledby="play-title">
-          <p className="case__label">Play it</p>
+          <p className="case__label"><LiveBadge /> Play it</p>
           <h2 id="play-title" className="case__playtitle">{cs.play.headline}</h2>
           <p className="muted">{cs.play.note}</p>
           <Suspense fallback={<p className="muted">Shuffling the deck…</p>}><AccessAdda /></Suspense>
@@ -172,6 +174,14 @@ export default function CaseStudy() {
   );
 }
 
+/** "● Live · Playable": marks something that can be played right on the page. */
+function LiveBadge() {
+  return <span className="live-badge"><i aria-hidden="true" />Live · Playable</span>;
+}
+function PlayDot() {
+  return <span className="play-dot" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 3.5v9l7.5-4.5z" /></svg></span>;
+}
+
 /** A work-in-progress project reached by its URL: a short "under construction" note instead of the case study. */
 function UnderConstruction({ p }) {
   return (
@@ -200,17 +210,25 @@ function LiveApp({ live, name }) {
     io.observe(ref.current);
     return () => io.disconnect();
   }, []);
+  // The "Tap to try it" bubble stays until the visitor taps into the app (focus moves into the iframe)
+  const [tried, setTried] = useState(false);
+  useEffect(() => {
+    const onBlur = () => setTimeout(() => { if (document.activeElement?.tagName === 'IFRAME') setTried(true); }, 0);
+    addEventListener('blur', onBlur);
+    return () => removeEventListener('blur', onBlur);
+  }, []);
   return (
     <section className="case__try" id="try" aria-labelledby="try-title" ref={ref}>
       <div className="case__try-copy">
-        <p className="case__label">Try it yourself</p>
+        <p className="case__label"><LiveBadge /> Try it yourself</p>
         <h2 id="try-title" className="case__playtitle">{live.headline}</h2>
         <p className="muted">{live.note}</p>
         <a className="ghost-button" href={live.href} target="_blank" rel="noopener noreferrer">
           Open in a new tab <Arrow dir="out" /><span className="sr-only"> (opens in a new tab)</span>
         </a>
       </div>
-      <div className="case__phone">
+      <div className={`case__phone${tried ? ' is-tried' : ''}`}>
+        {!tried && <span className="case__tap" aria-hidden="true"><span>👆</span> Tap to try it</span>}
         <div className="case__phone-screen">
           {near
             ? <iframe src={live.href} title={`${name}, the live app`} loading="lazy" allow="clipboard-write" />
