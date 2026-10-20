@@ -83,6 +83,19 @@ export default function HeroVideo({ src, poster, title }) {
     else if (e.key === 'Home') { e.preventDefault(); setVolume(0); }
     else if (e.key === 'End') { e.preventDefault(); setVolume(1); }
   };
+  // Full screen: the whole frame (so the custom controls come along); iPhones only allow the video's own player
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    const onChange = () => setFull(document.fullscreenElement === frameRef.current);
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+  const toggleFull = () => {
+    const f = frameRef.current, v = ref.current;
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (f.requestFullscreen) f.requestFullscreen().catch(() => v.webkitEnterFullscreen?.());
+    else v.webkitEnterFullscreen?.();
+  };
   const togglePlay = () => {
     const v = ref.current;
     if (v.paused) { delete v.dataset.userPaused; v.play(); setPaused(false); } else { v.dataset.userPaused = '1'; v.pause(); setPaused(true); }
@@ -122,6 +135,11 @@ export default function HeroVideo({ src, poster, title }) {
             />
             <span className="hero-video__time" aria-hidden="true">{clock(dur)}</span>
           </div>
+          <button className="hero-video__full" onClick={toggleFull} aria-label={full ? 'Exit full screen' : 'Full screen'}>
+            {full
+              ? <svg viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" /></svg>
+              : <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>}
+          </button>
           <div className="hero-video__audio">
             <input
               className="hero-video__vol" type="range" min="0" max="1" step="0.01" value={level}

@@ -573,7 +573,11 @@ html[data-phase='night'] .socials svg, html[data-phase='dusk'] .socials svg { co
   .hood__line { font-size: 16px; margin: 12px 0 20px; }
   .hood__mapline { bottom: 72px; left: 20px; right: 20px; }
   .hood__mapline-title { font-size: 22px; }
-  .pin--small { display: none; }
+  /* Passion-project pins stay on the map as compact logo bubbles; the name shows on hover, focus or highlight */
+  .pin--small { padding: 3px; }
+  .pin--small .pin__text { display: none; }
+  .pin--small:is(:hover, :focus-visible, .is-hot) { padding: 3px 10px 3px 3px; z-index: 2; }
+  .pin--small:is(:hover, :focus-visible, .is-hot) .pin__text { display: grid; }
   .pin { padding: 3px 10px 3px 3px; gap: 6px; }
   .pin__house { width: 22px; height: 22px; }
   .pin__text strong { font-size: 13px; }

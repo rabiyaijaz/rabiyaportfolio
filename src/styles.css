@@ -89,7 +89,9 @@ html[data-phase='dusk'] .topnav { background: none; }
 
 .ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 .page, .footer, .about-page { position: relative; z-index: 1; }
-.page { width: var(--page); margin: 0 auto; padding: clamp(40px, 8vh, 88px) 0 96px; animation: page-in 600ms var(--ease) both; }
+/* "backwards", not "both": a transform left on the page after the fade-in would make every position: fixed
+   overlay inside it (viewer, dialogs, menus) fixed to the page instead of the screen */
+.page { width: var(--page); margin: 0 auto; padding: clamp(40px, 8vh, 88px) 0 96px; animation: page-in 600ms var(--ease) backwards; }
 @keyframes page-in { from { opacity: 0; transform: translateY(10px); } }
 .footer { width: var(--page); margin: 0 auto; padding: 28px 0 40px; display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); }
 
@@ -168,6 +170,32 @@ html[data-phase='day'] .sim-menu button { color: #14151b; background: rgba(255, 
 .card__media img { width: 100%; height: 100%; object-fit: cover; object-position: top center; transition: transform 700ms var(--ease); }
 .card__media--contain img { object-fit: contain; padding: 12%; }
 .card a:hover .card__media img { transform: scale(1.025); }
+/* Work in progress: construction tape across the cover; clicking only wobbles the tape (and shows a toast) */
+.card__media { position: relative; }
+.card--wip a { cursor: not-allowed; }
+.card--wip .card__media img { filter: saturate(0.55) brightness(0.92); }
+.card--wip a:hover .card__media img { transform: none; }
+.card--wip .card__bob { opacity: 1; transform: none; }
+.wip-tape {
+  position: absolute; left: -20%; right: -20%; top: 50%; z-index: 2; overflow: hidden; padding: 8px 0;
+  transform: translateY(-50%) rotate(-7deg);
+  background: repeating-linear-gradient(-45deg, #f6c90e 0 18px, #1c1c1c 18px 36px);
+  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.55);
+  animation: wip-knock 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.wip-tape > span {
+  display: block; width: max-content; padding: 6px 0; white-space: nowrap; background: #f6c90e;
+  font: 800 13px/1 var(--sans, system-ui); letter-spacing: 0.14em; text-transform: uppercase; color: #1c1c1c;
+  animation: wip-scroll 18s linear infinite;
+}
+@keyframes wip-scroll { to { transform: translateX(-50%); } }
+@keyframes wip-knock { 0% { transform: translateY(-50%) rotate(-7deg); } 30% { transform: translateY(-50%) rotate(-11deg) scale(1.04); } 60% { transform: translateY(-50%) rotate(-4deg); } 100% { transform: translateY(-50%) rotate(-7deg); } }
+/* The project's own page, if someone has the link */
+.wip-note { position: relative; overflow: hidden; margin-top: 40px; padding: 124px clamp(24px, 5vw, 56px) 48px; border-radius: 28px; border: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.wip-note .wip-tape { top: 50px; transform: translateY(-50%) rotate(-2.5deg); animation: none; }
+.wip-note__title { margin: 0 0 8px; font: 400 clamp(26px, 3vw, 36px)/1.2 var(--serif); }
+.wip-note .muted { max-width: 52ch; margin: 0 0 24px; font-size: 16px; }
+@media (prefers-reduced-motion: reduce) { .wip-tape, .wip-tape > span { animation: none; } }
 .card__text { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; }
 .card__title { max-width: 34ch; font-weight: 500; font-size: 16px; line-height: 1.4; }
 .card__meta { font-size: 13px; color: var(--muted); }
@@ -317,6 +345,11 @@ html[data-phase='day'] .sim-menu button { color: #14151b; background: rgba(255, 
 /* (Hover only counts on devices with a real pointer; on touch a tap leaves :hover stuck, so taps use .is-awake) */
 .hero-video__frame:is(:focus-visible, :has(:focus-visible), .is-awake) :is(.hero-video__controls > *, .hero-video__vol) { opacity: 1; transform: none; pointer-events: auto; }
 @media (hover: hover) { .hero-video__frame:hover :is(.hero-video__controls > *, .hero-video__vol) { opacity: 1; transform: none; pointer-events: auto; } }
+/* Full screen: the frame fills the screen, the video letterboxes inside it, no tilt */
+.hero-video__frame:fullscreen { display: grid; place-items: center; border-radius: 0; border: 0; transform: none; background: #000; }
+.hero-video__frame:fullscreen video { width: 100%; height: 100%; object-fit: contain; }
+.hero-video__frame:fullscreen .hero-video__controls { left: 24px; right: 24px; bottom: 24px; }
+.hero-video__controls .hero-video__full svg { fill: none; stroke-width: 2; }
 /* Sound group: the volume slider tucks away beside the always-visible mute icon */
 .hero-video__audio { display: flex; align-items: center; gap: 6px; margin-left: auto; }
 .hero-video__vol {

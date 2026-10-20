@@ -62,15 +62,18 @@ export const PROJECTS = [
     meta: { Role: 'Designer', Context: 'Personal project', Status: 'In progress' },
   },
   {
-    id: 'devmode', name: 'DevMode', type: 'Learning concept', year: 'Personal', passion: true,
+    // wip: shown everywhere, but can't be opened yet (cards, pins and the house say "under construction")
+    id: 'devmode', name: 'DevMode', type: 'Learning concept', year: 'Personal', passion: true, wip: true,
     headline: 'A course that teaches designers to build with AI, in their own language',
     cover: '/img/work/devmode.webp', tint: '#f1f1f4',
     tags: ['Human–AI', 'EdTech', 'Personal'],
-    meta: { Role: 'Designer', Context: 'Personal exploration', Status: 'Concept' },
+    meta: { Role: 'Designer', Context: 'Personal exploration', Status: 'Work in progress' },
   },
 ];
 
 export const projectById = (id) => PROJECTS.find((p) => p.id === id);
+// Work-in-progress projects are listed but can't be opened yet; this is the toast every way in shows instead
+export const wipToast = (p) => ({ kind: 'info', title: `${p.name} is still being built`, body: 'Its case study is under construction. Check back soon!' });
 // "Vettio: an AI hiring platform that…": the name leads every project title
 export const titleOf = (p) => `${p.name}: ${p.headline.charAt(0).toLowerCase()}${p.headline.slice(1)}`;
 

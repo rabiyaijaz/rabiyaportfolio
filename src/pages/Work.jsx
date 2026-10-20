@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PROJECTS, titleOf } from '../content/projects.js';
+import { PROJECTS, titleOf, wipToast } from '../content/projects.js';
+import { useSim } from '../lib/simState.jsx';
 import useTitle from '../lib/useTitle.js';
 import StoryHeader from '../ui/StoryHeader.jsx';
 import MapBanner from '../ui/MapBanner.jsx';
@@ -63,12 +64,27 @@ export default function Work() {
 }
 
 function Card({ p, i, eager, onHot }) {
+  const { toast } = useSim();
+  const [knock, setKnock] = useState(0); // bumps the tape's wobble each time a WIP card is clicked
+  // Work in progress: still a link (so it can be focused and announced), but clicking only says it's being built
+  const wip = p.wip ? {
+    'aria-disabled': true,
+    'aria-label': `${p.name}, work in progress. Not open yet.`,
+    onClick: (e) => { e.preventDefault(); setKnock((k) => k + 1); toast(wipToast(p)); },
+  } : {};
   return (
-    <li className="card" style={{ '--i': i }} onMouseEnter={() => onHot(p.id)} onMouseLeave={() => onHot(null)}>
-      <Link to={`/work/${p.id}`} onFocus={() => onHot(p.id)} onBlur={() => onHot(null)}>
+    <li className={`card${p.wip ? ' card--wip' : ''}`} style={{ '--i': i }} onMouseEnter={() => onHot(p.id)} onMouseLeave={() => onHot(null)}>
+      <Link to={`/work/${p.id}`} onFocus={() => onHot(p.id)} onBlur={() => onHot(null)} {...wip}>
         <span className={`card__media${p.contain ? ' card__media--contain' : ''}`} style={{ '--tint': p.tint }}>
           <img src={p.cover || p.hero} alt="" loading={eager ? 'eager' : 'lazy'} />
-          <span className="card__bob" aria-hidden="true"><Plumbob size={12} /> Step inside</span>
+          {p.wip && (
+            <span className="wip-tape" aria-hidden="true" key={knock}>
+              <span>Work in progress · Work in progress · Work in progress · Work in progress ·</span>
+            </span>
+          )}
+          <span className="card__bob" aria-hidden="true">
+            {p.wip ? <>🚧 Under construction</> : <><Plumbob size={12} /> Step inside</>}
+          </span>
         </span>
         <span className="card__text">
           <span className="card__title">{titleOf(p)}</span>

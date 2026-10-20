@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { NeighbourhoodScene } from '../world/neighbourhood.js';
-import { PROJECTS } from '../content/projects.js';
+import { PROJECTS, projectById, wipToast } from '../content/projects.js';
+import { useSim } from '../lib/simState.jsx';
 import { HOUSES } from '../story/story.js';
 import { reducedMotion } from '../lib/scroll.js';
 import { usePhase } from '../lib/phase.jsx';
@@ -21,6 +22,9 @@ export default function MapBanner({ highlight }) {
   const navigate = useNavigate();
   const [hover, setHover] = useState(null);
   const [sceneObj, setSceneObj] = useState(null);
+  const { toast } = useSim();
+  const toastRef = useRef(toast); // the scene's listeners are set once; this keeps them on the current toast
+  toastRef.current = toast;
 
   useEffect(() => {
     const s = new NeighbourhoodScene(host.current, { lots: LOTS, reducedMotion: reducedMotion(), mapOnly: true });
@@ -33,7 +37,8 @@ export default function MapBanner({ highlight }) {
         if (el) el.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%, -100%)`;
       }
     };
-    const offs = [s.on('frame', place), s.on('enter', (id) => navigate(`/work/${id}`)), s.on('hover', setHover)];
+    const enter = (id) => { const p = projectById(id); if (p?.wip) toastRef.current(wipToast(p)); else navigate(`/work/${id}`); };
+    const offs = [s.on('frame', place), s.on('enter', enter), s.on('hover', setHover)];
     const io = new IntersectionObserver(([e]) => s.setActive(e.isIntersecting));
     io.observe(host.current);
     return () => { offs.forEach((o) => o()); io.disconnect(); s.dispose(); };
@@ -52,6 +57,7 @@ export default function MapBanner({ highlight }) {
             key={p.id} to={`/work/${p.id}`} className={`pin is-on${p.passion ? ' pin--small' : ''}${pinClass(LOTS[i])}${hover === p.id || highlight === p.id ? ' is-hot' : ''}`}
             ref={(el) => { pins.current[p.id] = el; }} style={pinStyle(LOTS[i], i)}
             onMouseEnter={() => scene.current?.highlight(p.id)} onMouseLeave={() => scene.current?.highlight(null)}
+            {...(p.wip ? { 'aria-disabled': true, onClick: (e) => { e.preventDefault(); toast(wipToast(p)); } } : {})}
           >
             <PinFace p={p} lot={LOTS[i]} />
           </Link>

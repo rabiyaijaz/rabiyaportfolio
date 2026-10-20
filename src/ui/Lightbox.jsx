@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Arrow from './Arrow.jsx';
 
 /** Full-size screen viewer: arrows / swipe to move, Esc or backdrop to close. */
@@ -24,7 +25,9 @@ export default function Lightbox({ images, index, onIndex, onClose }) {
   });
 
   let touchX = null;
-  return (
+  // Rendered on <body>: inside the page, an ancestor's transform would turn position: fixed into "fixed to the page"
+  // and the viewer would open far off-screen while the scroll stays locked
+  return createPortal(
     <div
       className="lightbox" role="dialog" aria-modal="true" aria-label={img.alt} tabIndex={-1} ref={ref}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -43,6 +46,7 @@ export default function Lightbox({ images, index, onIndex, onClose }) {
           <button onClick={onClose} aria-label="Close">×</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

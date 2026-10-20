@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { NeighbourhoodScene } from '../world/neighbourhood.js';
-import { PROJECTS, PROFILE } from '../content/projects.js';
+import { PROJECTS, PROFILE, wipToast } from '../content/projects.js';
 import { CAREER } from '../content/about.js';
 import StoryHeader from '../ui/StoryHeader.jsx';
 import { HOUSES } from '../story/story.js';
@@ -72,6 +72,8 @@ const SKY_HOUR = { day: 11, dusk: 18.9, night: 22.5 };
 export default function Landing() {
   const navigate = useNavigate();
   const { toast } = useSim();
+  const toastRef = useRef(toast); // the scene and key listeners are set once; this keeps them on the current toast
+  toastRef.current = toast;
   const { phase } = usePhase();
   const heroRef = useRef(null);
   const hostRef = useRef(null);
@@ -106,7 +108,7 @@ export default function Landing() {
     const offs = [
       s.on('near', setNear),
       s.on('hover', setHover),
-      s.on('enter', (id) => { sfx('coin'); navigate(`/work/${id}`); }),
+      s.on('enter', (id) => { if (byId[id]?.wip) { toastRef.current(wipToast(byId[id])); return; } sfx('coin'); navigate(`/work/${id}`); }),
       s.on('step', () => sfx('step', { volume: 0.55 })),
       // Easter egg: catching a frog from the fountain
       s.on('frog', (n) => toast({ kind: 'want', title: n === 1 ? 'You caught a frog!' : `Frog #${n} joined the parade`, body: n === 1 ? 'It’ll hop along behind you now. Ribbit.' : 'They follow wherever you walk.' })),
@@ -174,7 +176,7 @@ export default function Landing() {
       const s = sceneRef.current, { playing: on, near: at } = keyState.current;
       if (!s || typing(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
       if (on && e.key === 'Escape') { setPlaying(false); return; }
-      if (on && e.key === 'Enter' && at && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') { e.preventDefault(); navigate(`/work/${at}`); return; }
+      if (on && e.key === 'Enter' && at && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') { e.preventDefault(); if (byId[at]?.wip) toastRef.current(wipToast(byId[at])); else navigate(`/work/${at}`); return; }
       if (e.key === 'Shift') { s.setRun(true); return; }
       if (!WALK.has(e.code) || !inHood()) return;
       if (!s.onStreet() && !SIDE.has(e.code)) return;
@@ -257,7 +259,9 @@ export default function Landing() {
           {nearP && viewRef.current < 0.5 && (
             <div className="door" role="status">
               <span className="muted">At the door of</span> <strong>{nearP.name}</strong>
-              <Link className="button button--small" to={`/work/${nearP.id}`}>Go inside <kbd>↵</kbd></Link>
+              {nearP.wip
+                ? <button className="button button--small door__wip" onClick={() => toast(wipToast(nearP))}>🚧 Under construction</button>
+                : <Link className="button button--small" to={`/work/${nearP.id}`}>Go inside <kbd>↵</kbd></Link>}
             </div>
           )}
 
@@ -273,6 +277,7 @@ export default function Landing() {
                   ref={(el) => { pinsRef.current[l.id] = el; }} tabIndex={mapOn ? 0 : -1} style={pinStyle(l, i)}
                   onMouseEnter={() => sceneRef.current?.highlight(l.id)} onMouseLeave={() => sceneRef.current?.highlight(null)}
                   onFocus={() => sceneRef.current?.highlight(l.id)} onBlur={() => sceneRef.current?.highlight(null)}
+                  {...(p.wip ? { 'aria-disabled': true, onClick: (e) => { e.preventDefault(); toast(wipToast(p)); } } : {})}
                 >
                   <PinFace p={p} lot={l} />
                 </Link>

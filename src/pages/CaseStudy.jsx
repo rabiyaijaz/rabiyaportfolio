@@ -26,7 +26,7 @@ export default function CaseStudy() {
 
   useEffect(() => {
     scrollTo(0, 0);
-    if (p) { fulfil('read'); boost('fun', 30); }
+    if (p && !p.wip) { fulfil('read'); boost('fun', 30); }
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Finishing a case study is a Sims-style skill-up
@@ -50,8 +50,10 @@ export default function CaseStudy() {
   ]), [cs]);
 
   if (!p) return <NotFound />;
+  if (p.wip) return <UnderConstruction p={p} />;
+  // The next project that can be opened (work-in-progress ones are skipped)
   const i = PROJECTS.indexOf(p);
-  const next = PROJECTS[(i + 1) % PROJECTS.length];
+  const next = [...PROJECTS.slice(i + 1), ...PROJECTS.slice(0, i)].find((x) => !x.wip);
   const open = (img) => setLightbox(gallery.indexOf(img));
 
   return (
@@ -159,6 +161,24 @@ export default function CaseStudy() {
         </article>
       </div>
       {lightbox !== null && <Lightbox images={gallery} index={lightbox} onIndex={setLightbox} onClose={() => setLightbox(null)} />}
+    </main>
+  );
+}
+
+/** A work-in-progress project reached by its URL: a short "under construction" note instead of the case study. */
+function UnderConstruction({ p }) {
+  return (
+    <main id="main" className="page case wip-page">
+      <header className="case__head">
+        <p className="eyebrow">{p.type} • Work in progress</p>
+        <h1 className="display display--case"><strong>{p.name}:</strong> {titleOf(p).slice(p.name.length + 2)}</h1>
+      </header>
+      <div className="wip-note">
+        <span className="wip-tape" aria-hidden="true"><span>{'Work in progress · '.repeat(16)}</span></span>
+        <p className="wip-note__title">🚧 Still under construction</p>
+        <p className="muted">I’m building this one right now. The case study will open here once it’s ready.</p>
+        <Link className="button" to="/work"><Arrow dir="left" /> Back to the work</Link>
+      </div>
     </main>
   );
 }

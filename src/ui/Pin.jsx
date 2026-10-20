@@ -18,7 +18,7 @@ export function PinFace({ p, lot }) {
       </span>
       <span className="pin__text">
         <strong>{lot.label || p.name}</strong>
-        <span>{lot.featured ? `Featured · ${p.type}` : p.type}</span>
+        <span>{p.wip ? '🚧 Work in progress' : lot.featured ? `Featured · ${p.type}` : p.type}</span>
       </span>
     </>
   );
