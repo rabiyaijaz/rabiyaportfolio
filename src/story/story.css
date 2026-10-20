@@ -182,6 +182,48 @@
 .door strong { font-family: var(--serif); font-weight: 500; font-size: 19px; }
 @keyframes door-in { from { opacity: 0; transform: translate(-50%, 12px); } }
 
+/* Up on the Rangeen roof: a kite-flying panel in the door prompt's style, and the fade for the trip up */
+.kite-hud {
+  /* bottom left, above the Day/Dusk/Night switch, so she stays clear on the right */
+  position: absolute; left: 40px; bottom: 92px; z-index: 6; width: min(520px, calc(100% - 32px));
+  display: grid; gap: 8px; padding: 14px 16px; border-radius: 22px; color: #15201a; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(14px);
+  box-shadow: 0 16px 40px -18px rgba(0, 0, 0, 0.45); animation: kite-hud-in 420ms 300ms var(--ease) both;
+}
+@keyframes kite-hud-in { from { opacity: 0; transform: translateY(12px); } }
+.kite-hud__title { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.kite-hud__title .muted { color: #5f665f; }
+.kite-hud__title strong { font-family: var(--serif); font-weight: 500; font-size: 20px; }
+.kite-hud__cuts { margin-left: auto; padding: 3px 10px; border-radius: 999px; background: #e8336f; color: #fff; font-size: 13px; font-weight: 700; }
+.kite-hud__hint { margin: 0; font-size: 13px; color: #4b524b; }
+.kite-hud__hint kbd { margin-right: 2px; }
+.kite-hud__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.kite-hud__pad { display: flex; gap: 6px; }
+.kite-hud__btn {
+  display: grid; justify-items: center; gap: 1px; min-width: 58px; padding: 6px 8px; border-radius: 14px; border: 1.5px solid rgba(21, 32, 26, 0.18);
+  background: #fff; color: inherit; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none;
+  transition: transform 140ms var(--ease), background 140ms;
+}
+.kite-hud__btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.kite-hud__btn:hover { background: #fff6e0; }
+.kite-hud__btn:active { transform: scale(0.94); background: #ffe7a8; }
+.kite-hud__btn:focus-visible { outline: 3px solid #2f9a4a; outline-offset: 2px; }
+@media (max-width: 560px) {
+  /* a phone gets a slim bar: the title, then icon buttons and "Climb down" on one row */
+  .kite-hud { left: 16px; bottom: 80px; padding: 10px 12px; gap: 6px; border-radius: 18px; }
+  .kite-hud__title { font-size: 13px; }
+  .kite-hud__title strong { font-size: 16px; }
+  .kite-hud__hint { display: none; }
+  .kite-hud__row { flex-wrap: nowrap; gap: 6px; }
+  .kite-hud__pad { gap: 4px; }
+  .kite-hud__btn { min-width: 0; width: 42px; height: 40px; padding: 0; place-items: center; border-radius: 12px; }
+  .kite-hud__btn span { display: none; }
+  .kite-hud__row > .button { padding-inline: 12px; white-space: nowrap; }
+  .kite-hud__row > .button kbd { display: none; }
+}
+.hood__fade { position: absolute; inset: 0; z-index: 20; background: #07060d; opacity: 0; pointer-events: none; transition: opacity 400ms ease; }
+.hood__fade.is-on { opacity: 1; pointer-events: auto; }
+@media (prefers-reduced-motion: reduce) { .hood__fade { transition: none; } .kite-hud { animation: none; } }
+
 /* Pins: little speech bubbles with a house badge in the project's roof colour.
    JS sets `transform` to follow the house, so the pop uses the separate `scale` property. */
 .hood__pins { position: absolute; inset: 0; pointer-events: none; transition: opacity 600ms var(--ease); }

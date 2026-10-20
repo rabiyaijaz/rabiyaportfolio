@@ -7,6 +7,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { createHouse } from './house.js';
 import { createRangeenHouse } from './rangeen.js';
+import { createKites } from './kites.js';
 import { BASIN_R, PLAZA_R, createFountain } from './fountain.js';
 import { createForest, createPlumbob, createSimCutout, createStreetLamp, bakeStatic, canvasTexture, mat, seeded } from './assets.js';
 
@@ -53,6 +54,9 @@ const INTRO_HOLD = 0.7, INTRO_OUT = 1.0; // seconds on the close-up, then the ea
 const WHITE = 1.8, MORPH = 1.05, PROLOGUE_HOLD = 0.15;
 const ORBIT_FROM = 0.95; // where the prologue orbit starts (rad, around her)
 const START = new THREE.Vector3(4, 0, -17); // inner sidewalk, Crewnity dead ahead
+const ROOF_SCALE = 0.62; // her size up on the Rangeen roof (about 2 m)
+const NO_KEYS = new Set();
+const ROOF_SKY_TOP = new THREE.Color(0x9fcab5), ROOF_SKY_BOTTOM = new THREE.Color(0xeee6cf); // mint over a warm haze
 
 /** Angle a is measured from -Z (north), clockwise seen from above. */
 const polar = (r, a) => new THREE.Vector3(Math.sin(a) * r, 0, -Math.cos(a) * r);
@@ -275,7 +279,13 @@ export class NeighbourhoodScene {
       const body = bakeStatic(r.group);
       const at = polar(HOUSE_R + 0.5, a);
       for (const o of [body, r.glow]) { o.position.copy(at); o.rotation.y = -a; scene.add(o); }
-      this.rangeen = { ...r, angle: a, center: at, door: polar(DOOR_R, a) };
+      // the house's own frame (+Z out of its front), for the kites and her spot on the roof
+      const frame = new THREE.Group(); frame.position.copy(at); frame.rotation.y = -a; scene.add(frame);
+      frame.updateMatrixWorld(true);
+      this.kites = createKites({ reducedMotion: this.reducedMotion });
+      this.kites.onCut((n) => this.emit('bokata', n));
+      frame.add(this.kites.group);
+      this.rangeen = { ...r, angle: a, center: at, door: polar(DOOR_R, a), frame };
     }
 
     // Forest around the outside, leaving the lots and the road clear
@@ -543,6 +553,10 @@ export class NeighbourhoodScene {
     this.windowMat.emissiveIntensity = P.window;
     this.glowMat.opacity = P.lamps;
     this.rangeen?.setLights(Math.min(1, Math.max(0, P.lamps)));
+    this.kites?.setNight(clamp01((P.stars - 0.35) / 0.65));
+    // kept so the roof can tint the sky (see frame)
+    this.skyBase = { top: P.skyTop.clone(), bottom: P.skyBottom.clone(), day: 1 - clamp01(P.stars / 0.35) };
+    this.roofSky = -1; // re-apply
     this.starMat.opacity = P.stars;
     this.fillLevel = 4 + P.stars * 26 + P.lamps * 6;
     if (this.simFill) this.simFill.intensity = this.fillLevel;
@@ -602,8 +616,27 @@ export class NeighbourhoodScene {
     const lat = (portrait ? 3 : 12) * clamp01(1 - Math.abs(O.yaw) * 1.5) * clamp01((O.dist - 0.35) / 0.65);
     const follow = new THREE.Vector3(s.x - lat, portrait ? 11 : 9.5, s.z + (portrait ? 25 : 27));
     const followLook = new THREE.Vector3(s.x - lat, 3.6, s.z - 18);
+    if (this.kiteMode) {
+      // On the roof: over her right shoulder at head height, so she stands on the right with the
+      // parapet and the street in front of her, and the string runs up to the kite in the sky.
+      // The higher the kite, the further back the camera eases, so both stay in frame.
+      const K = this.kites, F = this.rangeen.frame, el = K.fly.el, h = K.hand;
+      // (the camera stays inside the terrace: from behind the back parapet it would block the view)
+      const back = Math.min(h.z - this.rangeen.roof.back - 0.4, (portrait ? 4.2 : 3.6) + el * 1.2);
+      const cam = new THREE.Vector3(h.x + (portrait ? 0.6 : 1.4), h.y + 0.15, h.z - back);
+      // tilt up toward the kite, but never so far that she drops out of the bottom of the frame
+      const look = h.clone().setY(h.y - 0.6).lerp(K.kitePos, 0.5);
+      const pitchOf = (p) => Math.atan2(p.y - cam.y, Math.hypot(p.x - cam.x, p.z - cam.z));
+      const half = THREE.MathUtils.degToRad((this.baseFov + 18) / 2);
+      // (on a phone the controls take the bottom of the screen, so she sits higher)
+      const maxPitch = pitchOf(h.clone().setY(h.y - 0.6)) + half * (portrait ? 0.4 : 0.85);
+      const lp = pitchOf(look);
+      if (lp > maxPitch) { const flat = Math.hypot(look.x - cam.x, look.z - cam.z); look.y = cam.y + Math.tan(maxPitch) * flat; }
+      follow.copy(F.localToWorld(cam));
+      followLook.copy(F.localToWorld(look));
+    }
     // Visitor orbit (drag on the street): swing the camera around her, tilt it, move closer or further
-    if (O.yaw || O.pitch || O.dist !== 1) {
+    else if (O.yaw || O.pitch || O.dist !== 1) {
       const pivot = new THREE.Vector3(s.x, 0, s.z);
       const turn = (v) => v.sub(pivot).applyAxisAngle(UP, O.yaw).add(pivot);
       turn(follow); turn(followLook);
@@ -664,7 +697,8 @@ export class NeighbourhoodScene {
   resize() {
     const w = this.container.clientWidth || innerWidth, h = this.container.clientHeight || innerHeight;
     this.camera.aspect = w / h;
-    this.camera.fov = this.camera.aspect < 0.9 ? 44 : 36;
+    this.baseFov = this.camera.aspect < 0.9 ? 44 : 36;
+    this.camera.fov = this.kiteMode ? this.baseFov + 18 : this.baseFov; // a wider lens on the roof (see frame)
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h, false);
   }
@@ -712,6 +746,7 @@ export class NeighbourhoodScene {
         if (drag) {
           const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
           if (Math.abs(dx) + Math.abs(dy) > 4) dragged = true;
+          if (dragged && this.kiteMode) { this.kites.drag(dx, dy); drag = { x: e.clientX, y: e.clientY }; return; } // on the roof a drag flies the kite
           if (dragged && street()) {
             // Orbit: sideways swings around her, up/down tilts the camera
             this.skipIntro();
@@ -741,6 +776,7 @@ export class NeighbourhoodScene {
     };
     this.onClick = (e) => {
       if (dragged) { dragged = false; return; } // the end of a pan isn't a click
+      if (this.kiteMode) return;
       this.skipIntro();
       const { lot, point, frog } = pick(e);
       if (frog) { this.goCatch(frog); return; }
@@ -814,6 +850,30 @@ export class NeighbourhoodScene {
   releaseKeys() { this.sim.keys.clear(); this.realKeys?.clear(); this.sim.running = false; }
   /** Shift held: she breaks into a jog. */
   setRun(on) { this.sim.running = !!on; }
+
+  /** Up on the Rangeen roof flying a kite (true), or back down at its door (false).
+   *  The page fades to black around this, so the jump and the camera cut are hidden. */
+  setKite(on) {
+    const R = this.rangeen, S = this.sim;
+    if (!R || this.mapOnly || !!on === !!this.kiteMode) return;
+    this.kiteMode = !!on;
+    this.releaseKeys(); S.target = null; S.goal = null; S.catching = null; S.walk = 0;
+    this.tapMark.material.opacity = 0;
+    if (on) {
+      S.pos.copy(R.frame.localToWorld(R.roof.spot.clone())).setY(0);
+      this.kites.launch();
+    } else {
+      // back on the path, a step out from the door, facing the street
+      S.pos.copy(R.door).addScaledVector(R.door.clone().setY(0).normalize(), -1.4);
+      this.kites.land();
+    }
+    // on the roof she's life-size (the street Sim is larger than life), so the parapet comes to her waist
+    this.simGroup.scale.setScalar(on ? ROOF_SCALE : 1);
+    this.simGroup.position.set(S.pos.x, on ? R.roof.y : 0, S.pos.z);
+    this.autoTurn = on ? 0 : this.autoTurn;
+    this.camera.fov = this.baseFov + (on ? 18 : 0); this.camera.updateProjectionMatrix();
+    this.snapCamera();
+  }
 
   /** Wild frogs do the odd little hop on the spot; caught frogs hop along her trail, one behind another. */
   tickFrogs(time, dt) {
@@ -966,7 +1026,7 @@ export class NeighbourhoodScene {
         }
       }
     }
-    const moving = move.lengthSq() > 0 && this.view < 0.6 && !this.intro;
+    const moving = move.lengthSq() > 0 && this.view < 0.6 && !this.intro && !this.kiteMode; // on the roof the keys fly the kite
     // Shift + keys: ease up to a jog (0 walk → 1 run), and back down when Shift is let go
     S.run = (S.run || 0) + (((moving && S.running && S.keys.size) ? 1 : 0) - (S.run || 0)) * Math.min(1, dt * 5);
     if (moving) {
@@ -979,12 +1039,28 @@ export class NeighbourhoodScene {
       if (Math.floor(S.step / Math.PI) !== before) this.emit('step'); // one per footfall
     }
     S.walk += ((moving ? 1 : 0) - S.walk) * Math.min(1, dt * 7); // 0 idle → 1 full stride
-    this.simGroup.position.set(S.pos.x, 0, S.pos.z);
+    const R = this.rangeen, kite = this.kiteMode;
+    this.simGroup.position.set(S.pos.x, kite ? R.roof.y : 0, S.pos.z);
+
+    // The kites over the Rangeen house (her own only while she's on its roof)
+    let kw = null;
+    if (this.kites) {
+      this.kites.group.visible = this.view < 0.5 && !this.mapOnly;
+      if (this.kites.group.visible || kite) {
+        // her hand: raised in front of her chest, toward the kite
+        const F = this.kites.fly, spot = R.roof.spot;
+        const hand = new THREE.Vector3(Math.sin(F.az) * 0.35, spot.y + SIM_H * ROOF_SCALE * 0.68, spot.z + Math.cos(F.az) * 0.35);
+        this.kites.tick(dt, time, kite ? S.keys : NO_KEYS, hand.setX(spot.x + hand.x));
+        if (kite) kw = R.frame.localToWorld(this.kites.kitePos.clone());
+      }
+    }
 
     if (this.simFace) {
       // Face where she's walking; when idle, turn to the camera like a Sim waiting for you
-      // (during the prologue she holds still, matching the white sculpt, so the camera orbits her)
-      const want = moving ? Math.atan2(move.x, move.z)
+      // (during the prologue she holds still, matching the white sculpt, so the camera orbits her;
+      // on the roof she faces her kite)
+      const want = kw ? Math.atan2(kw.x - S.pos.x, kw.z - S.pos.z)
+        : moving ? Math.atan2(move.x, move.z)
         : this.prologue && this.prologue.stage !== 'done' ? 0
           : Math.atan2(this.camera.position.x - S.pos.x, this.camera.position.z - S.pos.z);
       let diff = want - S.facing;
@@ -1005,6 +1081,16 @@ export class NeighbourhoodScene {
       const squash = (1 - stepUp) * 0.035 * w;
       g.scale.set(1 + squash * 0.5, 1 - squash + breathe, 1 + squash * 0.5);
       this.simBlob.scale.setScalar(1 - stepUp * 0.15 * w);
+      if (kw && !this.reducedMotion) {
+        // Flying: she leans back against the line, harder and with a yank on each pull, and sways
+        // into the turns; giving line, she steps forward a touch
+        const F = this.kites.fly;
+        const yank = F.tug * (0.5 + 0.5 * Math.sin(time * 11));
+        g.rotation.x = -0.05 - 0.1 * yank + (S.keys.has('d') ? 0.06 : 0) + Math.sin(time * 1.3) * 0.015;
+        g.rotation.z = -F.steer * 0.08 + Math.sin(time * 0.9) * 0.02;
+        g.rotation.y = F.steer * 0.12;
+        g.position.y = yank * 0.04;
+      }
     }
 
     if (this.tapMark.material.opacity > 0 && !S.target) this.tapMark.material.opacity = Math.max(0, this.tapMark.material.opacity - dt * 2);
@@ -1034,11 +1120,11 @@ export class NeighbourhoodScene {
     if (this.rangeen && !this.mapOnly) {
       const R = this.rangeen, d = R.door.distanceTo(S.pos);
       const street = clamp01(1 - this.view * 2.5); // fades out as the camera rises to the map
-      const song = clamp01((24 - d) / 18) * street;
+      const song = kite ? 1 : clamp01((24 - d) / 18) * street;
       if (Math.abs(song - (R.song ?? -1)) > 0.015 || (song === 0 && R.song !== 0)) { R.song = song; this.emit('rangeen', song); }
-      const turn = ease(clamp01((15 - d) / 9)) * street;
+      const turn = kite ? 0 : ease(clamp01((15 - d) / 9)) * street;
       this.autoTurn = (this.autoTurn || 0) + (turn - (this.autoTurn || 0)) * Math.min(1, dt * 2.5);
-      const atDoor = d < 2.6 && street > 0.5;
+      const atDoor = d < 2.6 && street > 0.5 && !kite;
       if (atDoor !== !!R.atDoor) { R.atDoor = atDoor; this.emit('rangeenDoor', atDoor); }
     }
 
@@ -1048,6 +1134,22 @@ export class NeighbourhoodScene {
     this.mapBob.userData.tick(this.reducedMotion ? 0 : time);
 
     if (this.prologue && this.prologue.stage !== 'done') this.tickPrologue(performance.now(), time, dt);
+
+    // On the roof by day the sky eases to the pastel mint of the Rangeen video's painted backdrop
+    if (this.skyBase) {
+      const want = kite ? this.skyBase.day : 0;
+      const k = (this.roofSkyK || 0) + (want - (this.roofSkyK || 0)) * Math.min(1, dt * 1.5);
+      this.roofSkyK = Math.abs(k - want) < 0.002 ? want : k;
+      if (this.roofSkyK !== this.roofSky) {
+        this.roofSky = this.roofSkyK;
+        this.skyUniforms.top.value.copy(this.skyBase.top).lerp(ROOF_SKY_TOP, this.roofSky * 0.9);
+        this.skyUniforms.bottom.value.copy(this.skyBase.bottom).lerp(ROOF_SKY_BOTTOM, this.roofSky * 0.9);
+      }
+    }
+
+    // On the roof the lens widens so she and her kite fit in one shot
+    const fov = this.baseFov + (kite ? 18 : 0);
+    if (Math.abs(this.camera.fov - fov) > 0.05) { this.camera.fov += (fov - this.camera.fov) * Math.min(1, dt * 4); this.camera.updateProjectionMatrix(); }
 
     // Camera eases toward where the view wants it
     const { pos, look } = this.cameraFor(this.view);

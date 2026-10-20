@@ -45,7 +45,6 @@ function Mailbox() {
 import MapZoom from '../ui/MapZoom.jsx';
 import PageGuide from '../ui/PageGuide.jsx';
 import { sfx, zoneMusic } from '../lib/audio.js';
-import RangeenRoom from '../ui/RangeenRoom.jsx';
 
 // Rangeen by Hassan Raheem, played by the Rangeen house (louder the closer she is)
 const RANGEEN_SONG = '/music/rangeen.mp3';
@@ -101,15 +100,39 @@ export default function Landing() {
   }, [playing]);
   // Leaving the map (scrolling back to the street) resets any zoom and pan
   useEffect(() => { if (!mapOn) sceneRef.current?.resetMap(); }, [mapOn]); // the street orbit is kept
-  // The Rangeen house: at its door, and inside it
+  // The Rangeen house: at its door, and up on its roof flying a kite. The page fades to black and back
+  // around the trip up (and down), so the jump and the camera cut are hidden.
   const [atRangeen, setAtRangeen] = useState(false);
   const [inRangeen, setInRangeen] = useState(false);
+  const [fade, setFade] = useState(false);
+  const [cuts, setCuts] = useState(0);
   const roomRef = useRef(false);
   const songRef = useRef(0);
-  const enterRangeen = () => { roomRef.current = true; setInRangeen(true); setPlaying(false); zoneMusic('rangeen', RANGEEN_SONG, 1); sfx('coin'); };
-  const leaveRangeen = () => { roomRef.current = false; setInRangeen(false); zoneMusic('rangeen', RANGEEN_SONG, songRef.current); };
+  const goingRef = useRef(false);
+  const viaFade = (fn) => {
+    if (goingRef.current) return;
+    goingRef.current = true; setFade(true);
+    setTimeout(() => { fn(); setFade(false); goingRef.current = false; }, reducedMotion() ? 0 : 420);
+  };
+  const enterRangeen = () => viaFade(() => {
+    roomRef.current = true; setInRangeen(true); setPlaying(true); setCuts(0);
+    sceneRef.current?.setKite(true); zoneMusic('rangeen', RANGEEN_SONG, 1); sfx('whoosh');
+  });
+  const leaveRangeen = () => viaFade(() => {
+    roomRef.current = false; setInRangeen(false);
+    sceneRef.current?.setKite(false); zoneMusic('rangeen', RANGEEN_SONG, songRef.current);
+  });
   const enterRangeenRef = useRef(enterRangeen);
   enterRangeenRef.current = enterRangeen;
+  const leaveRangeenRef = useRef(leaveRangeen);
+  leaveRangeenRef.current = leaveRangeen;
+  // The on-screen kite pad: held buttons work like held arrow keys
+  const hold = (code) => ({
+    onPointerDown: (e) => { e.currentTarget.setPointerCapture?.(e.pointerId); sceneRef.current?.key(code, true); },
+    onPointerUp: () => sceneRef.current?.key(code, false),
+    onPointerCancel: () => sceneRef.current?.key(code, false),
+    onLostPointerCapture: () => sceneRef.current?.key(code, false),
+  });
   const [intro, setIntro] = useState(() => !reducedMotion());
   const [prologue, setPrologue] = useState(() => (reducedMotion() ? 'done' : 'loading'));
 
@@ -134,6 +157,11 @@ export default function Landing() {
       // The Rangeen house: its song swells as she walks up; at its door she can go inside
       s.on('rangeen', (k) => { songRef.current = k; zoneMusic('rangeen', RANGEEN_SONG, roomRef.current ? 1 : k); }),
       s.on('rangeenDoor', (on) => { setAtRangeen(on); if (on) sfx('open', { volume: 0.6 }); }),
+      // Up on the roof: flying into another kite cuts it
+      s.on('bokata', (n) => {
+        setCuts(n); sfx('coin');
+        toastRef.current({ kind: 'want', title: 'Bo kata!', body: n === 1 ? 'You cut your first patang. The whole mohalla heard that.' : `That’s ${n} patangs cut. Basant champion.` });
+      }),
     ];
     // Only render (and only play the house's song) while the hero is on screen
     const io = new IntersectionObserver(([e]) => {
@@ -165,6 +193,7 @@ export default function Landing() {
     const view = seg(p, 0.22, 0.78);
     viewRef.current = view;
     s?.setView(view);
+    if (view > 0.2 && roomRef.current) leaveRangeenRef.current(); // scrolling on climbs her back down
     if (introRef.current) {
       const out = seg(p, 0.04, 0.26);
       introRef.current.style.opacity = String(1 - out);
@@ -193,7 +222,13 @@ export default function Landing() {
     const inHood = () => { const r = heroRef.current.getBoundingClientRect(); return r.top <= 1 && r.bottom > innerHeight * 0.6; };
     const down = (e) => {
       const s = sceneRef.current, { playing: on, near: at, atRangeen: atR, inRangeen: inR } = keyState.current;
-      if (!s || inR || typing(e.target) || e.altKey || e.ctrlKey || e.metaKey) return; // inside the house, the room has the keys
+      if (!s || typing(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (inR) {
+        // On the roof the arrows fly the kite; Esc climbs back down
+        if (e.key === 'Escape') { leaveRangeenRef.current(); return; }
+        if (WALK.has(e.code)) { e.preventDefault(); s.key(e.code, true); }
+        return;
+      }
       if (atR && e.key === 'Enter' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') { e.preventDefault(); s.releaseKeys(); enterRangeenRef.current(); return; }
       if (on && e.key === 'Escape') { setPlaying(false); return; }
       if (on && e.key === 'Enter' && at && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') { e.preventDefault(); if (byId[at]?.wip) toastRef.current(wipToast(byId[at])); else navigate(`/work/${at}`); return; }
@@ -256,7 +291,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className={`hood__help${playing ? ' is-on' : ''}${guideOpen ? '' : ' is-mini'}`}>
+          <div className={`hood__help${playing && !inRangeen ? ' is-on' : ''}${guideOpen ? '' : ' is-mini'}`} hidden={inRangeen}>
             <p id="hood-help" role="status" className="sr-only">
               {playing ? 'Click the ground or use the arrow keys to walk, hold Shift to run, drag to look around. At a door, press Enter or Go inside.' : ''}
             </p>
@@ -287,10 +322,33 @@ export default function Landing() {
           {atRangeen && !inRangeen && viewRef.current < 0.5 && (
             <div className="door" role="status">
               <span className="muted">At the door of</span> <strong>the Rangeen house</strong>
-              <button className="button button--small" onClick={enterRangeen}>Go inside <kbd>↵</kbd></button>
+              <button className="button button--small" onClick={enterRangeen}>Go up to the roof <kbd>↵</kbd></button>
             </div>
           )}
-          {inRangeen && <RangeenRoom onClose={leaveRangeen} />}
+          {/* Up on the roof: what she's doing, how to fly, and the way back down */}
+          {inRangeen && (
+            <div className="kite-hud" role="group" aria-label="Flying a kite on the Rangeen roof">
+              <p className="kite-hud__title">
+                <span className="muted">On the Rangeen roof</span> <strong>Flying a patang</strong>
+                {cuts > 0 && <span className="kite-hud__cuts" aria-live="polite">✂ {cuts} bo kata</span>}
+              </p>
+              <p className="kite-hud__hint">
+                <kbd>←</kbd><kbd>→</kbd> steer · <kbd>↑</kbd> pull · <kbd>↓</kbd> give line · or drag. Fly into another kite to cut it.
+              </p>
+              <div className="kite-hud__row">
+                <div className="kite-hud__pad">
+                  {[['ArrowLeft', 'Steer left', 'M15 5l-7 7 7 7'], ['ArrowUp', 'Pull', 'M5 15l7-7 7 7'], ['ArrowDown', 'Give line', 'M5 9l7 7 7-7'], ['ArrowRight', 'Steer right', 'M9 5l7 7-7 7']].map(([code, label, d]) => (
+                    <button key={code} type="button" className="kite-hud__btn" aria-label={label} title={label} {...hold(code)}>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d={d} /></svg>
+                      <span>{label.replace(/^Steer /, '')}</span>
+                    </button>
+                  ))}
+                </div>
+                <button className="button button--small" onClick={leaveRangeen}>Climb down <kbd>Esc</kbd></button>
+              </div>
+            </div>
+          )}
+          <div className={`hood__fade${fade ? ' is-on' : ''}`} aria-hidden="true" />
 
           {/* Pins: the hovered house on the street, every house on the map */}
           <div className="hood__pins" aria-hidden={!mapOn}>
@@ -313,7 +371,7 @@ export default function Landing() {
           </div>
 
           {/* On the street (while walking) these zoom the camera around her; on the map they zoom the map */}
-          <MapZoom scene={sceneObj} hidden={!(mapOn || playing)} street={!mapOn} />
+          <MapZoom scene={sceneObj} hidden={!(mapOn || playing) || inRangeen} street={!mapOn} />
           {/* The map's caption: one line, no panel. The pins themselves are the list. */}
           <p className="hood__mapline" aria-hidden={!mapOn}>
             <span className="story-kicker">The neighbourhood</span>

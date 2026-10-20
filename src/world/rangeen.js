@@ -4,6 +4,7 @@
 // wallpaper, a red satin skirt, white garlands and tinsel bunting. Upper floor: mustard plaster, a balcony with
 // an iron railing, two wooden French doors under jali transoms. Fairy lights outline the openings and hang in
 // swags from the balcony and the eave. Neighbours on both sides, a motorbike and potted plants in front.
+// On top, a roof terrace for Basant (kites.js): jali parapets, a stair room, a charpai and a charkhi.
 // Front faces +Z, resting on y = 0. `lights` (0–1) is set from the clock: the bulbs and rooms glow at dusk and night.
 import * as THREE from 'three';
 import { canvasTexture, mat } from './assets.js';
@@ -72,6 +73,38 @@ const hexGlass = () => canvasTexture(128, 256, (ctx, w, h) => {
   }
 });
 
+// the roof: a jali tile (two diamonds over a row of slits, like the parapets in the reference),
+// terracotta floor tiles, corrugated tin and a charpai's rope weave
+const jaliTile = () => {
+  const t = canvasTexture(128, 128, (ctx, w, h) => {
+    ctx.fillStyle = '#e8d6a6'; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(120,90,40,0.18)'; ctx.fillRect(0, 0, 4, h); ctx.fillRect(w - 4, 0, 4, h);
+    ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = '#000';
+    const diamond = (x, y, r) => { ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r * 0.8, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r * 0.8, y); ctx.closePath(); ctx.fill(); };
+    diamond(34, 36, 22); diamond(94, 36, 22); diamond(64, 18, 9); diamond(64, 56, 9);
+    for (const x of [14, 38, 62, 86, 110]) ctx.fillRect(x - 4, 74, 9, 44);
+  });
+  t.wrapS = THREE.RepeatWrapping;
+  return t;
+};
+const roofTiles = () => {
+  const t = canvasTexture(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#c89a78'; ctx.fillRect(0, 0, w, h);
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+      ctx.fillStyle = (x + y) % 3 ? '#d4a886' : '#c1916f'; ctx.fillRect(x * 32 + 1, y * 32 + 1, 30, 30);
+    }
+  });
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 2.4);
+  return t;
+};
+const corrugated = () => canvasTexture(128, 64, (ctx, w, h) => {
+  for (let x = 0; x < w; x += 8) { const g = ctx.createLinearGradient(x, 0, x + 8, 0); g.addColorStop(0, '#9c7b74'); g.addColorStop(0.5, '#c9a59c'); g.addColorStop(1, '#8a6a63'); ctx.fillStyle = g; ctx.fillRect(x, 0, 8, h); }
+});
+const weave = () => canvasTexture(128, 128, (ctx, w, h) => {
+  ctx.fillStyle = '#b89c6c'; ctx.fillRect(0, 0, w, h);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) if ((x + y) % 2) { ctx.fillStyle = '#dcc69a'; ctx.fillRect(x * 8, y * 8, 8, 8); }
+});
+
 // ---------- fairy lights ----------
 // Bulbs are tiny spheres collected into one mesh by bakeStatic; their material glows with `lights`.
 const BULB_GAP = 0.17;
@@ -92,6 +125,7 @@ function swag(a, b, sag, z, steps = 12) {
 
 export function createRangeenHouse() {
   const g = new THREE.Group();
+  const NW = 2.6; // neighbour bay width
   const W = 7.8, D = 6, G = 3.15, U = 3.0, BASE = 0.22; // width, depth, ground and upper storey heights
   const front = D / 2;
   const groundTop = BASE + G, slab = 0.28, upperBot = groundTop + slab, upperTop = upperBot + U;
@@ -120,6 +154,8 @@ export function createRangeenHouse() {
   // warm tungsten bulbs: orange so they stay orange under tone mapping instead of burning to white
   const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffb35c, emissive: 0xff8a26, emissiveIntensity: 1.2, roughness: 0.4 });
   const wire = mat(0x1a1a1a, { roughness: 0.9 });
+  let jaliMat2;
+  const jaliMatOf = () => (jaliMat2 ||= new THREE.MeshStandardMaterial({ map: jaliTile(), roughness: 0.9, alphaTest: 0.5, side: THREE.DoubleSide }));
 
   // ---------- body ----------
   g.add(box(W + 0.2, BASE, D + 0.2, mat(0x8d8a82), 0, BASE / 2, 0));
@@ -130,9 +166,8 @@ export function createRangeenHouse() {
   for (const s of [-1, 1]) g.add(box(0.12, G, CORE, teal, s * (W / 2 - 0.06), BASE + G / 2, front - CORE / 2));
   g.add(box(W + 0.5, slab, D + 0.9, band, 0, groundTop + slab / 2, 0.45)); // floor slab = balcony floor, projecting
   g.add(box(W, U, D, mustard, 0, upperBot + U / 2, 0));
-  g.add(box(W + 0.3, 0.32, D + 0.5, band, 0, upperTop + 0.16, 0.2));      // eave band
-  g.add(box(W + 0.3, 0.5, D + 0.3, mustard, 0, upperTop + 0.57, 0));       // parapet
-  g.add(box(W + 0.42, 0.1, D + 0.42, darkFrame, 0, upperTop + 0.87, 0));
+  g.add(box(W + 0.3, 0.32, D + 0.5, band, 0, upperTop + 0.16, 0.2));      // eave band = the roof slab
+  const RY = upperTop + 0.32; // the roof terrace floor (see "the roof terrace" below)
   // pale lintel band over the ground openings, like the reference
   g.add(box(W, 0.36, 0.06, mat(0xbcd2cc, { roughness: 0.9 }), 0, BASE + G - 0.3, front + 0.02));
 
@@ -259,13 +294,69 @@ export function createRangeenHouse() {
   // a few long strands draped down from the balcony, like the reference
   for (const x of [-2.9, -0.9, 1.0, 3.0]) along(swag(new THREE.Vector3(x, railTop, 0), new THREE.Vector3(x + 0.35, railY + 0.15, 0), -0.05, balZ + 0.06, 6), bulbs);
 
+  // ---------- the roof terrace: Basant on the chhat ----------
+  // After the rooftop kite scene: pale jali parapets (diamonds over slits) between square posts, a
+  // stair room with a tin awning and a water tank, a charpai, and the fairy lights carried up to the parapet.
+  const PH = 1.05;                                            // parapet height
+  const cream = mat(0xe3cf9e, { roughness: 0.9 }), creamDark = mat(0xcbb27c, { roughness: 0.9 });
+  g.add(box(W + 0.2, 0.03, D + 0.4, new THREE.MeshStandardMaterial({ map: roofTiles(), roughness: 0.95 }), 0, RY + 0.015, 0.2));
+  const jaliWall = (x0, z0, x1, z1, y0 = RY) => {
+    const L = Math.hypot(x1 - x0, z1 - z0), wall = new THREE.Group();
+    wall.position.set((x0 + x1) / 2, y0, (z0 + z1) / 2); wall.rotation.y = -Math.atan2(z1 - z0, x1 - x0);
+    wall.add(box(L, 0.16, 0.22, creamDark, 0, 0.08, 0));                  // plinth
+    wall.add(box(L + 0.1, 0.12, 0.32, cream, 0, PH + 0.06, 0));           // coping
+    const panel = new THREE.PlaneGeometry(L, PH - 0.16);
+    const uv = panel.attributes.uv; for (let k = 0; k < uv.count; k++) uv.setX(k, uv.getX(k) * Math.max(1, Math.round(L / 0.9)));
+    const m = new THREE.Mesh(panel, jaliMatOf()); m.position.y = 0.16 + (PH - 0.16) / 2; wall.add(m);
+    const posts = Math.max(1, Math.round(L / 2));
+    for (let i = 0; i <= posts; i++) wall.add(box(0.24, PH + 0.1, 0.28, cream, -L / 2 + (i * L) / posts, (PH + 0.1) / 2, 0));
+    g.add(wall);
+    return wall;
+  };
+  const TX = W / 2 + 0.05, TF = front + 0.3, TB = -D / 2 - 0.02;
+  jaliWall(-TX, TF, TX, TF); jaliWall(-TX, TB, TX, TB); jaliWall(-TX, TB, -TX, TF); jaliWall(TX, TB, TX, TF);
+  // the neighbours' roofs get the same parapet along their fronts
+  for (const sx of [-1, 1]) jaliWall(sx * (W / 2 + 0.1), front - 0.75, sx * (W / 2 + NW - 0.05), front - 0.75, upperTop + 0.9);
+  // stair room (mumty) at the back left, with a wooden door, a tin awning and a black water tank
+  const mx = -2.75, mz = -1.95, mw = 2.2, md = 1.9, mh = 2.3;
+  g.add(box(mw, mh, md, mustard, mx, RY + mh / 2, mz));
+  g.add(box(mw + 0.2, 0.12, md + 0.2, cream, mx, RY + mh + 0.06, mz));
+  g.add(box(0.9, 1.85, 0.06, wood, mx + 0.25, RY + 0.93, mz + md / 2 + 0.02));
+  g.add(box(0.06, 1.6, 0.03, mat(0x3a2416), mx + 0.25, RY + 0.95, mz + md / 2 + 0.06));
+  const tin = box(1.5, 0.05, 0.75, new THREE.MeshStandardMaterial({ map: corrugated(), roughness: 0.6, metalness: 0.3 }), mx + 0.25, RY + 2.0, mz + md / 2 + 0.33);
+  tin.rotation.x = 0.32; g.add(tin);
+  const water = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.9, 16), mat(0x2b2d31, { roughness: 0.5 }));
+  water.position.set(mx - 0.3, RY + mh + 0.12 + 0.45, mz - 0.1); g.add(water);
+  // a charpai on the right, its rope weave catching the light
+  {
+    const cx = 2.45, cz = -1.7, cw = 1.0, cl = 1.9;
+    g.add(box(cw, 0.04, cl, new THREE.MeshStandardMaterial({ map: weave(), roughness: 0.9 }), cx, RY + 0.46, cz));
+    for (const s of [-1, 1]) { g.add(box(0.08, 0.08, cl + 0.1, wood, cx + s * cw / 2, RY + 0.46, cz)); g.add(box(cw + 0.1, 0.08, 0.08, wood, cx, RY + 0.46, cz + s * cl / 2)); }
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.46, 8), wood); leg.position.set(cx + sx * cw / 2, RY + 0.23, cz + sz * cl / 2); g.add(leg);
+    }
+  }
+  // a charkhi (string spool) by where she stands
+  {
+    const ch = new THREE.Group();
+    const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.26, 12), mat(0xe8336f, { roughness: 0.5 })); drum.rotation.z = Math.PI / 2; ch.add(drum);
+    for (const s of [-1, 1]) { const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.03, 12), mat(0xf2c230)); rim.rotation.z = Math.PI / 2; rim.position.x = s * 0.14; ch.add(rim); }
+    ch.add(box(0.04, 0.5, 0.04, wood, 0, -0.1, 0));
+    ch.position.set(0.85, RY + 0.42, front - 0.6); ch.rotation.y = 0.5; g.add(ch);
+  }
+  // the fairy lights climb to the roof: along the front coping and in swags down its face
+  const copeY = RY + PH + 0.13;
+  along([new THREE.Vector3(-TX, copeY, TF + 0.17), new THREE.Vector3(TX, copeY, TF + 0.17)], bulbs);
+  for (let i = 0; i < 6; i++) { const x0 = -TX + (i * 2 * TX) / 6; along(swag(new THREE.Vector3(x0, copeY - 0.05, 0), new THREE.Vector3(x0 + (2 * TX) / 6, copeY - 0.05, 0), 0.32, TF + 0.18), bulbs); }
+  along([new THREE.Vector3(-TX, copeY, TB), new THREE.Vector3(-TX, copeY, TF)], bulbs);
+  along([new THREE.Vector3(TX, copeY, TB), new THREE.Vector3(TX, copeY, TF)], bulbs);
+
   const bulbGeo = new THREE.SphereGeometry(0.045, 6, 4);
   for (const p of bulbs) { const b = new THREE.Mesh(bulbGeo, bulbMat); b.position.copy(p); g.add(b); }
   // the wire the bulbs hang on, as a thin dark line through each run would be costly; a faint band reads as wire
   g.add(box(W - 0.4, 0.012, 0.012, wire, 0, railTop + 0.02, balZ + 0.04));
 
   // ---------- neighbours on both sides (one bay each) ----------
-  const NW = 2.6;
   for (const sx of [-1, 1]) {
     const nx = sx * (W / 2 + NW / 2);
     const H2 = upperTop + 0.9;
@@ -283,11 +374,11 @@ export function createRangeenHouse() {
 
   // ---------- plants: pots along the front, a fern by the left door ----------
   const potMat = mat(0x6e6a63, { roughness: 0.8 }), leafMats = [mat(0x3f6b34, { flatShading: true }), mat(0x5c8a3e, { flatShading: true }), mat(0x2f5a2c, { flatShading: true })];
-  const pot = (x, z, s = 1, k = 0) => {
-    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * s, 0.12 * s, 0.3 * s, 10), potMat); p.position.set(x, BASE + 0.15 * s, z); g.add(p);
+  const pot = (x, z, s = 1, k = 0, y0 = BASE) => {
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * s, 0.12 * s, 0.3 * s, 10), potMat); p.position.set(x, y0 + 0.15 * s, z); g.add(p);
     for (let i = 0; i < 4; i++) {
       const l = new THREE.Mesh(new THREE.IcosahedronGeometry(0.17 * s, 0), leafMats[(i + k) % 3]);
-      l.position.set(x + Math.sin(i * 2.1) * 0.12 * s, BASE + 0.38 * s + i * 0.09 * s, z + Math.cos(i * 2.1) * 0.1 * s); g.add(l);
+      l.position.set(x + Math.sin(i * 2.1) * 0.12 * s, y0 + 0.38 * s + i * 0.09 * s, z + Math.cos(i * 2.1) * 0.1 * s); g.add(l);
     }
   };
   // clusters of pots under each window and either side of the door, like the reference
@@ -301,6 +392,10 @@ export function createRangeenHouse() {
   // pots on the balcony too
   for (const x of [-3.3, 3.3]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.11, 0.28, 10), potMat); p.position.set(x, upperBot + 0.14, front + 0.5); g.add(p);
     const l = new THREE.Mesh(new THREE.IcosahedronGeometry(0.25, 0), leafMats[1]); l.position.set(x, upperBot + 0.45, front + 0.5); g.add(l); }
+
+  // and potted plants up on the roof terrace, in the corners and along the sides
+  [[-3.5, 2.9, 1.5], [-3.1, 3.0, 1.1], [3.5, 2.9, 1.6], [3.55, 1.6, 1.2], [3.55, 0.5, 1.4], [-3.55, 0.6, 1.3], [-0.9, -2.6, 1.2]]
+    .forEach(([x, z, s], k) => pot(x, z, s, k, RY));
 
   // ---------- the motorbike (a yellow 70cc, parked at the left) ----------
   const bike = new THREE.Group();
@@ -347,5 +442,6 @@ export function createRangeenHouse() {
     spill.intensity = k * 7; upper.intensity = k * 4;
   };
   setLights(0);
-  return { group: g, glow, setLights, width: W + NW * 2 };
+  // `roof`: where she stands to fly a kite (house-local), the terrace floor height and its front parapet
+  return { group: g, glow, setLights, width: W + NW * 2, roof: { y: RY, spot: new THREE.Vector3(0, RY, front - 0.9), front: TF, back: TB } };
 }
