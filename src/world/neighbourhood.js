@@ -283,7 +283,7 @@ export class NeighbourhoodScene {
       const frame = new THREE.Group(); frame.position.copy(at); frame.rotation.y = -a; scene.add(frame);
       frame.updateMatrixWorld(true);
       this.kites = createKites({ reducedMotion: this.reducedMotion });
-      this.kites.onCut((n) => this.emit('bokata', n));
+      this.kites.onEvent((e) => this.emit('kitegame', e)); // challenger · pech · win · lose · relaunch · gone
       frame.add(this.kites.group);
       this.rangeen = { ...r, angle: a, center: at, door: polar(DOOR_R, a), frame };
     }

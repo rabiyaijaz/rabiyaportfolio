@@ -46,8 +46,8 @@ import MapZoom from '../ui/MapZoom.jsx';
 import PageGuide from '../ui/PageGuide.jsx';
 import { sfx, zoneMusic } from '../lib/audio.js';
 
-// Rangeen by Hassan Raheem, played by the Rangeen house (louder the closer she is)
-const RANGEEN_SONG = '/music/rangeen.mp3';
+// The Rangeen house's song (Rabiya's own audio edit), louder the closer she is, full on the roof
+const RANGEEN_SONG = '/music/rangeen.m4a';
 import { useSim } from '../lib/simState.jsx';
 import { PinFace, pinClass, pinStyle } from '../ui/Pin.jsx';
 import { progressOf, reducedMotion, seg, useScrollFrame } from '../lib/scroll.js';
@@ -106,6 +106,11 @@ export default function Landing() {
   const [inRangeen, setInRangeen] = useState(false);
   const [fade, setFade] = useState(false);
   const [cuts, setCuts] = useState(0);
+  const [lost, setLost] = useState(0);
+  const [pech, setPech] = useState(null);       // the kite she's fighting, by name
+  const [kiteMsg, setKiteMsg] = useState(null); // "The green patang is coming for your line!"
+  const pechRef = useRef(null);
+  const rubRef = useRef(0);
   const roomRef = useRef(false);
   const songRef = useRef(0);
   const goingRef = useRef(false);
@@ -115,7 +120,7 @@ export default function Landing() {
     setTimeout(() => { fn(); setFade(false); goingRef.current = false; }, reducedMotion() ? 0 : 420);
   };
   const enterRangeen = () => viaFade(() => {
-    roomRef.current = true; setInRangeen(true); setPlaying(true); setCuts(0);
+    roomRef.current = true; setInRangeen(true); setPlaying(true); setCuts(0); setLost(0); setPech(null); setKiteMsg(null);
     sceneRef.current?.setKite(true); zoneMusic('rangeen', RANGEEN_SONG, 1); sfx('whoosh');
   });
   const leaveRangeen = () => viaFade(() => {
@@ -157,10 +162,31 @@ export default function Landing() {
       // The Rangeen house: its song swells as she walks up; at its door she can go inside
       s.on('rangeen', (k) => { songRef.current = k; zoneMusic('rangeen', RANGEEN_SONG, roomRef.current ? 1 : k); }),
       s.on('rangeenDoor', (on) => { setAtRangeen(on); if (on) sfx('open', { volume: 0.6 }); }),
-      // Up on the roof: flying into another kite cuts it
-      s.on('bokata', (n) => {
-        setCuts(n); sfx('coin');
-        toastRef.current({ kind: 'want', title: 'Bo kata!', body: n === 1 ? 'You cut your first patang. The whole mohalla heard that.' : `That’s ${n} patangs cut. Basant champion.` });
+      // Up on the roof: the kite fight (a pech). See world/kites.js for the rules.
+      s.on('kitegame', (e) => {
+        if (e.type === 'challenger') { setKiteMsg(`The ${e.name} is coming for your line!`); sfx('open', { volume: 0.5 }); }
+        if (e.type === 'gone' || e.type === 'relaunch') setKiteMsg(null);
+        if (e.type === 'pech') { setPech(e.name); setKiteMsg(null); sfx('toggle', { volume: 0.7 }); }
+        if (e.type === 'win') {
+          setPech(null); setCuts(e.cuts); sfx('coin');
+          toastRef.current({ kind: 'want', title: 'Bo kata!', body: e.cuts === 1 ? `You cut the ${e.name}. The whole mohalla heard that.` : `${e.cuts} patangs cut. The next one will fly harder.` });
+        }
+        if (e.type === 'lose') {
+          setPech(null); setLost(e.lost); sfx('splash', { volume: 0.4 });
+          toastRef.current({ kind: 'need', title: 'Your patang got cut!', body: e.reason === 'heat' ? 'Too much pulling: your manjha overheated and snapped. Mix in some dheel.' : `The ${e.name} out-pulled you. A new one’s going up.` });
+        }
+      }),
+      // The pech meter follows the fight every frame (no re-render), with the rasp of the strings rubbing
+      s.on('frame', () => {
+        const el = pechRef.current, st = el && s.kites?.pechState();
+        if (!st) return;
+        el.style.setProperty('--t', st.tension.toFixed(3));
+        el.style.setProperty('--h', Math.min(1, st.heat).toFixed(3));
+        el.style.setProperty('--l', st.line.toFixed(3));
+        el.classList.toggle('is-hot', st.heat > 0.72);
+        el.classList.toggle('is-short', st.line < 0.12);
+        const now = performance.now();
+        if (now - rubRef.current > 110) { rubRef.current = now; sfx('tap', { volume: 0.18 }); }
       }),
     ];
     // Only render (and only play the house's song) while the hero is on screen
@@ -327,14 +353,28 @@ export default function Landing() {
           )}
           {/* Up on the roof: what she's doing, how to fly, and the way back down */}
           {inRangeen && (
-            <div className="kite-hud" role="group" aria-label="Flying a kite on the Rangeen roof">
+            <div className={`kite-hud${pech ? ' is-pech' : ''}`} role="group" aria-label="Kite fight on the Rangeen roof">
               <p className="kite-hud__title">
-                <span className="muted">On the Rangeen roof</span> <strong>Flying a patang</strong>
-                {cuts > 0 && <span className="kite-hud__cuts" aria-live="polite">✂ {cuts} bo kata</span>}
+                <span className="muted">On the Rangeen roof</span> <strong>{pech ? 'Pech!' : 'Kite fight'}</strong>
+                <span className="kite-hud__score" aria-live="polite"><b title="Kites you cut">✂ {cuts}</b><b title="Kites you lost" className="is-lost">{lost} lost</b></span>
               </p>
-              <p className="kite-hud__hint">
-                <kbd>←</kbd><kbd>→</kbd> steer · <kbd>↑</kbd> pull · <kbd>↓</kbd> give line · or drag. Fly into another kite to cut it.
-              </p>
+              {pech ? (
+                // The tug of war: your side fills from the left; heat and line left underneath
+                <div className="pech" ref={pechRef} style={{ '--t': 0.5, '--h': 0, '--l': 1 }}>
+                  <div className="pech__bar" aria-hidden="true"><i className="pech__you" /><i className="pech__mid" /></div>
+                  <div className="pech__labels" aria-hidden="true"><span>You</span><span>The {pech}</span></div>
+                  <div className="pech__gauges">
+                    <span className="pech__gauge pech__gauge--heat">Manjha heat<i /></span>
+                    <span className="pech__gauge pech__gauge--line">Line left<i /></span>
+                  </div>
+                  <p className="kite-hud__hint pech__hint"><kbd>↑</kbd> <b>Pull</b> wins fast but heats your string · <kbd>↓</kbd> <b>Give line</b> is steady but runs out</p>
+                </div>
+              ) : (
+                <p className="kite-hud__hint">
+                  {kiteMsg ? <b className="kite-hud__alert">{kiteMsg} </b> : null}
+                  <kbd>←</kbd><kbd>→</kbd> steer · <kbd>↑</kbd> pull · <kbd>↓</kbd> give line · or drag. Cross another kite’s string to start a pech.
+                </p>
+              )}
               <div className="kite-hud__row">
                 <div className="kite-hud__pad">
                   {[['ArrowLeft', 'Steer left', 'M15 5l-7 7 7 7'], ['ArrowUp', 'Pull', 'M5 15l7-7 7 7'], ['ArrowDown', 'Give line', 'M5 9l7 7 7-7'], ['ArrowRight', 'Steer right', 'M9 5l7 7-7 7']].map(([code, label, d]) => (

@@ -193,7 +193,30 @@
 .kite-hud__title { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 .kite-hud__title .muted { color: #5f665f; }
 .kite-hud__title strong { font-family: var(--serif); font-weight: 500; font-size: 20px; }
-.kite-hud__cuts { margin-left: auto; padding: 3px 10px; border-radius: 999px; background: #e8336f; color: #fff; font-size: 13px; font-weight: 700; }
+.kite-hud__score { margin-left: auto; display: flex; gap: 6px; }
+.kite-hud__score b { padding: 3px 10px; border-radius: 999px; background: #e8336f; color: #fff; font-size: 13px; font-weight: 700; }
+.kite-hud__score b.is-lost { background: #ece7dc; color: #5f665f; }
+.kite-hud__alert { color: #c4232b; }
+.kite-hud.is-pech { box-shadow: 0 0 0 3px #e8336f, 0 16px 40px -18px rgba(0, 0, 0, 0.45); }
+
+/* The pech meter: a tug of war. Your pink side fills from the left (--t), against their side. */
+.pech { display: grid; gap: 6px; }
+.pech__bar { position: relative; height: 18px; border-radius: 999px; overflow: hidden; background: #3a4f4c; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3); }
+.pech__you { position: absolute; inset: 0 auto 0 0; width: calc(var(--t) * 100%); background: linear-gradient(90deg, #e8336f, #f2c230); border-radius: 999px 0 0 999px; }
+.pech__you::after { content: ''; position: absolute; right: -3px; top: -2px; bottom: -2px; width: 6px; border-radius: 3px; background: #fff; box-shadow: 0 0 10px 3px rgba(255, 220, 120, 0.9); animation: pech-rub 140ms steps(2) infinite; }
+@keyframes pech-rub { 50% { transform: translateY(1px); opacity: 0.7; } }
+.pech__mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: rgba(255, 255, 255, 0.5); }
+.pech__labels { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #4b524b; }
+.pech__gauges { display: flex; gap: 14px; }
+.pech__gauge { flex: 1; display: grid; gap: 3px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #5f665f; }
+.pech__gauge i { display: block; height: 7px; border-radius: 999px; background: #ece7dc; overflow: hidden; position: relative; }
+.pech__gauge i::before { content: ''; position: absolute; inset: 0 auto 0 0; border-radius: inherit; }
+.pech__gauge--heat i::before { width: calc(var(--h) * 100%); background: linear-gradient(90deg, #f2c230, #e8562c); }
+.pech__gauge--line i::before { width: calc(var(--l) * 100%); background: #2fa59a; }
+.pech.is-hot .pech__gauge--heat { color: #c4232b; animation: pech-warn 300ms ease-in-out infinite alternate; }
+.pech.is-short .pech__gauge--line { color: #c4232b; }
+@keyframes pech-warn { to { opacity: 0.55; } }
+.pech__hint { margin: 0; }
 .kite-hud__hint { margin: 0; font-size: 13px; color: #4b524b; }
 .kite-hud__hint kbd { margin-right: 2px; }
 .kite-hud__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
@@ -222,7 +245,7 @@
 }
 .hood__fade { position: absolute; inset: 0; z-index: 20; background: #07060d; opacity: 0; pointer-events: none; transition: opacity 400ms ease; }
 .hood__fade.is-on { opacity: 1; pointer-events: auto; }
-@media (prefers-reduced-motion: reduce) { .hood__fade { transition: none; } .kite-hud { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .hood__fade { transition: none; } .kite-hud, .pech__you::after, .pech.is-hot .pech__gauge--heat { animation: none; } }
 
 /* Pins: little speech bubbles with a house badge in the project's roof colour.
    JS sets `transform` to follow the house, so the pop uses the separate `scale` property. */
