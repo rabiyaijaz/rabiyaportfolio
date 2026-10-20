@@ -30,7 +30,8 @@ export default function Lightbox({ images, index, onIndex, onClose }) {
   return createPortal(
     <div
       className="lightbox" role="dialog" aria-modal="true" aria-label={img.alt} tabIndex={-1} ref={ref}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      // A click anywhere closes it, except on the image itself or the bar's buttons (the × still works too)
+      onClick={(e) => { if (!e.target.closest('img, button')) onClose(); }}
       onTouchStart={(e) => { touchX = e.touches[0].clientX; }}
       onTouchEnd={(e) => { if (touchX === null) return; const d = e.changedTouches[0].clientX - touchX; if (Math.abs(d) > 50) go(d < 0 ? 1 : -1); touchX = null; }}
     >
