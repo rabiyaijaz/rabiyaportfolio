@@ -6,10 +6,11 @@
 //   stat        one verified number from the case study
 //   findingLabel  'Finding' by default; 'Premise' where no research was run (be honest about it)
 //   finding / decision   one sentence each
-//   image       the one screen that shows the decision ({ src, fit: 'contain' } for phone shots)
+//   image       the one screen that shows the decision ({ src }), or { phones: [{ src, caption }] } for app screens in bezels
 //   outcome / next      where it stands, and what I'd do next
 //   gallery     1–2 "Highlights" pages after the project: the key screens for context.
-//               Each page: { layout: 'bento' (one big + two) | 'row' (2–4 equal columns) | 'grid' (2×2), items: [src | { src, caption }] }.
+//               Each page: { layout: 'bento' (one big + two) | 'row' (2–4 equal columns) | 'grid' (2×2), phones?: true
+//               (raw app screens get a phone bezel and keep their transparent corners), items: [src | { src, caption }] }.
 //               Captions come from the case study when the image is used there; tall images (phones, posters) sit contained.
 const v = (n) => `/img/cs/vettio/${n}.webp`;
 const c = (n) => `/img/cs/crewnity/${n}.webp`;
@@ -122,11 +123,12 @@ export const STORY = {
     findingLabel: 'Premise',
     finding: 'At that scale, nobody can follow up by hand.',
     decision: 'AI drafts the nudge. The gym approves it.',
-    image: { src: r('poke'), fit: 'contain' },
+    // Two phones: the AI-drafted poke waiting for the gym's confirm, and the history of what was actually sent
+    image: { phones: [{ src: r('poke'), caption: 'The AI drafts it. Staff confirm it.' }, { src: r('history'), caption: 'Every nudge that went out, on record.' }] },
     outcome: 'In progress.',
     next: 'Test the flows with gym managers before building the AI.',
     gallery: [
-      { layout: 'row', items: [r('whatsapp'), r('channels'), r('failed'), r('history')] },
+      { layout: 'row', phones: true, items: [r('whatsapp'), r('channels'), r('failed'), r('poke')] },
     ],
   },
 };

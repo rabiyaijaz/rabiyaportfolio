@@ -22,7 +22,8 @@ const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Applic
 const esc = (s = '') => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const font = (p) => pathToFileURL(path.join(app, 'node_modules', p)).href;
 
-// Images are embedded at print size: screens as JPEG, the sculpt as PNG (it needs its transparency)
+// Images are embedded at print size: screens as JPEG, the sculpt as PNG (it needs its transparency), and raw
+// app screens ('scr') as full-colour PNG so their transparent rounded corners stay transparent inside a phone bezel
 const images = new Map();
 const img = (p, kind = 'jpg') => { const k = `${kind}:${p}`; if (!images.has(k)) images.set(k, `__IMG_${images.size}__`); return images.get(k); };
 async function inline(text) {
@@ -32,8 +33,10 @@ async function inline(text) {
     const s = sharp(file);
     const buf = kind === 'png'
       ? await s.trim({ threshold: 1 }).resize({ height: 1300, withoutEnlargement: true }).png({ compressionLevel: 9, palette: true, quality: 90 }).toBuffer()
-      : await s.flatten({ background: '#ffffff' }).resize({ width: 1600, withoutEnlargement: true }).jpeg({ quality: 80, mozjpeg: true }).toBuffer();
-    text = text.split(token).join(`data:image/${kind === 'png' ? 'png' : 'jpeg'};base64,${buf.toString('base64')}`);
+      : kind === 'scr'
+        ? await s.resize({ width: 800, withoutEnlargement: true }).png({ compressionLevel: 9 }).toBuffer()
+        : await s.flatten({ background: '#ffffff' }).resize({ width: 1600, withoutEnlargement: true }).jpeg({ quality: 80, mozjpeg: true }).toBuffer();
+    text = text.split(token).join(`data:image/${kind === 'jpg' ? 'jpeg' : 'png'};base64,${buf.toString('base64')}`);
   }
   return text;
 }
@@ -48,20 +51,23 @@ const run = (p, i, page, total) => `<div class="run"><span>Rabiya Ijaz</span><sp
 const captions = new Map(Object.values(CASE_STUDIES).flatMap((cs) => (cs.sections || []).flatMap((s) => [...(s.images || []), ...(s.iterations || [])]))
   .map((im) => [im.src, im.caption || im.name || '']));
 const aspect = new Map();
-for (const s of Object.values(STORY)) for (const pg of s.gallery || []) for (const it of pg.items) {
+const srcs = Object.values(STORY).flatMap((s) => [...(s.gallery || []).flatMap((pg) => pg.items), ...(s.image?.phones || [])]);
+for (const it of srcs) {
   const src = typeof it === 'string' ? it : it.src;
   const m = await sharp(path.join(app, 'public', src)).metadata();
   aspect.set(src, m.width / m.height);
 }
+// An app screen in a phone bezel, sized to the screen's own shape
+const phone = (src) => `<div class="phone" style="--ar:${aspect.get(src).toFixed(4)}"><img src="${img(src, 'scr')}" alt=""></div>`;
 function highlights(p, i, pg, page, total) {
   const items = pg.items.map((it) => (typeof it === 'string' ? { src: it } : it))
     .map((it) => ({ ...it, caption: it.caption ?? captions.get(it.src) ?? '', tall: aspect.get(it.src) < 0.95 }));
   return `
-  <section class="page light hl hl--${pg.layout} hl--n${items.length}">
+  <section class="page light hl hl--${pg.layout} hl--n${items.length}${pg.phones ? ' hl--phones' : ''}">
     ${run(p, i, page, total)}
     <p class="label green">Highlights</p>
     <div class="hl__grid">
-      ${items.map((it) => `<figure class="${it.tall ? 'is-tall' : ''}"><div class="hl__img"><img src="${img(it.src)}" alt=""></div>${it.caption ? `<figcaption>${esc(it.caption)}</figcaption>` : ''}</figure>`).join('')}
+      ${items.map((it) => `<figure class="${it.tall ? 'is-tall' : ''}"><div class="hl__img">${pg.phones ? phone(it.src) : `<img src="${img(it.src)}" alt="">`}</div>${it.caption ? `<figcaption>${esc(it.caption)}</figcaption>` : ''}</figure>`).join('')}
     </div>
   </section>`;
 }
@@ -108,7 +114,9 @@ function project(p, i) {
       <p class="label green">So I decided</p>
       <h3 class="decision">${esc(s.decision)}</h3>
     </div>
-    <figure class="fd__shot${s.image.fit === 'contain' ? ' is-contain' : ''}"><img src="${img(s.image.src)}" alt=""></figure>
+    ${s.image.phones
+      ? `<div class="fd__phones">${s.image.phones.map((ph) => `<figure>${phone(ph.src)}<figcaption>${esc(ph.caption)}</figcaption></figure>`).join('')}</div>`
+      : `<figure class="fd__shot"><img src="${img(s.image.src)}" alt=""></figure>`}
   </section>
 
   <!-- ${p.name} · outcome & reflection -->
@@ -142,10 +150,13 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>
   --dusk: radial-gradient(130% 60% at 50% 112%, rgba(255, 138, 72, .30), transparent 70%), linear-gradient(180deg, #161a3e 0%, #221f4c 32%, #36244f 58%, #4c2742 80%, #5c2a22 100%);
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html, body { margin: 0; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 body { font: 400 11pt/1.45 Geist, system-ui, sans-serif; color: var(--ink); }
 a { color: inherit; }
-.page { position: relative; width: 297mm; height: 210mm; padding: 16mm 18mm; overflow: hidden; page-break-after: always; }
+/* 1 mm of bleed on the right: rounding to the PDF page left a hairline of white along the right edge */
+.page { position: relative; width: 298mm; height: 210mm; padding: 16mm 19mm 16mm 18mm; overflow: hidden; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+.cover .mark { display: inline-flex; align-items: center; gap: 3mm; }
 .dark { background: var(--dusk); color: #fbf3ee; }
 /* a few stars in the dusk sky */
 .dark::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .7;
@@ -165,7 +176,7 @@ a { color: inherit; }
 .cover .role { position: absolute; left: 18mm; top: 18mm; margin: 0; font: 300 italic 22pt/1.15 Newsreader, serif; max-width: 120mm; }
 .cover .role b { font-style: normal; font-weight: 400; color: var(--mint); }
 .cover .sculpt { position: absolute; right: 22mm; bottom: 8mm; height: 178mm; z-index: 1; filter: drop-shadow(0 18px 40px rgba(0, 0, 0, .45)); }
-.cover .foot { position: absolute; left: 18mm; right: 18mm; bottom: 12mm; display: flex; gap: 10mm; font-size: 9pt; letter-spacing: .04em; z-index: 2; }
+.cover .foot { position: absolute; left: 18mm; right: 18mm; bottom: 12mm; display: flex; align-items: center; gap: 8mm; font-size: 9pt; letter-spacing: .04em; z-index: 2; }
 
 /* ---------- intro + contents ---------- */
 .intro { display: grid; grid-template-columns: 1.15fr .85fr; gap: 14mm; }
@@ -207,8 +218,14 @@ a { color: inherit; }
 .decision { margin: 0; font: 800 34pt/1 Geist, sans-serif; letter-spacing: -.03em; text-transform: uppercase; }
 .fd__shot { margin: 8mm 0 0; border-radius: 4mm; overflow: hidden; border: 2px solid var(--ink); background: #fff; box-shadow: 8px 8px 0 var(--ink); }
 .fd__shot img { display: block; width: 100%; max-height: 150mm; object-fit: cover; object-position: top; }
-.fd__shot.is-contain { background: #2b2b9c; padding: 6mm; }
-.fd__shot.is-contain img { height: 150mm; object-fit: contain; }
+/* App screens: a dark bezel around each screen, clipped to its own rounded corners */
+.phone { aspect-ratio: var(--ar); height: 100%; max-width: 100%; margin: 0 auto; padding: 1.6mm; border-radius: 9mm; background: #15161c; box-shadow: 0 14px 30px -14px rgba(0, 0, 0, .55); }
+.phone img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 7.6mm; }
+.fd__phones { display: flex; justify-content: center; gap: 9mm; height: 150mm; margin-top: 10mm; padding: 9mm 8mm 6mm; border-radius: 4mm; background: #2b2b9c; border: 2px solid var(--ink); box-shadow: 8px 8px 0 var(--ink); }
+.fd__phones figure { display: flex; flex-direction: column; align-items: center; flex: none; margin: 0; }
+.fd__phones .phone { flex: none; height: 122mm; width: auto; max-width: none; margin: 0; }
+.fd__phones figcaption { max-width: 56mm; }
+.fd__phones figcaption { margin-top: 3mm; font-size: 8.5pt; font-weight: 600; color: #fff; text-align: center; }
 
 /* ---------- outcome & reflection ---------- */
 .outcome { margin: 0; max-width: 250mm; font: 800 58pt/.95 Geist, sans-serif; letter-spacing: -.04em; text-transform: uppercase; }
@@ -234,6 +251,9 @@ a { color: inherit; }
 .hl__img { position: relative; }
 .hl__img img { position: absolute; inset: 3mm; width: calc(100% - 6mm); height: calc(100% - 6mm); object-fit: contain; }
 .hl figure.is-tall .hl__img { background: #e6e1d6; }
+.hl--phones .hl__img { padding: 5mm 0; border: 0; box-shadow: none; background: transparent !important; }
+.hl--phones .hl__img .phone { position: absolute; inset: 5mm 0; height: calc(100% - 10mm); }
+.hl--phones .hl__img .phone img { position: static; width: 100%; height: 100%; }
 .hl figcaption { margin-top: 3mm; font-size: 9pt; line-height: 1.35; color: #3a3a40; }
 
 /* ---------- closing ---------- */
@@ -249,7 +269,7 @@ a { color: inherit; }
   <p class="role">Product designer for <b>human–AI collaboration.</b></p>
   <img class="sculpt" src="${img('sculpt-hero', 'png')}" alt="">
   <h1 class="name">Rabiya<br>Ijaz</h1>
-  <div class="foot"><span class="plumbob"></span><span>Portfolio ${new Date().getFullYear()}</span><span>${SITE_SHORT}</span></div>
+  <div class="foot"><span class="mark"><span class="plumbob"></span>Portfolio ${new Date().getFullYear()}</span><span>${SITE_SHORT}</span></div>
 </section>
 
 <section class="page light intro">
