@@ -82,6 +82,13 @@ export default function CaseStudy() {
       <dl className="case__meta">
         {Object.entries(p.meta).map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
       </dl>
+      {/* The HCI concepts the project practises, in the field's own language */}
+      {p.hci && (
+        <p className="case__hci">
+          <span className="case__hci-label">HCI lens</span>
+          {p.hci.map((c) => <span key={c} className="case__hci-chip">{c}</span>)}
+        </p>
+      )}
 
       {cs?.play && (
         <section className="case__play" id="play" aria-labelledby="play-title">
