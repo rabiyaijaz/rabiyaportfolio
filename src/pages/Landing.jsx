@@ -44,7 +44,11 @@ function Mailbox() {
 }
 import MapZoom from '../ui/MapZoom.jsx';
 import PageGuide from '../ui/PageGuide.jsx';
-import { sfx } from '../lib/audio.js';
+import { sfx, zoneMusic } from '../lib/audio.js';
+import RangeenRoom from '../ui/RangeenRoom.jsx';
+
+// Rangeen by Hassan Raheem, played by the Rangeen house (louder the closer she is)
+const RANGEEN_SONG = '/music/rangeen.mp3';
 import { useSim } from '../lib/simState.jsx';
 import { PinFace, pinClass, pinStyle } from '../ui/Pin.jsx';
 import { progressOf, reducedMotion, seg, useScrollFrame } from '../lib/scroll.js';
@@ -97,6 +101,15 @@ export default function Landing() {
   }, [playing]);
   // Leaving the map (scrolling back to the street) resets any zoom and pan
   useEffect(() => { if (!mapOn) sceneRef.current?.resetMap(); }, [mapOn]); // the street orbit is kept
+  // The Rangeen house: at its door, and inside it
+  const [atRangeen, setAtRangeen] = useState(false);
+  const [inRangeen, setInRangeen] = useState(false);
+  const roomRef = useRef(false);
+  const songRef = useRef(0);
+  const enterRangeen = () => { roomRef.current = true; setInRangeen(true); setPlaying(false); zoneMusic('rangeen', RANGEEN_SONG, 1); sfx('coin'); };
+  const leaveRangeen = () => { roomRef.current = false; setInRangeen(false); zoneMusic('rangeen', RANGEEN_SONG, songRef.current); };
+  const enterRangeenRef = useRef(enterRangeen);
+  enterRangeenRef.current = enterRangeen;
   const [intro, setIntro] = useState(() => !reducedMotion());
   const [prologue, setPrologue] = useState(() => (reducedMotion() ? 'done' : 'loading'));
 
@@ -118,12 +131,18 @@ export default function Landing() {
       s.on('intro', (st) => { if (st === 'out') setIntro(false); }),
       // The white-sculpt prologue: 'white' → 'morph' → 'done'
       s.on('prologue', (st) => { setPrologue(st); if (st === 'morph') sfx('want', { volume: 0.5 }); }),
+      // The Rangeen house: its song swells as she walks up; at its door she can go inside
+      s.on('rangeen', (k) => { songRef.current = k; zoneMusic('rangeen', RANGEEN_SONG, roomRef.current ? 1 : k); }),
+      s.on('rangeenDoor', (on) => { setAtRangeen(on); if (on) sfx('open', { volume: 0.6 }); }),
     ];
-    // Only render while the hero is on screen
-    const io = new IntersectionObserver(([e]) => s.setActive(e.isIntersecting));
+    // Only render (and only play the house's song) while the hero is on screen
+    const io = new IntersectionObserver(([e]) => {
+      s.setActive(e.isIntersecting);
+      if (!roomRef.current) zoneMusic('rangeen', RANGEEN_SONG, e.isIntersecting ? songRef.current : 0);
+    });
     io.observe(heroRef.current);
     if (import.meta.env.DEV) window.__hood = s;
-    return () => { offs.forEach((off) => off()); io.disconnect(); s.dispose(); };
+    return () => { offs.forEach((off) => off()); io.disconnect(); s.dispose(); zoneMusic('rangeen', RANGEEN_SONG, 0); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { sceneRef.current?.setClock(SKY_HOUR[phase]); }, [phase]);
 
@@ -163,7 +182,7 @@ export default function Landing() {
   // Keyboard play is page-wide: arrow keys / WASD walk on the street the moment the page opens,
   // intro or not, wherever focus is (no click into the scene needed). Esc and Enter work once walking.
   const keyState = useRef({});
-  keyState.current = { playing, near };
+  keyState.current = { playing, near, atRangeen, inRangeen };
   useEffect(() => {
     const WALK = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD']);
     const typing = (t) => t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName);
@@ -173,8 +192,9 @@ export default function Landing() {
     const SIDE = new Set(['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD']);
     const inHood = () => { const r = heroRef.current.getBoundingClientRect(); return r.top <= 1 && r.bottom > innerHeight * 0.6; };
     const down = (e) => {
-      const s = sceneRef.current, { playing: on, near: at } = keyState.current;
-      if (!s || typing(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
+      const s = sceneRef.current, { playing: on, near: at, atRangeen: atR, inRangeen: inR } = keyState.current;
+      if (!s || inR || typing(e.target) || e.altKey || e.ctrlKey || e.metaKey) return; // inside the house, the room has the keys
+      if (atR && e.key === 'Enter' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') { e.preventDefault(); s.releaseKeys(); enterRangeenRef.current(); return; }
       if (on && e.key === 'Escape') { setPlaying(false); return; }
       if (on && e.key === 'Enter' && at && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') { e.preventDefault(); if (byId[at]?.wip) toastRef.current(wipToast(byId[at])); else navigate(`/work/${at}`); return; }
       if (e.key === 'Shift') { s.setRun(true); return; }
@@ -264,6 +284,13 @@ export default function Landing() {
                 : <Link className="button button--small" to={`/work/${nearP.id}`}>Go inside <kbd>↵</kbd></Link>}
             </div>
           )}
+          {atRangeen && !inRangeen && viewRef.current < 0.5 && (
+            <div className="door" role="status">
+              <span className="muted">At the door of</span> <strong>the Rangeen house</strong>
+              <button className="button button--small" onClick={enterRangeen}>Go inside <kbd>↵</kbd></button>
+            </div>
+          )}
+          {inRangeen && <RangeenRoom onClose={leaveRangeen} />}
 
           {/* Pins: the hovered house on the street, every house on the map */}
           <div className="hood__pins" aria-hidden={!mapOn}>

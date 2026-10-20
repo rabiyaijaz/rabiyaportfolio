@@ -48,7 +48,33 @@ function applyGains(ramp = 0.25) {
   const set = (node, v) => { node.gain.cancelScheduledValues(t); node.gain.setValueAtTime(node.gain.value, t); node.gain.linearRampToValueAtTime(v, t + ramp); };
   set(master, prefs.muted ? 0 : db(LEVEL.master));
   set(sfxBus, prefs.sfx ? db(LEVEL.sfx) : 0);
-  set(musicBus, prefs.music ? db(LEVEL.music) : 0);
+  set(musicBus, prefs.music ? db(LEVEL.music) * (1 - zoneLevel()) : 0); // the soundtrack makes way for a place's song
+}
+
+// ---------------------------------------------------------------- zone music
+// A place on the street can play its own song, faded by how close the visitor is (0–1). While one plays,
+// the soundtrack fades out by the same amount. It follows the music preference and the mute button.
+const zones = new Map(); // name → { el, gain, level }
+if (import.meta.env.DEV) window.__zones = zones;
+const zoneLevel = () => Math.max(0, ...[...zones.values()].map((z) => z.level));
+export function zoneMusic(name, src, level) {
+  level = Math.max(0, Math.min(1, level));
+  let z = zones.get(name);
+  if (!z) {
+    if (level <= 0 || !graph()) return;
+    const el = new Audio(src); el.loop = true; el.preload = 'auto'; el.crossOrigin = 'anonymous';
+    const gain = ctx.createGain(); gain.gain.value = 0;
+    ctx.createMediaElementSource(el).connect(gain); gain.connect(master);
+    z = { el, gain, level: 0 }; zones.set(name, z);
+  }
+  if (Math.abs(z.level - level) < 0.01 && !(level === 0 && !z.el.paused)) return;
+  z.level = level;
+  const audible = unlocked && prefs.music && !prefs.muted && !held && !document.hidden;
+  const t = ctx.currentTime, target = audible ? level * level * db(LEVEL.music + 7) : 0; // squared: it swells as you arrive
+  z.gain.gain.cancelScheduledValues(t); z.gain.gain.setValueAtTime(z.gain.gain.value, t); z.gain.gain.linearRampToValueAtTime(target, t + 0.3);
+  if (audible && level > 0 && z.el.paused) { if (ctx.state === 'suspended') ctx.resume(); z.el.play().catch(() => {}); }
+  if ((!audible || level === 0) && !z.el.paused) setTimeout(() => { if (z.level === 0 || !prefs.music || prefs.muted) z.el.pause(); }, 400);
+  applyGains(0.3);
 }
 
 // ---------------------------------------------------------------- music
@@ -77,11 +103,13 @@ function syncMusic() {
     if (audioEl?.paused) {
       // Fade in rather than blasting in
       const t = ctx.currentTime;
-      musicBus.gain.cancelScheduledValues(t); musicBus.gain.setValueAtTime(0, t); musicBus.gain.linearRampToValueAtTime(db(LEVEL.music), t + 2.5);
+      musicBus.gain.cancelScheduledValues(t); musicBus.gain.setValueAtTime(0, t); musicBus.gain.linearRampToValueAtTime(db(LEVEL.music) * (1 - zoneLevel()), t + 2.5);
       audioEl.play().then(save).catch(() => {});
     }
   }
   else if (audioEl && !audioEl.paused) { audioEl.pause(); save(); }
+  // zone songs follow the same rules: re-apply their level now that the conditions changed
+  for (const [name, z] of zones) { const l = z.level; z.level = -1; zoneMusic(name, z.el.src, l); }
 }
 export function nextTrack() {
   ensureMusic();
@@ -94,7 +122,7 @@ export function nextTrack() {
 /** Briefly lower the music under an important sound, then let it recover (sidechain-style). */
 function duck(dbDown = -8, hold = 0.6) {
   if (!ctx || !prefs.music) return;
-  const t = ctx.currentTime, base = db(LEVEL.music);
+  const t = ctx.currentTime, base = db(LEVEL.music) * (1 - zoneLevel());
   musicBus.gain.cancelScheduledValues(t);
   musicBus.gain.setValueAtTime(musicBus.gain.value, t);
   musicBus.gain.linearRampToValueAtTime(base * db(dbDown), t + 0.04);

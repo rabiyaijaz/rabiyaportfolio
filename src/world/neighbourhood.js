@@ -596,7 +596,9 @@ export class NeighbourhoodScene {
     // (landscape keeps the Sim right of centre and the three flagship houses in the middle)
     // Landscape looks a little left of the Sim so Vettio, Crewnity and Flownet all sit right of the intro panel
     // The default framing keeps her right of the hero text; once the visitor orbits or zooms in, centre her
-    const O = this.orbit;
+    // Near the Rangeen house the camera swings round to face its front (it faces east, the street looks north)
+    const at = this.autoTurn || 0;
+    const O = at ? { ...this.orbit, yaw: this.orbit.yaw + at * 1.4, dist: this.orbit.dist * (1 - at * 0.32) } : this.orbit;
     const lat = (portrait ? 3 : 12) * clamp01(1 - Math.abs(O.yaw) * 1.5) * clamp01((O.dist - 0.35) / 0.65);
     const follow = new THREE.Vector3(s.x - lat, portrait ? 11 : 9.5, s.z + (portrait ? 25 : 27));
     const followLook = new THREE.Vector3(s.x - lat, 3.6, s.z - 18);
@@ -951,7 +953,7 @@ export class NeighbourhoodScene {
     if (S.keys.size) {
       if (S.keys.has('u')) move.z -= 1; if (S.keys.has('d')) move.z += 1;
       if (S.keys.has('l')) move.x -= 1; if (S.keys.has('r')) move.x += 1;
-      move.applyAxisAngle(UP, this.orbit.yaw); // "up" always walks away from the camera
+      move.applyAxisAngle(UP, this.orbit.yaw + (this.autoTurn || 0) * 1.4); // "up" always walks away from the camera
     } else if (S.target) {
       move.subVectors(S.target, S.pos).setY(0);
       if (move.length() < 0.25) {
@@ -1026,6 +1028,19 @@ export class NeighbourhoodScene {
       l.marker.scale.setScalar(pulse * (1 + this.view * 1.6));
     }
     if (near !== S.near) { S.near = near; this.emit('near', near); }
+
+    // The Rangeen house: its song swells as she walks up (0 far → 1 at the door), the camera turns to
+    // face its front as she arrives, and standing on its path offers "Go inside"
+    if (this.rangeen && !this.mapOnly) {
+      const R = this.rangeen, d = R.door.distanceTo(S.pos);
+      const street = clamp01(1 - this.view * 2.5); // fades out as the camera rises to the map
+      const song = clamp01((24 - d) / 18) * street;
+      if (Math.abs(song - (R.song ?? -1)) > 0.015 || (song === 0 && R.song !== 0)) { R.song = song; this.emit('rangeen', song); }
+      const turn = ease(clamp01((15 - d) / 9)) * street;
+      this.autoTurn = (this.autoTurn || 0) + (turn - (this.autoTurn || 0)) * Math.min(1, dt * 2.5);
+      const atDoor = d < 2.6 && street > 0.5;
+      if (atDoor !== !!R.atDoor) { R.atDoor = atDoor; this.emit('rangeenDoor', atDoor); }
+    }
 
     // Map marker grows as the camera rises
     this.mapBob.visible = this.view > 0.15;
