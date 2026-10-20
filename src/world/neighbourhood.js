@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { createHouse } from './house.js';
+import { createRangeenHouse } from './rangeen.js';
 import { BASIN_R, PLAZA_R, createFountain } from './fountain.js';
 import { createForest, createPlumbob, createSimCutout, createStreetLamp, bakeStatic, canvasTexture, mat, seeded } from './assets.js';
 
@@ -266,6 +267,16 @@ export class NeighbourhoodScene {
       }
       return { ...lot, angle: a, center, door, group: g, marker, star, label: polar(HOUSE_R, a).setY(lot.featured ? 11 : 9) };
     });
+
+    // The Rangeen house: not a project, a place to visit, at the free west end of the crescent
+    {
+      const a = THREE.MathUtils.degToRad(-86);
+      const r = createRangeenHouse();
+      const body = bakeStatic(r.group);
+      const at = polar(HOUSE_R + 0.5, a);
+      for (const o of [body, r.glow]) { o.position.copy(at); o.rotation.y = -a; scene.add(o); }
+      this.rangeen = { ...r, angle: a, center: at, door: polar(DOOR_R, a) };
+    }
 
     // Forest around the outside, leaving the lots and the road clear
     const spots = [];
@@ -531,6 +542,7 @@ export class NeighbourhoodScene {
     this.windowMat.emissive.set(P.window > 0.5 ? 0xffb866 : 0x23384d);
     this.windowMat.emissiveIntensity = P.window;
     this.glowMat.opacity = P.lamps;
+    this.rangeen?.setLights(Math.min(1, Math.max(0, P.lamps)));
     this.starMat.opacity = P.stars;
     this.fillLevel = 4 + P.stars * 26 + P.lamps * 6;
     if (this.simFill) this.simFill.intensity = this.fillLevel;
@@ -896,6 +908,16 @@ export class NeighbourhoodScene {
     for (const l of this.lots) {
       const d = p.clone().sub(l.center);
       if (d.length() < 5.2) p.copy(l.center).add(d.setLength(5.2));
+    }
+    // The Rangeen row (house plus neighbours) is wide: keep her out of its footprint, pushing to the nearest edge
+    if (this.rangeen) {
+      const R = this.rangeen, half = R.width / 2 + 0.3, back = -3.6, front = 3.9;
+      const local = p.clone().sub(R.center).applyAxisAngle(UP, R.angle); // into the house's own frame (front = +Z)
+      if (Math.abs(local.x) < half && local.z > back && local.z < front) {
+        const out = [[half - Math.abs(local.x), 'x'], [front - local.z, 'f'], [local.z - back, 'b']].sort((u, v) => u[0] - v[0])[0][1];
+        if (out === 'x') local.x = Math.sign(local.x || 1) * half; else if (out === 'f') local.z = front; else local.z = back;
+        p.copy(local.applyAxisAngle(UP, -R.angle).add(R.center)).setY(0);
+      }
     }
     return p;
   }
