@@ -6,7 +6,6 @@ import { CAREER } from '../content/about.js';
 import StoryHeader from '../ui/StoryHeader.jsx';
 import { HOUSES } from '../story/story.js';
 import ProcessStory from '../story/ProcessStory.jsx';
-import { Plumbob } from '../ui/Logo.jsx';
 import { usePhase } from '../lib/phase.jsx';
 import NightCta from '../ui/NightCta.jsx';
 import OrgLogo from '../ui/Logos.jsx';
@@ -50,7 +49,7 @@ import { sfx, zoneMusic } from '../lib/audio.js';
 const RANGEEN_SONG = '/music/rangeen.m4a';
 import { useSim } from '../lib/simState.jsx';
 import { PinFace, pinClass, pinStyle } from '../ui/Pin.jsx';
-import { progressOf, reducedMotion, seg, useScrollFrame } from '../lib/scroll.js';
+import { glideTo, progressOf, reducedMotion, seg, useScrollFrame } from '../lib/scroll.js';
 import '../story/story.css';
 import Arrow from '../ui/Arrow.jsx';
 
@@ -233,6 +232,11 @@ export default function Landing() {
 
   // ---------------------------------------------------------------- keyboard play
   const startPlaying = () => { sceneRef.current?.skipIntro(); setPlaying(true); };
+  // From the map (or anywhere further down): glide back to the street first, then start walking
+  const playFromAnywhere = () => {
+    const top = heroRef.current.getBoundingClientRect().top + scrollY;
+    glideTo(top, startPlaying);
+  };
 
   // Keyboard play is page-wide: arrow keys / WASD walk on the street the moment the page opens,
   // intro or not, wherever focus is (no click into the scene needed). Esc and Enter work once walking.
@@ -313,7 +317,7 @@ export default function Landing() {
             <p className="hood__line">Product designer for human–AI collaboration. Every house on this street is something I designed.</p>
             <div className="hood__actions">
               <Link className="button" to="/work">See the work <Arrow dir="right" /></Link>
-              <button className="ghost-button" onClick={startPlaying}><Plumbob size={10} /> Walk the street</button>
+              {/* "Play the game" lives in the play-or-scroll bar at the bottom (ui/PageGuide.jsx) */}
             </div>
           </div>
 
@@ -422,7 +426,7 @@ export default function Landing() {
       </section>
 
       {/* Fixed on screen; kept before the last section so `#main > :last-child` stays the contact band */}
-      <PageGuide chapters={CHAPTERS} hidden={playing || (intro && prologue !== 'done')} />
+      <PageGuide chapters={CHAPTERS} hidden={playing || (intro && prologue !== 'done')} onPlay={playFromAnywhere} choiceWhile={() => !!heroRef.current && heroRef.current.getBoundingClientRect().bottom > innerHeight * 0.8} />
       <ProcessStory />
       <Skills />
       <NightCta title={<>Got a product in mind? <em>Let’s talk.</em></>} />

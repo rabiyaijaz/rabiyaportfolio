@@ -101,21 +101,32 @@
 .pguide__chev { font-size: 16px; color: var(--accent); }
 @keyframes pguide-bob { 50% { transform: translateY(5px); } }
 @keyframes pguide-wheel { 0% { opacity: 1; transform: translateY(0); } 70% { opacity: 0; transform: translateY(8px); } 100% { opacity: 0; } }
-/* The hero's scroll cue: bottom centre, a clear white pill naming what's below, with a falling double chevron */
-.pguide__hero {
-  position: fixed; left: 50%; bottom: 28px; z-index: 40; display: grid; justify-items: center; gap: 2px;
-  padding: 10px 22px 8px; border: 0; border-radius: 22px; cursor: pointer; font: inherit; color: #15201a; text-align: center;
+/* Play or scroll: one bar, bottom centre, through the street and the map. Green "Play the game" on the
+   left, white "Keep scrolling" with a falling double chevron on the right. */
+.pguide__choice {
+  position: fixed; left: 50%; bottom: 26px; z-index: 40; display: flex; gap: 4px; padding: 4px; border-radius: 22px;
   background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 16px 40px -14px rgba(0, 0, 0, 0.55), 0 0 0 4px rgba(255, 255, 255, 0.16);
-  opacity: 0; transform: translate(-50%, 14px); pointer-events: none;
-  transition: opacity 400ms var(--ease), transform 400ms var(--ease), background 200ms;
+  box-shadow: 0 16px 40px -14px rgba(0, 0, 0, 0.6), 0 0 0 4px rgba(255, 255, 255, 0.14);
+  opacity: 0; transform: translate(-50%, 14px); pointer-events: none; transition: opacity 400ms var(--ease), transform 400ms var(--ease);
 }
-.pguide__hero.is-on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; transition-delay: 600ms; }
-.pguide__hero:hover { background: #fff; }
-.pguide__hero:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-.pguide__hero-label { font-size: 15px; font-weight: 800; }
-.pguide__hero-next { font-size: 12px; font-weight: 600; color: #5f665f; white-space: nowrap; }
-.pguide__hero-arrow { display: grid; justify-items: center; height: 22px; margin-top: 2px; color: #2f9a4a; }
+.pguide__choice.is-on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; transition-delay: 500ms; }
+.pguide__choice button {
+  display: flex; align-items: center; gap: 10px; padding: 9px 18px; border: 0; border-radius: 18px; cursor: pointer; font: inherit; text-align: left;
+  transition: background 180ms, transform 180ms var(--ease);
+}
+.pguide__choice button:active { transform: scale(0.97); }
+.pguide__choice button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.pguide__choice b { display: block; font-size: 15px; font-weight: 800; line-height: 1.2; white-space: nowrap; }
+.pguide__choice small { display: block; font-size: 12px; font-weight: 600; line-height: 1.25; white-space: nowrap; }
+.pguide__play { background: #5fe08a; color: #0d2a17; }
+.pguide__play:hover { background: #79ea9d; }
+.pguide__play small { color: #24603a; }
+.pguide__gem { width: 12px; height: 20px; fill: #0d2a17; animation: pguide-gem 2.4s ease-in-out infinite; }
+@keyframes pguide-gem { 50% { transform: translateY(-2px) rotate(8deg); } }
+.pguide__down { background: transparent; color: #15201a; }
+.pguide__down:hover { background: rgba(21, 32, 26, 0.06); }
+.pguide__down small { color: #5f665f; }
+.pguide__hero-arrow { display: grid; justify-items: center; height: 22px; color: #2f9a4a; }
 .pguide__hero-arrow svg { grid-area: 1 / 1; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; animation: pguide-fall 1.6s ease-in-out infinite; }
 .pguide__hero-arrow svg + svg { animation-delay: 0.8s; }
 @keyframes pguide-fall { 0% { opacity: 0; transform: translateY(-6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(8px); } }
@@ -125,13 +136,15 @@
 }
 @media (max-width: 860px) {
   /* phones and small tablets: above the Day/Dusk/Night switch, which sits bottom centre there */
-  .pguide__hero { bottom: 74px; padding: 8px 18px 6px; }
-  .pguide__hero-next { font-size: 11px; }
+  .pguide__choice { bottom: 70px; width: calc(100% - 32px); max-width: 380px; }
+  .pguide__choice button { flex: 1; justify-content: center; gap: 8px; padding: 8px 10px; }
+  .pguide__choice b { font-size: 14px; }
+  .pguide__choice small { font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .pguide__nudge.is-on { animation: none; }
   .pguide__mouse span { animation: none; }
-  .pguide__hero-arrow svg { animation: none; opacity: 1; }
+  .pguide__hero-arrow svg, .pguide__gem { animation: none; opacity: 1; }
   .pguide__hero-arrow svg + svg { display: none; }
 }
 
@@ -664,7 +677,7 @@ html[data-phase='night'] .socials svg, html[data-phase='dusk'] .socials svg { co
   .hood__veil { background: linear-gradient(0deg, rgba(5, 9, 18, 0.72) 0%, rgba(5, 9, 18, 0.4) 40%, transparent 66%); }
   .hood__intro { left: 20px; right: 20px; bottom: 156px; } /* clear of the centred scroll cue below it */
   .hood__line { font-size: 16px; margin: 12px 0 20px; }
-  .hood__mapline { bottom: 72px; left: 20px; right: 20px; }
+  .hood__mapline { bottom: 150px; left: 20px; right: 20px; } /* above the play-or-scroll bar */
   .hood__mapline-title { font-size: 22px; }
   /* Passion-project pins stay on the map as compact logo bubbles; the name shows on hover, focus or highlight */
   .pin--small { padding: 3px; }

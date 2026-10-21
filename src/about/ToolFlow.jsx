@@ -3,7 +3,7 @@ import Icon from './icons.jsx';
 import ToolIcon from '../ui/ToolIcon.jsx';
 import StoryHeader from '../ui/StoryHeader.jsx';
 import PlumbobCanvas from '../ui/PlumbobCanvas.jsx';
-import { progressOf, reducedMotion, useScrollFrame } from '../lib/scroll.js';
+import { glideTo, progressOf, reducedMotion, useScrollFrame } from '../lib/scroll.js';
 
 // How I work: the tools, in the order a project uses them. The plumbob changes with each step,
 // the same way it does in the landing's process story. Testing tools only appear once there's
@@ -43,7 +43,7 @@ export default function ToolFlow() {
   const jump = (i) => {
     const el = runRef.current;
     const run = el.offsetHeight - innerHeight;
-    scrollTo({ top: el.getBoundingClientRect().top + scrollY + run * (i / (STEPS.length - 1)), behavior: 'smooth' });
+    glideTo(el.getBoundingClientRect().top + scrollY + run * (i / (STEPS.length - 1)));
   };
 
   const header = (

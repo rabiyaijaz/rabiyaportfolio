@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CHAPTERS } from './story.js';
-import { progressOf, reducedMotion, useScrollFrame } from '../lib/scroll.js';
+import { glideTo, progressOf, reducedMotion, useScrollFrame } from '../lib/scroll.js';
 import Lightbox from '../ui/Lightbox.jsx';
 import StoryHeader from '../ui/StoryHeader.jsx';
 import PlumbobCanvas from '../ui/PlumbobCanvas.jsx';
@@ -88,7 +88,7 @@ function Scrub({ onOpen }) {
   const jump = (i) => {
     const el = ref.current;
     const run = el.offsetHeight - innerHeight;
-    scrollTo({ top: el.getBoundingClientRect().top + scrollY + run * ((i + 0.5) / CHAPTERS.length), behavior: 'smooth' });
+    glideTo(el.getBoundingClientRect().top + scrollY + run * ((i + 0.5) / CHAPTERS.length));
   };
 
   return (
