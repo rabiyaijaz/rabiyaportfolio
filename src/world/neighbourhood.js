@@ -8,6 +8,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { createHouse } from './house.js';
 import { createRangeenHouse } from './rangeen.js';
 import { createKites } from './kites.js';
+import { TRACK_R, WALK_R, createOutskirts } from './outskirts.js';
 import { BASIN_R, PLAZA_R, createFountain } from './fountain.js';
 import { createForest, createPlumbob, createSimCutout, createStreetLamp, bakeStatic, canvasTexture, mat, seeded } from './assets.js';
 
@@ -56,6 +57,7 @@ const ORBIT_FROM = 0.95; // where the prologue orbit starts (rad, around her)
 const START = new THREE.Vector3(4, 0, -17); // inner sidewalk, Crewnity dead ahead
 const ROOF_SCALE = 0.62; // her size up on the Rangeen roof (about 2 m)
 const NO_KEYS = new Set();
+export const MAP_ZOOM_MAX = 2.6; // how far the map pulls back (1 = the crescent framed)
 const ROOF_SKY_TOP = new THREE.Color(0x9fcab5), ROOF_SKY_BOTTOM = new THREE.Color(0xeee6cf); // mint over a warm haze
 
 /** Angle a is measured from -Z (north), clockwise seen from above. */
@@ -149,14 +151,14 @@ export class NeighbourhoodScene {
     this.starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.6, sizeAttenuation: false, transparent: true, depthWrite: false, fog: false });
     scene.add(new THREE.Points(starGeo, this.starMat));
 
-    // Ground, gently rolling beyond the neighbourhood
+    // Ground, flat out to the railway round the edge of town, gently rolling beyond it
     this.groundMat = new THREE.MeshStandardMaterial({ roughness: 1, flatShading: true });
-    const groundGeo = new THREE.PlaneGeometry(700, 700, 70, 70);
+    const groundGeo = new THREE.PlaneGeometry(900, 900, 90, 90);
     groundGeo.rotateX(-Math.PI / 2);
-    const gp = groundGeo.attributes.position;
+    const gp = groundGeo.attributes.position, FLAT = TRACK_R + 8;
     for (let i = 0; i < gp.count; i++) {
       const d = Math.hypot(gp.getX(i), gp.getZ(i));
-      if (d > 70) gp.setY(i, (rand() - 0.3) * Math.min(7, (d - 70) * 0.06));
+      if (d > FLAT) gp.setY(i, (rand() - 0.3) * Math.min(7, (d - FLAT) * 0.06));
     }
     groundGeo.computeVertexNormals();
     const ground = new THREE.Mesh(groundGeo, this.groundMat);
@@ -288,11 +290,34 @@ export class NeighbourhoodScene {
       this.rangeen = { ...r, angle: a, center: at, door: polar(DOOR_R, a), frame };
     }
 
-    // Forest around the outside, leaving the lots and the road clear
+    // The outskirts past the ring road: cricket ground, bazaar, dhaba, lake, railway, rickshaws (outskirts.js)
+    this.outskirts = createOutskirts({ reducedMotion: this.reducedMotion });
+    // its lamps glow like the ring road's (on at dusk); the floodlights are bigger
+    {
+      const lampRoot = new THREE.Group();
+      for (const at of this.outskirts.lamps) {
+        const lamp = createStreetLamp(); lamp.position.copy(at); lamp.rotation.y = Math.atan2(at.x, at.z); lampRoot.add(lamp);
+        const glow = new THREE.Sprite(this.glowMat); glow.scale.setScalar(5); glow.position.copy(at).setY(3.2); scene.add(glow);
+      }
+      for (const at of this.outskirts.floods) { const glow = new THREE.Sprite(this.glowMat); glow.scale.setScalar(16); glow.position.copy(at); scene.add(glow); }
+      this.outskirts.stat.add(lampRoot);
+    }
+    scene.add(bakeStatic(this.outskirts.stat), this.outskirts.live);
+    this.obstacles = [...this.outskirts.obstacles, ...this.outskirts.lamps.map((p) => ({ x: p.x, z: p.z, r: 0.5 }))];
+
+    // Forest: a belt beyond the railway, plus woods behind the crescent of houses (clear of the lake).
+    // The near trees are obstacles now that she can walk out this far.
     const spots = [];
-    while (spots.length < 150) {
-      const a = rand() * Math.PI * 2, r = 46 + rand() * 60;
-      spots.push({ x: Math.sin(a) * r, z: -Math.cos(a) * r, scale: 0.9 + rand() * 1.0, pine: rand() < 0.45 });
+    while (spots.length < 170) {
+      const a = rand() * Math.PI * 2, r = TRACK_R + 7 + rand() * 75;
+      spots.push({ x: Math.sin(a) * r, z: -Math.cos(a) * r, scale: 0.9 + rand() * 1.2, pine: rand() < 0.45 });
+    }
+    for (let n = 0; n < 60;) {
+      const a = THREE.MathUtils.degToRad(-100 + rand() * 175), r = 50 + rand() * 52; // -100° … 75°, north of the lake
+      const x = Math.sin(a) * r, z = -Math.cos(a) * r;
+      spots.push({ x, z, scale: 0.9 + rand() * 1.0, pine: rand() < 0.5 });
+      this.obstacles.push({ x, z, r: 1.4 });
+      n++;
     }
     for (let i = 0; i < 9; i++) {
       const a = Math.PI + (rand() - 0.5) * 2.2, r = RING + 9 + rand() * 6; // the southern verge
@@ -558,6 +583,7 @@ export class NeighbourhoodScene {
     this.glowMat.opacity = P.lamps;
     this.rangeen?.setLights(Math.min(1, Math.max(0, P.lamps)));
     this.kites?.setNight(clamp01((P.stars - 0.35) / 0.65));
+    this.outskirts?.setLights(clamp01(P.lamps));
     // kept so the roof can tint the sky (see frame)
     this.skyBase = { top: P.skyTop.clone(), bottom: P.skyBottom.clone(), day: 1 - clamp01(P.stars / 0.35) };
     this.roofSky = -1; // re-apply
@@ -817,7 +843,7 @@ export class NeighbourhoodScene {
       this.emit('zoom', this.orbit.dist);
       return;
     }
-    this.zoom = Math.min(1.3, Math.max(0.4, z));
+    this.zoom = Math.min(MAP_ZOOM_MAX, Math.max(0.4, z)); // > 1 pulls back to show the outskirts too
     this.panBy(0, 0); // re-clamp the pan for the new zoom
     this.emit('zoom', this.zoom);
   }
@@ -827,8 +853,8 @@ export class NeighbourhoodScene {
     else this.resetMap();
   }
   panBy(dx, dz) {
-    // The closer you are, the further you may wander, but never off the map
-    const lim = 34 * (1.3 - this.zoom);
+    // The closer you are, the further you may wander (the town is ~110 m across), but never off the map
+    const lim = 25 + 60 * clamp01((MAP_ZOOM_MAX - this.zoom) / (MAP_ZOOM_MAX - 0.4));
     this.pan.x = Math.min(lim, Math.max(-lim, this.pan.x + dx));
     this.pan.z = Math.min(lim, Math.max(-lim, this.pan.z + dz));
   }
@@ -1014,7 +1040,12 @@ export class NeighbourhoodScene {
 
   clampWalkable(p) {
     const r = Math.hypot(p.x, p.z);
-    if (r > 46) p.multiplyScalar(46 / r);
+    if (r > WALK_R) p.multiplyScalar(WALK_R / r); // out to the railway, not over it
+    // Round things she walks around: stalls, the dhaba, trees, the scoreboard; the lake is an oval
+    for (const o of this.obstacles || []) {
+      const sx = o.sx || 1, dx = (p.x - o.x) / sx, dz = p.z - o.z, d = Math.hypot(dx, dz);
+      if (d < o.r) { const k = o.r / Math.max(d, 0.001); p.x = o.x + dx * k * sx; p.z = o.z + dz * k; }
+    }
     // Walk around the fountain, not through it
     const keep = BASIN_R + 0.6;
     if (r < keep) { if (r < 0.01) p.set(0, 0, keep); else p.multiplyScalar(keep / r); }
@@ -1231,6 +1262,7 @@ export class NeighbourhoodScene {
     }
 
     this.fountain.tick(time, dt, this.reducedMotion);
+    this.outskirts.tick(dt, time, this.view, S.pos, this.zoom);
     this.tickFrogs(time, dt);
 
     if (this.simBob) {

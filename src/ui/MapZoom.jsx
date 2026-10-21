@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { sfx } from '../lib/audio.js';
+import { MAP_ZOOM_MAX } from '../world/neighbourhood.js';
 
 /**
  * Zoom controls for the neighbourhood. On the map they zoom and reset the map; on the street they
@@ -9,7 +10,7 @@ export default function MapZoom({ scene, hidden = false, street = false }) {
   const [zoom, setZoom] = useState(1);
   useEffect(() => scene?.on('zoom', setZoom), [scene]);
   const act = (fn) => () => { if (!scene) return; fn(scene); sfx('whoosh'); };
-  const min = street ? 0.36 : 0.41, max = street ? 1.39 : 1.29;
+  const min = street ? 0.36 : 0.41, max = street ? 1.39 : MAP_ZOOM_MAX - 0.01;
   return (
     <div className={`map-zoom${hidden ? ' is-hidden' : ''}`} role="group" aria-label={street ? 'Camera' : 'Map zoom'} aria-hidden={hidden || undefined}>
       <button onClick={act((s) => s.zoomBy(0.75))} disabled={zoom <= min} aria-label="Zoom in" tabIndex={hidden ? -1 : 0}>+</button>
