@@ -281,6 +281,18 @@
   .kite-hud__row > .button { padding-inline: 12px; white-space: nowrap; }
   .kite-hud__row > .button kbd { display: none; }
 }
+/* The cricket call after each ball: a big word that pops in the middle of the screen and fades */
+.cricket-call {
+  position: absolute; left: 50%; top: 34%; z-index: 7; margin: 0; transform: translate(-50%, -50%); pointer-events: none;
+  font: 400 clamp(54px, 9vw, 120px)/1 var(--serif); font-style: italic; color: #fff; white-space: nowrap;
+  text-shadow: 0 6px 30px rgba(0, 0, 0, 0.45); animation: cricket-call 2.1s var(--ease) both;
+}
+.cricket-call--six { color: #ffd34d; }
+.cricket-call--four { color: #8ff0b3; }
+.cricket-call--out { color: #ff8a7a; }
+.cricket-call--dot, .cricket-call--runs { font-size: clamp(36px, 5vw, 64px); }
+@keyframes cricket-call { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); } 14% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); } 24% { transform: translate(-50%, -50%) scale(1); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -62%); } }
+@media (prefers-reduced-motion: reduce) { .cricket-call { animation: none; } } /* it simply shows until the next ball */
 .hood__fade { position: absolute; inset: 0; z-index: 20; background: #07060d; opacity: 0; pointer-events: none; transition: opacity 400ms ease; }
 .hood__fade.is-on { opacity: 1; pointer-events: auto; }
 @media (prefers-reduced-motion: reduce) { .hood__fade { transition: none; } .kite-hud, .pech__you::after, .pech.is-hot .pech__gauge--heat { animation: none; } }

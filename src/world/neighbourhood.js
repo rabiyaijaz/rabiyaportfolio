@@ -646,7 +646,13 @@ export class NeighbourhoodScene {
     const lat = (portrait ? 3 : 12) * clamp01(1 - Math.abs(O.yaw) * 1.5) * clamp01((O.dist - 0.35) / 0.65);
     const follow = new THREE.Vector3(s.x - lat, portrait ? 11 : 9.5, s.z + (portrait ? 25 : 27));
     const followLook = new THREE.Vector3(s.x - lat, 3.6, s.z - 18);
-    if (this.kiteMode) {
+    if (this.cricketMode) {
+      // At the crease: just behind and above her, over the keeper's head, looking down the pitch at the bowler
+      const K = this.outskirts.cricket, sp = K.spot;
+      // (landscape: from her left, so she stands right of centre, clear of the scoreboard panel)
+      follow.set(sp.x + (portrait ? 0.5 : -1.5), portrait ? 3.8 : 3.1, sp.z + (portrait ? 4.6 : 3.8));
+      followLook.set(sp.x + (portrait ? -0.2 : -1.2), portrait ? 0.9 : 0.35, sp.z - 9);
+    } else if (this.kiteMode) {
       // On the roof: over her right shoulder at head height, so she stands on the right with the
       // parapet and the street in front of her, and the string runs up to the kite in the sky.
       // The higher the kite, the further back the camera eases, so both stay in frame.
@@ -728,7 +734,7 @@ export class NeighbourhoodScene {
     const w = this.container.clientWidth || innerWidth, h = this.container.clientHeight || innerHeight;
     this.camera.aspect = w / h;
     this.baseFov = this.camera.aspect < 0.9 ? 44 : 36;
-    this.camera.fov = this.kiteMode ? this.baseFov + 18 : this.baseFov; // a wider lens on the roof (see frame)
+    this.camera.fov = this.baseFov + (this.kiteMode ? 18 : this.cricketMode ? 8 : 0); // a wider lens on the roof and at the crease (see frame)
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h, false);
   }
@@ -808,6 +814,7 @@ export class NeighbourhoodScene {
     this.onClick = (e) => {
       if (dragged) { dragged = false; return; } // the end of a pan isn't a click
       if (this.kiteMode) return;
+      if (this.cricketMode) { this.swing(0); return; } // a tap at the crease is a straight drive
       this.skipIntro();
       const { lot, point, frog, sim } = pick(e);
       if (sim) { const r = el.getBoundingClientRect(); this.emit('simClick', { x: e.clientX - r.left, y: e.clientY - r.top }); return; }
@@ -905,6 +912,50 @@ export class NeighbourhoodScene {
     this.autoTurn = on ? 0 : this.autoTurn;
     this.camera.fov = this.baseFov + (on ? 18 : 0); this.camera.updateProjectionMatrix();
     this.snapCamera();
+  }
+
+  /** At the crease on the cricket ground, batting an over (true), or back out by the boundary (false).
+   *  Like the roof, the page fades around it. */
+  setCricket(on) {
+    const K = this.outskirts?.cricket, S = this.sim;
+    if (!K || this.mapOnly || !!on === !!this.cricketMode) return;
+    this.cricketMode = !!on;
+    this.releaseKeys(); S.target = null; S.goal = null; S.catching = null; S.arrive = null; S.walk = 0;
+    this.tapMark.material.opacity = 0;
+    if (on) {
+      S.pos.copy(K.spot).setY(0);
+      this.ensureBat();
+      K.start((e) => this.emit('cricket', e));
+    } else {
+      K.stop();
+      S.pos.copy(K.approach).setY(0);
+    }
+    if (this.simBat) this.simBat.visible = !!on;
+    S.swingT = 0;
+    this.simGroup.scale.setScalar(on ? ROOF_SCALE : 1); // life-size beside the players
+    this.simGroup.position.set(S.pos.x, 0, S.pos.z);
+    this.camera.fov = this.baseFov + (on ? 8 : 0); this.camera.updateProjectionMatrix();
+    this.snapCamera();
+  }
+  /** Another over, after one finishes. */
+  cricketAgain() { if (this.cricketMode) this.outskirts.cricket.start((e) => this.emit('cricket', e)); }
+  /** Her shot: -1 pull (leg side), 0 drive, 1 cut (off side). */
+  swing(dir = 0) {
+    if (!this.cricketMode || !this.outskirts.cricket.swing(dir)) return false;
+    this.sim.swingT = 0.001; this.sim.swingDir = dir;
+    return true;
+  }
+  /** A cricket bat in her right hand (made once, the first time she bats). */
+  ensureBat() {
+    if (this.simBat || !this.simGait) return;
+    const pivot = new THREE.Group();
+    const wood = mat(0xe2c48e, { roughness: 0.6 }), grip = mat(0x1d1d1f, { roughness: 0.8 });
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.55, 8), grip); handle.position.y = -0.2; pivot.add(handle);
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.05, 0.09), wood); blade.position.y = -0.98; pivot.add(blade);
+    pivot.position.set(-0.62, 1.55, 0.38); // at her right hand, in front of her (she faces +Z in the model)
+    pivot.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+    this.simGait.add(pivot);
+    this.simBat = pivot;
   }
 
   /** Wild frogs do the odd little hop on the spot; caught frogs hop along her trail, one behind another. */
@@ -1113,7 +1164,7 @@ export class NeighbourhoodScene {
         const then = S.arrive; S.arrive = null; then?.(); // an action from her menu finishes here
       }
     }
-    const moving = move.lengthSq() > 0 && this.view < 0.6 && !this.intro && !this.kiteMode; // on the roof the keys fly the kite
+    const moving = move.lengthSq() > 0 && this.view < 0.6 && !this.intro && !this.kiteMode && !this.cricketMode; // on the roof the keys fly the kite; at the crease they play shots
     // Shift + keys: ease up to a jog (0 walk → 1 run), and back down when Shift is let go
     S.run = (S.run || 0) + (((moving && S.running && S.keys.size) ? 1 : 0) - (S.run || 0)) * Math.min(1, dt * 5);
     if (moving) {
@@ -1146,7 +1197,8 @@ export class NeighbourhoodScene {
       // Face where she's walking; when idle, turn to the camera like a Sim waiting for you
       // (during the prologue she holds still, matching the white sculpt, so the camera orbits her;
       // on the roof she faces her kite)
-      const want = kw ? Math.atan2(kw.x - S.pos.x, kw.z - S.pos.z)
+      const want = this.cricketMode ? Math.PI // at the crease: facing the bowler, down the pitch
+        : kw ? Math.atan2(kw.x - S.pos.x, kw.z - S.pos.z)
         : moving ? Math.atan2(move.x, move.z)
         : this.prologue && this.prologue.stage !== 'done' ? 0
           : Math.atan2(this.camera.position.x - S.pos.x, this.camera.position.z - S.pos.z);
@@ -1168,6 +1220,18 @@ export class NeighbourhoodScene {
       const squash = (1 - stepUp) * 0.035 * w;
       g.scale.set(1 + squash * 0.5, 1 - squash + breathe, 1 + squash * 0.5);
       this.simBlob.scale.setScalar(1 - stepUp * 0.15 * w);
+      if (this.cricketMode && this.simBat) {
+        // Batting: a crouched stance with the bat raised behind; a swing whips it through in a quarter second
+        // (pull, drive or cut) with her shoulders turning into the shot, then holds the follow-through
+        const B = this.simBat;
+        let k = 0;
+        if (S.swingT > 0) { S.swingT += dt; k = Math.min(1, S.swingT / 0.25); if (S.swingT > 1.1) S.swingT = 0; }
+        const e = 1 - Math.pow(1 - k, 3), d = S.swingDir || 0;
+        B.rotation.set(-0.9 + e * 2.5, d * 0.7 * e, 0.25 - e * 0.5);
+        g.rotation.y = -0.35 + e * (0.9 + d * 0.35);
+        g.rotation.x = 0.12 - e * 0.05;
+        g.position.y = -0.04;
+      }
       if (S.dance > 0) {
         // the little dance: a full spin with three hops and a sway
         S.dance = Math.max(0, S.dance - dt);
@@ -1223,6 +1287,12 @@ export class NeighbourhoodScene {
       if (atDoor !== !!R.atDoor) { R.atDoor = atDoor; this.emit('rangeenDoor', atDoor); }
     }
 
+    // The cricket ground: standing by the pitch offers "Bat an over"
+    if (this.outskirts && !this.mapOnly) {
+      const at = !this.cricketMode && !kite && this.view < 0.4 && S.pos.distanceTo(this.outskirts.cricket.approach) < 3.2;
+      if (at !== !!this.atCricket) { this.atCricket = at; this.emit('cricketSpot', at); }
+    }
+
     // Map marker grows as the camera rises
     this.mapBob.visible = this.view > 0.15;
     this.mapBob.scale.setScalar(Math.max(0.01, (this.view - 0.15) / 0.85));
@@ -1243,7 +1313,7 @@ export class NeighbourhoodScene {
     }
 
     // On the roof the lens widens so she and her kite fit in one shot
-    const fov = this.baseFov + (kite ? 18 : 0);
+    const fov = this.baseFov + (kite ? 18 : this.cricketMode ? 8 : 0);
     if (Math.abs(this.camera.fov - fov) > 0.05) { this.camera.fov += (fov - this.camera.fov) * Math.min(1, dt * 4); this.camera.updateProjectionMatrix(); }
 
     // Camera eases toward where the view wants it

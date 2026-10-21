@@ -128,6 +128,21 @@ export default function Landing() {
     roomRef.current = false; setInRangeen(false);
     sceneRef.current?.setKite(false); zoneMusic('rangeen', RANGEEN_SONG, songRef.current);
   });
+  // The cricket ground: by the pitch, and batting an over
+  const [atCricket, setAtCricket] = useState(false);
+  const [inCricket, setInCricket] = useState(false);
+  const [score, setScore] = useState({ runs: 0, wkts: 0, balls: 0, done: false });
+  const [call, setCall] = useState(null); // the big "SIX!" in the middle of the screen: { label, kind, n }
+  const cricketRef = useRef(false);
+  const enterCricket = () => viaFade(() => {
+    cricketRef.current = true; setInCricket(true); setPlaying(true); setScore({ runs: 0, wkts: 0, balls: 0, done: false }); setCall(null);
+    sceneRef.current?.setCricket(true); sfx('whoosh');
+  });
+  const leaveCricket = () => viaFade(() => { cricketRef.current = false; setInCricket(false); setCall(null); sceneRef.current?.setCricket(false); });
+  const enterCricketRef = useRef(enterCricket); enterCricketRef.current = enterCricket;
+  const leaveCricketRef = useRef(leaveCricket); leaveCricketRef.current = leaveCricket;
+  const shot = (dir) => { if (sceneRef.current?.swing(dir)) sfx('hover', { volume: 0.8 }); };
+  const shotRef = useRef(shot); shotRef.current = shot;
   const enterRangeenRef = useRef(enterRangeen);
   enterRangeenRef.current = enterRangeen;
   const leaveRangeenRef = useRef(leaveRangeen);
@@ -153,6 +168,17 @@ export default function Landing() {
       s.on('enter', (id) => { if (byId[id]?.wip) { toastRef.current(wipToast(byId[id])); return; } sfx('coin'); navigate(`/work/${id}`); }),
       s.on('step', () => sfx('step', { volume: 0.55 })),
       // Easter egg: catching a frog from the fountain
+      // The cricket ground: standing by the pitch, and the over itself
+      s.on('cricketSpot', (on) => { setAtCricket(on); if (on) sfx('open', { volume: 0.6 }); }),
+      s.on('cricket', (e) => {
+        setScore({ runs: e.runs, wkts: e.wkts, balls: e.balls, done: e.type === 'over' });
+        if (e.type === 'contact') sfx('tap', { volume: 1 });
+        if (e.type === 'result') {
+          setCall((c) => ({ label: e.label, kind: e.kind, n: (c?.n || 0) + 1 }));
+          sfx(e.kind === 'six' ? 'coin' : e.kind === 'four' ? 'want' : e.kind === 'out' ? 'splash' : 'toggle', { volume: 0.7 });
+        }
+        if (e.type === 'over') toastRef.current({ kind: 'want', title: `Over! ${e.runs}/${e.wkts}`, body: e.runs >= 24 ? 'A proper Peshawar Zalmi knock.' : e.runs >= 12 ? 'Not bad at all. The crowd at the boundary is clapping.' : 'Every innings starts somewhere. Bat again?' });
+      }),
       // Clicking her on the street opens her pie menu (like the About room)
       s.on('simClick', (p) => { setPlaying(true); setSimMenu(p); sfx('open', { volume: 0.6 }); }),
       s.on('frog', (n) => toast({ kind: 'want', title: n === 1 ? 'You caught a frog!' : `Frog #${n} joined the parade`, body: n === 1 ? 'It’ll hop along behind you now. Ribbit.' : 'They follow wherever you walk.' })),
@@ -223,6 +249,7 @@ export default function Landing() {
     viewRef.current = view;
     s?.setView(view);
     if (view > 0.2 && roomRef.current) leaveRangeenRef.current(); // scrolling on climbs her back down
+    if (view > 0.2 && cricketRef.current) leaveCricketRef.current(); // …or walks her off the pitch
     if (introRef.current) {
       const out = seg(p, 0.04, 0.26);
       introRef.current.style.opacity = String(1 - out);
@@ -245,6 +272,7 @@ export default function Landing() {
     const [nextPhase, phaseLabel, phaseIcon] = NEXT_PHASE[phase];
     return [
       { label: 'Fly a kite', icon: '🪁', onSelect: () => s.actGoToRangeen(() => enterRangeenRef.current()) },
+      { label: 'Play cricket', icon: '🏏', onSelect: () => s.walkThen(s.outskirts.cricket.approach, () => enterCricketRef.current()) },
       {
         label: 'Catch a frog', icon: '🐸',
         onSelect: () => { if (!s.actCatchFrog()) toast({ kind: 'want', title: 'No frogs left', body: 'You’ve caught every frog in the fountain. They’re all hopping after you.' }); },
@@ -267,7 +295,7 @@ export default function Landing() {
   // Keyboard play is page-wide: arrow keys / WASD walk on the street the moment the page opens,
   // intro or not, wherever focus is (no click into the scene needed). Esc and Enter work once walking.
   const keyState = useRef({});
-  keyState.current = { playing, near, atRangeen, inRangeen };
+  keyState.current = { playing, near, atRangeen, inRangeen, atCricket, inCricket };
   useEffect(() => {
     const WALK = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD']);
     const typing = (t) => t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName);
@@ -277,8 +305,18 @@ export default function Landing() {
     const SIDE = new Set(['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD']);
     const inHood = () => { const r = heroRef.current.getBoundingClientRect(); return r.top <= 1 && r.bottom > innerHeight * 0.6; };
     const down = (e) => {
-      const s = sceneRef.current, { playing: on, near: at, atRangeen: atR, inRangeen: inR } = keyState.current;
+      const s = sceneRef.current, { playing: on, near: at, atRangeen: atR, inRangeen: inR, atCricket: atC, inCricket: inC } = keyState.current;
       if (!s || typing(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (inC) {
+        // At the crease: ← pull, ↑ / Space / Enter drive, → cut; Esc walks off
+        if (e.key === 'Escape') { leaveCricketRef.current(); return; }
+        if (e.repeat) return;
+        if ((e.code === 'Space' || e.code === 'Enter') && e.target.tagName === 'BUTTON') return; // let a focused button do its thing
+        const dir = { ArrowLeft: -1, KeyA: -1, ArrowRight: 1, KeyD: 1, ArrowUp: 0, KeyW: 0, Space: 0, Enter: 0 }[e.code];
+        if (dir !== undefined) { e.preventDefault(); shotRef.current(dir); }
+        return;
+      }
+      if (atC && e.key === 'Enter' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') { e.preventDefault(); s.releaseKeys(); enterCricketRef.current(); return; }
       if (inR) {
         // On the roof the arrows fly the kite; Esc climbs back down
         if (e.key === 'Escape') { leaveRangeenRef.current(); return; }
@@ -347,7 +385,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className={`hood__help${playing && !inRangeen ? ' is-on' : ''}${guideOpen ? '' : ' is-mini'}`} hidden={inRangeen}>
+          <div className={`hood__help${playing && !inRangeen && !inCricket ? ' is-on' : ''}${guideOpen ? '' : ' is-mini'}`} hidden={inRangeen || inCricket}>
             <p id="hood-help" role="status" className="sr-only">
               {playing ? 'Click the ground or use the arrow keys to walk, hold Shift to run, drag to look around. At a door, press Enter or Go inside.' : ''}
             </p>
@@ -374,6 +412,43 @@ export default function Landing() {
                 ? <button className="button button--small door__wip" onClick={() => toast(wipToast(nearP))}>🚧 Under construction</button>
                 : <Link className="button button--small" to={`/work/${nearP.id}`}>Go inside <kbd>↵</kbd></Link>}
             </div>
+          )}
+          {atCricket && !inCricket && viewRef.current < 0.5 && (
+            <div className="door" role="status">
+              <span className="muted">At the</span> <strong>cricket ground</strong>
+              <button className="button button--small" onClick={enterCricket}>🏏 Bat an over <kbd>↵</kbd></button>
+            </div>
+          )}
+          {/* At the crease: the scoreboard, the shots, and the big call after each ball */}
+          {inCricket && (
+            <>
+              {call && <p className={`cricket-call cricket-call--${call.kind}`} key={call.n} aria-hidden="true">{call.label}</p>}
+              <div className="kite-hud cricket-hud" role="group" aria-label="Batting an over at the cricket ground">
+                <p className="kite-hud__title">
+                  <span className="muted">At the crease</span> <strong>{score.done ? 'Over!' : 'Batting an over'}</strong>
+                  <span className="kite-hud__score" aria-live="polite">
+                    <b title="Runs / wickets">{score.runs}/{score.wkts}</b>
+                    <b className="is-lost" title="Balls bowled">Ball {Math.min(6, score.balls + (score.done ? 0 : 1))} of 6</b>
+                  </span>
+                </p>
+                <p className="kite-hud__hint">Swing as the ball reaches you: spot on is a <b>six</b>. <kbd>←</kbd> pull · <kbd>↑</kbd> or <kbd>Space</kbd> drive · <kbd>→</kbd> cut. Or tap the pitch.</p>
+                <div className="kite-hud__row">
+                  {score.done ? (
+                    <button className="button button--small" onClick={() => { setScore({ runs: 0, wkts: 0, balls: 0, done: false }); setCall(null); sceneRef.current?.cricketAgain(); }}>🏏 Bat another over</button>
+                  ) : (
+                    <div className="kite-hud__pad">
+                      {[[-1, 'Pull', 'M15 5l-7 7 7 7'], [0, 'Drive', 'M5 15l7-7 7 7'], [1, 'Cut', 'M9 5l7 7-7 7']].map(([dir, label, d]) => (
+                        <button key={label} type="button" className="kite-hud__btn" aria-label={`${label} shot`} onPointerDown={() => shot(dir)}>
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d={d} /></svg>
+                          <span>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button className="button button--small" onClick={leaveCricket}>Walk off <kbd>Esc</kbd></button>
+                </div>
+              </div>
+            </>
           )}
           {atRangeen && !inRangeen && viewRef.current < 0.5 && (
             <div className="door" role="status">
@@ -441,8 +516,8 @@ export default function Landing() {
           </div>
 
           {/* On the street (while walking) these zoom the camera around her; on the map they zoom the map */}
-          <MapZoom scene={sceneObj} hidden={!(mapOn || playing) || inRangeen || !!simMenu} street={!mapOn} />
-          {simMenu && !inRangeen && !mapOn && <SimMenu x={simMenu.x} y={simMenu.y} items={simActions()} onClose={() => setSimMenu(null)} />}
+          <MapZoom scene={sceneObj} hidden={!(mapOn || playing) || inRangeen || inCricket || !!simMenu} street={!mapOn} />
+          {simMenu && !inRangeen && !inCricket && !mapOn &&<SimMenu x={simMenu.x} y={simMenu.y} items={simActions()} onClose={() => setSimMenu(null)} />}
           {/* The map's caption: one line, no panel. The pins themselves are the list. */}
           <p className="hood__mapline" aria-hidden={!mapOn}>
             <span className="story-kicker">The neighbourhood</span>

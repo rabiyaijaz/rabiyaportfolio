@@ -90,12 +90,121 @@ export function createOutskirts({ reducedMotion = false } = {}) {
     // the match: fielders spread round, a batter at one end, a bowler running in; the ball flies and is hit away
     const m = new THREE.Group(); m.position.copy(C); live.add(m);
     for (const [x, z] of [[-9, 2], [8, -3], [-4, 9], [5, 8], [-11, -5], [12, 4], [0, -9]]) { const f = person(0xf4f1ea); f.position.set(x, 0, z); f.rotation.y = Math.atan2(-x, -z); m.add(f); }
-    const batter = person(0x2f8a52); batter.position.set(0.5, 0, 4.6); batter.rotation.y = Math.PI; m.add(batter);
+    const batter = person(0x2f8a52); batter.position.set(0.5, 0, 3.5); batter.rotation.y = Math.PI; m.add(batter);
     const bat = box(0.12, 0.08, 0.9, mat(0xd9b878), 0.45, 1.0, -0.2); batter.add(bat);
     const keeper = person(0xf4f1ea); keeper.position.set(0, 0, 6.2); keeper.rotation.y = Math.PI; m.add(keeper);
     const bowler = person(0x2f6fb5); m.add(bowler);
     const ball = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), mat(0xb3261e, { roughness: 0.4 })); m.add(ball);
-    live.userData.match = { batter, bat, bowler, ball, t: 0 };
+    // the bails on her stumps: they fly off when she's bowled
+    const bails = [-0.09, 0.09].map((x) => { const b = box(0.17, 0.04, 0.04, mat(0xf2e6c8), x, 0.97, 4.2); m.add(b); return b; });
+    live.userData.match = { batter, bat, bowler, ball, bails, keeper, t: 0 };
+  }
+
+  // ---------- the mini game: she bats one over (six balls) ----------
+  // Timing is everything: swing as the ball reaches her. Spot on is a six, close is a four, a bit off is
+  // a run or two, and a miss on the stumps knocks the bails off. A late edge can be caught behind.
+  // ← pull to leg, ↑ drive straight, → cut to off. Each ball comes a little quicker than the last.
+  const RELEASE = new THREE.Vector3(0.25, 2.0, -4.6), CONTACT_Z = 3.45;
+  const cricket = {
+    spot: C.clone().add(new THREE.Vector3(0.55, 0, 3.55)),   // where she takes guard, in front of her stumps (world)
+    approach: C.clone().add(new THREE.Vector3(2.4, 0, 6.2)), // where she walks to first (world)
+    center: C.clone(),
+    on: false, onEvent: null,
+    g: null, // the current over: { balls, runs, wkts, phase, t, D, line, swing, hit, result }
+    start(onEvent) {
+      this.on = true; this.onEvent = onEvent;
+      this.g = { balls: 0, runs: 0, wkts: 0, phase: 'wait', t: 0 };
+      const M = live.userData.match; M.batter.visible = false; M.keeper.visible = false; // the camera stands where the keeper would
+      this.emit('start', {});
+    },
+    stop() { this.on = false; const M = live.userData.match; M.batter.visible = true; M.keeper.visible = true; M.bails.forEach((b, i) => { b.position.set(i ? 0.09 : -0.09, 0.97, 4.2); b.rotation.set(0, 0, 0); }); },
+    emit(type, d) { this.onEvent?.({ type, ...d, runs: this.g?.runs ?? 0, wkts: this.g?.wkts ?? 0, balls: this.g?.balls ?? 0 }); },
+    /** dir: -1 pull (leg side), 0 drive, 1 cut (off side). Returns true if she swings now. */
+    swing(dir) {
+      const G = this.g;
+      if (!this.on || !G || G.swing || !(G.phase === 'runup' || G.phase === 'flight')) return false;
+      G.swing = { t: G.phase === 'flight' ? G.t : -1, dir }; // swinging during the run-up is far too early
+      return true;
+    },
+  };
+  // where the ball is at k (0 release → 1 at her), with one bounce on a good length
+  const KB = 0.64;
+  const ballAt = (k, line, out) => {
+    out.set(RELEASE.x + (line - RELEASE.x) * Math.min(1, k), 0, RELEASE.z + (CONTACT_Z - RELEASE.z) * k);
+    out.y = k < KB ? 0.1 + (RELEASE.y - 0.1) * (1 - Math.pow(k / KB, 1.6)) : 0.1 + 0.65 * Math.sin(Math.min(1, (k - KB) / (1 - KB)) * (Math.PI / 2));
+    return out;
+  };
+  const verdict = (q, late) => {
+    if (q <= 0.05) return { runs: 6, label: 'SIX!', kind: 'six' };
+    if (q <= 0.1) return { runs: 4, label: 'FOUR!', kind: 'four' };
+    if (q <= 0.15) return { runs: 2, label: '2 runs', kind: 'runs' };
+    if (late && Math.random() < 0.3) return { runs: 0, label: 'Caught behind!', kind: 'out' };
+    return { runs: 1, label: '1 run', kind: 'runs' };
+  };
+  const hitVel = new THREE.Vector3();
+  function tickCricket(dt) {
+    const G = cricket.g, M = live.userData.match;
+    if (!G) return;
+    G.t += dt;
+    if (G.phase === 'wait') {
+      // the bowler walks back to his mark; then he's off
+      M.bowler.position.set(0.2, 0, -11); M.ball.position.set(0.4, 1.3, -10.8);
+      if (G.t > 1.4) { G.phase = 'runup'; G.t = 0; G.swing = null; G.line = [0, 0, -0.2, 0.3][Math.floor(Math.random() * 4)]; G.D = Math.max(0.52, 0.86 - G.balls * 0.045 + Math.random() * 0.06); cricket.emit('bowl', {}); }
+    } else if (G.phase === 'runup') {
+      const k = Math.min(1, G.t / 1.3);
+      M.bowler.position.set(0.2, Math.abs(Math.sin(k * Math.PI * 7)) * 0.12, -11 + k * 6.3);
+      M.ball.position.set(0.4, 1.3 + k * 0.6, M.bowler.position.z + 0.2);
+      if (k >= 1) { G.phase = 'flight'; G.t = 0; }
+    } else if (G.phase === 'flight') {
+      const k = G.t / G.D;
+      ballAt(k, G.line, M.ball.position);
+      // contact: a swing within 0.2 s of the ball arriving connects, on the ball's own time
+      const s = G.swing;
+      const inTime = s && s.t >= 0 && Math.abs(s.t - G.D) <= 0.2;
+      if (inTime && G.t >= G.D && !G.hit) { // early swings connect as it arrives; late ones the moment she swings
+        const q = Math.abs(s.t - G.D), r = verdict(q, s.t > G.D);
+        G.hit = r; G.phase = 'hit'; G.t = 0;
+        // send it: high for six, along the ground for four, gently for a run or two; aimed by the shot
+        const ang = (s.dir * 0.75 + (Math.random() - 0.5) * 0.3);
+        const sp = r.kind === 'six' ? 24 : r.kind === 'four' ? 26 : r.kind === 'out' ? 6 : 11;
+        hitVel.set(Math.sin(ang) * sp, r.kind === 'six' ? 15 : r.kind === 'four' ? 2 : r.kind === 'out' ? 6 : 4, -Math.cos(ang) * sp);
+        if (r.kind === 'out') hitVel.set(0.4, 5, 4); // up off the edge, into the keeper's gloves
+        cricket.emit('contact', { kind: r.kind });
+      } else if (k >= 1 && !inTime && (G.t > G.D + 0.2 || (s && (s.t < 0 || s.t < G.D - 0.2)))) {
+        // missed it (or never swung): it goes on through
+        const onStumps = Math.abs(G.line) < 0.15;
+        G.hit = onStumps ? { runs: 0, label: 'Bowled!', kind: 'out' } : { runs: 0, label: s ? 'Swing and a miss' : 'Dot ball', kind: 'dot' };
+        G.phase = 'miss'; G.t = 0;
+      }
+    } else if (G.phase === 'hit') {
+      const b = M.ball.position;
+      hitVel.y -= 9.8 * dt;
+      b.addScaledVector(hitVel, dt);
+      if (b.y < 0.12) { b.y = 0.12; hitVel.y = Math.abs(hitVel.y) * 0.4; hitVel.x *= 0.82; hitVel.z *= 0.82; }
+      if (G.hit.kind === 'out' && G.t > 0.7) b.set(0, -2, 6.0); // into the keeper's gloves, behind the camera
+      if (G.t > 2.4) finishBall();
+    } else if (G.phase === 'miss') {
+      const b = M.ball.position;
+      if (G.hit.label === 'Bowled!') {
+        // into the stumps: the bails fly
+        b.set(G.line, 0.5, 4.2);
+        M.bails.forEach((x, i) => { x.position.x += (i ? 1 : -1) * dt * 2; x.position.y = 0.97 + Math.sin(Math.min(1, G.t * 1.6) * Math.PI) * 0.9 - G.t * 0.3; x.rotation.z += dt * 9; });
+      } else {
+        const k = 1 + G.t / G.D;
+        ballAt(Math.min(k, 1.25), G.line, b);
+        if (k > 1.25) b.set(0, -2, 6.0); // through to the keeper, behind the camera
+      }
+      if (G.t > 2.0) finishBall();
+    }
+  }
+  function finishBall() {
+    const G = cricket.g, M = live.userData.match;
+    G.balls++; G.runs += G.hit.runs; if (G.hit.kind === 'out') G.wkts++;
+    cricket.emit('result', { label: G.hit.label, kind: G.hit.kind, scored: G.hit.runs });
+    M.bails.forEach((b, i) => { b.position.set(i ? 0.09 : -0.09, 0.97, 4.2); b.rotation.set(0, 0, 0); });
+    G.hit = null; G.swing = null;
+    if (G.balls >= 6) { G.phase = 'done'; cricket.emit('over', {}); }
+    else { G.phase = 'wait'; G.t = 0; }
   }
 
   // ---------- the bazaar (south-west): two rows of stalls facing a lane ----------
@@ -254,7 +363,7 @@ export function createOutskirts({ reducedMotion = false } = {}) {
 
   let trainA = 0;
   return {
-    stat, live, obstacles, labels, lamps, floods,
+    stat, live, obstacles, labels, lamps, floods, cricket,
     /** 0 day → 1 night: the lanterns and lights glow. */
     setLights(k) { lanternMat.emissiveIntensity = 0.4 + k * 1.4; },
     /** view: 0 street → 1 map (the name tags show on the map). sim: her position, so traffic waits for her. */
@@ -262,18 +371,21 @@ export function createOutskirts({ reducedMotion = false } = {}) {
       // the name tags show on the map, and grow as it pulls back so they stay readable
       const ls = 16 * Math.max(1, zoom * 0.95);
       labels.forEach((l) => { l.visible = view > 0.6; l.material.opacity = Math.min(1, (view - 0.6) / 0.25); l.scale.set(ls, ls / 4, 1); });
+      if (cricket.on) tickCricket(dt); // she's batting: the game drives the match (even under reduced motion)
       if (still) return;
       // the match: the bowler runs in and bowls, the batter swings and the ball goes for four
       const M = live.userData.match;
-      M.t = (M.t + dt) % 6;
-      const t = M.t;
-      const run = Math.min(1, t / 1.6);
-      M.bowler.position.set(0.2, Math.abs(Math.sin(run * Math.PI * 6)) * 0.12 * (run < 1 ? 1 : 0), -9 + run * 4.4);
-      M.bowler.rotation.y = 0;
-      if (t < 1.6) M.ball.position.set(0.4, 1.4, M.bowler.position.z);
-      else if (t < 2.2) { const k = (t - 1.6) / 0.6; M.ball.position.set(0.4, 1.9 - k * 1.2 + Math.sin(k * Math.PI) * 0.6 - (k > 0.7 ? (k - 0.7) * 1.5 : 0), -4.6 + k * 9); }
-      else { const k = Math.min(1, (t - 2.2) / 2.2); M.ball.position.set(0.4 - k * 14, 0.2 + Math.sin(Math.min(1, k * 1.4) * Math.PI) * 6, 4.4 + k * 4); }
-      M.bat.rotation.y = t > 2.0 && t < 2.5 ? -Math.sin(((t - 2.0) / 0.5) * Math.PI) * 1.6 : 0;
+      if (!cricket.on) {
+        M.t = (M.t + dt) % 6;
+        const t = M.t;
+        const run = Math.min(1, t / 1.6);
+        M.bowler.position.set(0.2, Math.abs(Math.sin(run * Math.PI * 6)) * 0.12 * (run < 1 ? 1 : 0), -9 + run * 4.4);
+        M.bowler.rotation.y = 0;
+        if (t < 1.6) M.ball.position.set(0.4, 1.4, M.bowler.position.z);
+        else if (t < 2.2) { const k = (t - 1.6) / 0.6; M.ball.position.set(0.4, 1.9 - k * 1.2 + Math.sin(k * Math.PI) * 0.6 - (k > 0.7 ? (k - 0.7) * 1.5 : 0), -4.6 + k * 8); }
+        else { const k = Math.min(1, (t - 2.2) / 2.2); M.ball.position.set(0.4 - k * 14, 0.2 + Math.sin(Math.min(1, k * 1.4) * Math.PI) * 6, 4.4 + k * 4); }
+        M.bat.rotation.y = t > 2.0 && t < 2.5 ? -Math.sin(((t - 2.0) / 0.5) * Math.PI) * 1.6 : 0;
+      }
       // the train goes round
       trainA += dt * 0.045;
       trainCars.forEach((c, i) => {
