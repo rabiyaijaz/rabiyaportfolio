@@ -57,6 +57,9 @@ const ORBIT_FROM = 0.95; // where the prologue orbit starts (rad, around her)
 const START = new THREE.Vector3(4, 0, -17); // inner sidewalk, Crewnity dead ahead
 const ROOF_SCALE = 0.62; // her size up on the Rangeen roof (about 2 m)
 const NO_KEYS = new Set();
+// Her bat when she's batting (metres, from her feet; she faces -Z): hands at her right hip, a little in front.
+// Hanging straight down, the blade's middle (BAT_SWEET below the hands) is where each ball arrives (outskirts.js).
+export const BAT_HAND = new THREE.Vector3(0.32, 0.95, -0.16), BAT_SWEET = 0.55;
 export const MAP_ZOOM_MAX = 2.6; // how far the map pulls back (1 = the crescent framed)
 const ROOF_SKY_TOP = new THREE.Color(0x9fcab5), ROOF_SKY_BOTTOM = new THREE.Color(0xeee6cf); // mint over a warm haze
 
@@ -649,9 +652,11 @@ export class NeighbourhoodScene {
     if (this.cricketMode) {
       // At the crease: just behind and above her, over the keeper's head, looking down the pitch at the bowler
       const K = this.outskirts.cricket, sp = K.spot;
-      // (landscape: from her left, so she stands right of centre, clear of the scoreboard panel)
-      follow.set(sp.x + (portrait ? 0.5 : -1.5), portrait ? 3.8 : 3.1, sp.z + (portrait ? 4.6 : 3.8));
-      followLook.set(sp.x + (portrait ? -0.2 : -1.2), portrait ? 0.9 : 0.35, sp.z - 9);
+      // (from her right, the bat side, so you see the bat come through; landscape puts her left of centre,
+      // with the scoreboard panel on the right)
+      // (a phone looks down more steeply, so she and the bat sit above the controls at the bottom)
+      follow.set(sp.x + (portrait ? 0.9 : 2.1), portrait ? 4.6 : 3.0, sp.z + (portrait ? 5.8 : 5.0));
+      followLook.set(sp.x + (portrait ? 0.25 : 1.1), portrait ? -1.2 : 0.2, sp.z - (portrait ? 7 : 9));
     } else if (this.kiteMode) {
       // On the roof: over her right shoulder at head height, so she stands on the right with the
       // parapet and the street in front of her, and the string runs up to the kite in the sky.
@@ -941,21 +946,31 @@ export class NeighbourhoodScene {
   cricketAgain() { if (this.cricketMode) this.outskirts.cricket.start((e) => this.emit('cricket', e)); }
   /** Her shot: -1 pull (leg side), 0 drive, 1 cut (off side). */
   swing(dir = 0) {
-    if (!this.cricketMode || !this.outskirts.cricket.swing(dir)) return false;
-    this.sim.swingT = 0.001; this.sim.swingDir = dir;
+    const r = this.cricketMode && this.outskirts.cricket.swing(dir);
+    if (!r) return false;
+    // hold the backlift for `delay`, then bring the bat through: it crosses the crease as the ball arrives
+    this.sim.swingT = -r.delay || 0.001; this.sim.swingDir = dir;
     return true;
   }
   /** A cricket bat in her right hand (made once, the first time she bats). */
   ensureBat() {
-    if (this.simBat || !this.simGait) return;
+    if (this.simBat) return;
+    // Built in metres and mounted on her group (not her animated body, which twists and is scaled to the
+    // model), so the swing is exact: hands at her right hip, the blade sweeping down the line of the stumps.
     const pivot = new THREE.Group();
     const wood = mat(0xe2c48e, { roughness: 0.6 }), grip = mat(0x1d1d1f, { roughness: 0.8 });
-    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.55, 8), grip); handle.position.y = -0.2; pivot.add(handle);
-    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.05, 0.09), wood); blade.position.y = -0.98; pivot.add(blade);
-    pivot.position.set(-0.62, 1.55, 0.38); // at her right hand, in front of her (she faces +Z in the model)
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.3, 8), grip); handle.position.y = -0.1; pivot.add(handle);
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.04, 8), mat(0xb3261e)); band.position.y = -0.24; pivot.add(band); // the grip's red band
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.62, 0.07), wood); blade.position.y = -0.56; pivot.add(blade); // a touch over life-size, so it reads from the camera
+    pivot.scale.setScalar(1 / ROOF_SCALE); // she's drawn at ROOF_SCALE while batting; this keeps the bat in true metres
+    pivot.position.copy(BAT_HAND).divideScalar(ROOF_SCALE);
     pivot.traverse((o) => { if (o.isMesh) o.castShadow = true; });
-    this.simGait.add(pivot);
+    this.simGroup.add(pivot);
     this.simBat = pivot;
+    // where the ball meets the bat: the middle of the blade
+    const sweet = new THREE.Object3D(); sweet.position.y = -BAT_SWEET; pivot.add(sweet);
+    const v = new THREE.Vector3();
+    this.outskirts.cricket.batPoint = () => { this.simGroup.updateMatrixWorld(true); return sweet.getWorldPosition(v); };
   }
 
   /** Wild frogs do the odd little hop on the spot; caught frogs hop along her trail, one behind another. */
@@ -1221,14 +1236,18 @@ export class NeighbourhoodScene {
       g.scale.set(1 + squash * 0.5, 1 - squash + breathe, 1 + squash * 0.5);
       this.simBlob.scale.setScalar(1 - stepUp * 0.15 * w);
       if (this.cricketMode && this.simBat) {
-        // Batting: a crouched stance with the bat raised behind; a swing whips it through in a quarter second
-        // (pull, drive or cut) with her shoulders turning into the shot, then holds the follow-through
+        // Batting: a crouched stance with the bat lifted behind her (the backlift); a swing brings it down and
+        // through in a quarter second, vertical as it crosses the crease (where it meets the ball), and up into
+        // the follow-through; pull, drive or cut turn it to leg, straight or off. A held swing (swingT < 0)
+        // waits in the backlift first, so the bat arrives with the ball.
         const B = this.simBat;
         let k = 0;
-        if (S.swingT > 0) { S.swingT += dt; k = Math.min(1, S.swingT / 0.25); if (S.swingT > 1.1) S.swingT = 0; }
+        if (S.swingT < 0) S.swingT = Math.min(0.001, S.swingT + dt);
+        else if (S.swingT > 0) { S.swingT += dt; k = Math.min(1, S.swingT / 0.25); if (S.swingT > 0.9) S.swingT = 0; }
         const e = 1 - Math.pow(1 - k, 3), d = S.swingDir || 0;
-        B.rotation.set(-0.9 + e * 2.5, d * 0.7 * e, 0.25 - e * 0.5);
-        g.rotation.y = -0.35 + e * (0.9 + d * 0.35);
+        // she faces -Z: a negative tilt lifts the blade behind her, zero hangs it straight down the crease, positive sweeps it out in front
+        B.rotation.set(-1.2 + e * 2.6, -d * 0.6 * Math.sin(e * Math.PI), -0.12 + e * 0.24);
+        g.rotation.y = -0.3 + e * (0.75 + d * 0.3);
         g.rotation.x = 0.12 - e * 0.05;
         g.position.y = -0.04;
       }

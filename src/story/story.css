@@ -281,6 +281,8 @@
   .kite-hud__row > .button { padding-inline: 12px; white-space: nowrap; }
   .kite-hud__row > .button kbd { display: none; }
 }
+/* at the crease the panel sits bottom right, so she (left of centre, bat side to camera) stays clear */
+@media (min-width: 861px) { .cricket-hud { left: auto; right: 40px; } }
 /* The cricket call after each ball: a big word that pops in the middle of the screen and fades */
 .cricket-call {
   position: absolute; left: 50%; top: 34%; z-index: 7; margin: 0; transform: translate(-50%, -50%); pointer-events: none;
