@@ -23,7 +23,6 @@ export default function Contact() {
           <Socials />
           <ul className="contact__links">
             <li><a href={PROFILE.cv} download onClick={() => fulfil('cv')}>CV (PDF) ↓</a></li>
-            <li><a href={PROFILE.portfolio} download>Portfolio (PDF) ↓</a></li>
             <li className="muted">{PROFILE.location} · works remotely</li>
           </ul>
         </div>

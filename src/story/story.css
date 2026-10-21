@@ -573,9 +573,6 @@ html[data-phase='night'] .bob-canvas, html[data-phase='dusk'] .bob-canvas {
 
 /* Resume: a timeline with the plumbob levelling up beside it */
 .resume__cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 26px 0 0; }
-.work__pdf { margin: -8px 0 28px; font-size: 14px; }
-.work__pdf a { color: var(--accent); font-weight: 600; text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
-.work__pdf a:hover { border-bottom-color: var(--accent); }
 .resume-grid { display: grid; grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr); gap: clamp(24px, 5vw, 72px); padding-bottom: 100px; }
 .resume-bob { position: sticky; top: 90px; align-self: start; display: grid; justify-items: center; gap: 6px; }
 .resume-bob .bob-canvas { width: min(100%, 300px); }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PROJECTS, PROFILE, titleOf, wipToast } from '../content/projects.js';
+import { PROJECTS, titleOf, wipToast } from '../content/projects.js';
 import { useSim } from '../lib/simState.jsx';
 import useTitle from '../lib/useTitle.js';
 import StoryHeader from '../ui/StoryHeader.jsx';
@@ -39,7 +39,6 @@ export default function Work() {
           title={<>Every lot, <em>one project.</em></>}
           lede="Products I’ve designed around real people, from AI hiring and finance to healthcare and accessibility. Pick a house on the map, or browse them all below."
         />
-        <p className="work__pdf"><a href={PROFILE.portfolio} download>Prefer a document? Download the portfolio (PDF)</a></p>
       </div>
       <MapBanner highlight={hot} />
 
