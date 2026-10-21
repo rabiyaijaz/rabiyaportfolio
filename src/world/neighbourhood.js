@@ -293,7 +293,7 @@ export class NeighbourhoodScene {
       this.rangeen = { ...r, angle: a, center: at, door: polar(DOOR_R, a), frame };
     }
 
-    // The outskirts past the ring road: cricket ground, bazaar, dhaba, lake, railway, rickshaws (outskirts.js)
+    // The outskirts past the ring road: cricket ground, Board Bazar, dhaba, lake, railway (outskirts.js)
     this.outskirts = createOutskirts({ reducedMotion: this.reducedMotion });
     // its lamps glow like the ring road's (on at dusk); the floodlights are bigger
     {

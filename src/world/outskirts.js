@@ -1,8 +1,7 @@
 // The outskirts: what lies past the ring road, so the map has more to find when you zoom out.
 // All of it sits on the open south side and the far edge, away from the crescent of project houses:
 //   a cricket ground with a match on (south), a bazaar of awning stalls (south-west), a chai dhaba (south-east),
-//   a lake with two boats (east, behind the houses), a train looping round the edge of town, and
-//   rickshaws driving the ring road. Static parts go in `stat` (the caller bakes them); moving parts in `live`.
+//   a lake with two boats (east, behind the houses), and a train looping round the edge of town. Static parts go in `stat` (the caller bakes them); moving parts in `live`.
 // `obstacles` are circles she walks around; `labels` are map-only name tags.
 import * as THREE from 'three';
 import { canvasTexture, mat } from './assets.js';
@@ -256,7 +255,7 @@ export function createOutskirts({ reducedMotion = false } = {}) {
     else { G.phase = 'wait'; G.t = 0; }
   }
 
-  // ---------- the bazaar (south-west): two rows of stalls facing a lane ----------
+  // ---------- Board Bazar (south-west): two rows of stalls facing a lane ----------
   {
     const a = deg(228), at = polar(63, a);
     const g = new THREE.Group(); g.position.copy(at); g.rotation.y = -a; // local X runs along the lane
@@ -278,14 +277,14 @@ export function createOutskirts({ reducedMotion = false } = {}) {
     }
     // a string of bunting down the lane
     for (let i = 0; i < 14; i++) { const f = box(0.5, 0.4, 0.02, mat([0xc4232b, 0x2f8a52, 0xf2c230, 0x2f6fb5][i % 4]), -11 + i * 1.7, 3.6 - Math.sin((i / 13) * Math.PI) * 0.5, 0); g.add(f); }
-    const arch = signText('QISSA KHWANI', { bg: '#2f8a52', ink: '#f6efe2', w: 512, h: 96, font: 'bold 56px sans-serif' });
+    const arch = signText('BOARD BAZAR', { bg: '#2f8a52', ink: '#f6efe2', w: 512, h: 96, font: 'bold 56px sans-serif' });
     // the arch sign reads the right way round from both sides: two faces, back to back
     const signMat = new THREE.MeshStandardMaterial({ map: arch, roughness: 0.7 });
     for (const s of [1, -1]) { const sign = new THREE.Mesh(new THREE.PlaneGeometry(6, 1.1), signMat); sign.position.set(-13.2 - s * 0.03, 4.2, 0); sign.rotation.y = -s * Math.PI / 2; g.add(sign); }
     g.add(box(0.04, 1.1, 6, darkWood, -13.2, 4.2, 0));
     for (const z of [-2.6, 2.6]) g.add(box(0.25, 4.6, 0.25, darkWood, -13.2, 2.3, z));
     stat.add(g);
-    addLabel('Bazaar', at, 10);
+    addLabel('Board Bazar', at, 10);
   }
 
   // ---------- the chai dhaba (south-east) ----------
@@ -379,22 +378,6 @@ export function createOutskirts({ reducedMotion = false } = {}) {
     });
   }
 
-  // ---------- rickshaws on the ring road ----------
-  const rickshaws = [];
-  {
-    const colours = [[0x2f8a52, 0xf2c230], [0x1f4fa0, 0xf2c230], [0xc4232b, 0x2b2d31]];
-    colours.forEach(([body, trim], i) => {
-      const r = new THREE.Group();
-      r.add(box(1.4, 0.8, 2.3, mat(body, { roughness: 0.5 }), 0, 0.75, 0));
-      r.add(box(1.5, 0.9, 1.9, mat(0x1d1d1f, { roughness: 0.7 }), 0, 1.6, -0.2)); // the black canopy
-      r.add(box(1.42, 0.12, 2.32, mat(trim), 0, 1.12, 0));
-      for (const [x, z] of [[0, 1.15], [-0.6, -0.8], [0.6, -0.8]]) { const w = cyl(0.3, 0.3, 0.16, mat(0x1d1d1f), x, 0.3, z, 12); w.rotation.z = Math.PI / 2; r.add(w); }
-      live.add(r);
-      // inner lane runs clockwise, outer anticlockwise
-      rickshaws.push({ r, a: (i / 3) * Math.PI * 2 + 0.6, lane: i === 1 ? 27.8 : 24.2, dir: i === 1 ? -1 : 1, speed: 0.22 + i * 0.03, hold: 0 });
-    });
-  }
-
   // Lamps the caller lights with the ring road's glow (on at dusk): street lamps along the bazaar lane,
   // by the dhaba and the station, and four floodlight masts round the cricket ground
   const lamps = [];
@@ -415,7 +398,7 @@ export function createOutskirts({ reducedMotion = false } = {}) {
     stat, live, obstacles, labels, lamps, floods, cricket,
     /** 0 day → 1 night: the lanterns and lights glow. */
     setLights(k) { lanternMat.emissiveIntensity = 0.4 + k * 1.4; },
-    /** view: 0 street → 1 map (the name tags show on the map). sim: her position, so traffic waits for her. */
+    /** view: 0 street → 1 map (the name tags show on the map). */
     tick(dt, time, view, sim, zoom = 1) {
       // the name tags show on the map, and grow as it pulls back so they stay readable
       const ls = 16 * Math.max(1, zoom * 0.95);
@@ -449,15 +432,6 @@ export function createOutskirts({ reducedMotion = false } = {}) {
         b.position.set(at.x + Math.cos(a) * r * 1.2, Math.sin(time * 1.3 + ph) * 0.06, at.z + Math.sin(a) * r * 0.9);
         b.rotation.y = -a; b.rotation.z = Math.sin(time * 1.1 + ph) * 0.05;
       });
-      // rickshaws: round the ring, waiting if she's in the road just ahead
-      for (const k of rickshaws) {
-        const next = polar(k.lane, k.a + k.dir * 0.12);
-        const blocked = sim && Math.hypot(next.x - sim.x, next.z - sim.z) < 3.2;
-        k.hold += ((blocked ? 0 : 1) - k.hold) * Math.min(1, dt * (blocked ? 8 : 2));
-        k.a += k.dir * k.speed * k.hold * dt;
-        k.r.position.copy(polar(k.lane, k.a)).setY(Math.abs(Math.sin(time * 14 + k.lane)) * 0.03 * k.hold);
-        k.r.rotation.y = (k.dir > 0 ? Math.PI / 2 : -Math.PI / 2) - k.a; // nose along the way it's driving
-      }
       // steam over the dhaba's kettle
       if (steam) steam.children.forEach((s) => { const u = (time * 0.4 + s.userData.k) % 1; s.position.set(Math.sin(u * 6) * 0.15, u * 1.6, 0); s.scale.setScalar(0.6 + u * 1.4); s.material.opacity = 0.35 * (1 - u); });
     },
