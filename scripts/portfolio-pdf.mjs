@@ -1,7 +1,7 @@
 // Builds the downloadable portfolio: public/cv/Rabiya-Ijaz-Portfolio.pdf (A4 landscape).
 // Minimal and loud: a few big words per page, one image at most. Dusk-sky pages (with the white sculpt) open the
 // book and each project; paper pages carry the HCI beats: question & method, finding → decision, outcome & reflection.
-// Words come from scripts/portfolio-story.mjs; names, meta and HCI lenses from the site's own content files.
+// Words come from scripts/portfolio-story.mjs; names and meta from the site's own content files.
 // Usage: npm run portfolio:pdf   (needs Google Chrome; set CHROME_PATH if it's elsewhere)
 //        PDF_PREVIEW=<folder> also saves a PNG per page for checking the layout.
 // Note: no GitHub links anywhere, as some applications (e.g. Siegen HCI) don't allow them in portfolios.
@@ -130,7 +130,6 @@ function project(p, i) {
         <p class="next">${esc(s.next)}</p>
       </div>
       <div>
-        ${p.hci ? `<p class="label">HCI lens</p><p class="lens">${p.hci.map((h) => `<i>${esc(h)}</i>`).join('')}</p>` : ''}
         ${play ? `<p class="play"><span>▶</span>${play.label}: <a href="${play.href}">${esc(play.href.replace('https://', '').replace(/\/$/, ''))}</a></p>` : ''}
         <p class="more">Full case study → <a href="${SITE}/work/${p.id}">${SITE_SHORT}/work/${p.id}</a></p>
       </div>
@@ -231,8 +230,6 @@ a { color: inherit; }
 .outcome { margin: 0; max-width: 250mm; font: 800 58pt/.95 Geist, sans-serif; letter-spacing: -.04em; text-transform: uppercase; }
 .or__foot { position: absolute; left: 18mm; right: 18mm; bottom: 16mm; display: grid; grid-template-columns: 1fr 1fr; gap: 16mm; padding-top: 5mm; border-top: 2px solid var(--ink); }
 .next { margin: 0; font: 300 italic 19pt/1.25 Newsreader, serif; }
-.lens { display: flex; flex-wrap: wrap; gap: 2mm; margin: 0 0 4mm; }
-.lens i { font-style: normal; font-size: 9pt; font-weight: 600; padding: 1.2mm 3mm; border: 1.5px solid var(--ink); border-radius: 99px; }
 .play { display: inline-flex; align-items: center; gap: 2.5mm; margin: 0 0 3mm; padding: 2mm 4mm 2mm 2mm; border-radius: 99px; background: var(--ink); color: var(--paper); font-size: 9pt; font-weight: 600; }
 .play span { display: grid; place-items: center; width: 6mm; height: 6mm; border-radius: 50%; background: var(--mint); color: var(--ink); font-size: 6.5pt; }
 .play a { color: var(--mint); text-decoration: none; }

@@ -276,12 +276,6 @@ html[data-phase='day'] .sim-menu button { color: #14151b; background: rgba(255, 
 .case__meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; margin: 28px 0 0; padding-top: 24px; border-top: 1px solid var(--line); }
 .case__meta dt { font-size: 13px; color: var(--muted); }
 .case__meta dd { margin: 4px 0 0; font-weight: 500; }
-.case__hci { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 22px 0 0; }
-.case__hci-label { margin-right: 4px; font-size: 13px; color: var(--muted); }
-.case__hci-chip {
-  padding: 5px 12px; border-radius: 999px; font-size: 13.5px; font-weight: 500; color: var(--ink);
-  background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-}
 .case__layout { display: grid; grid-template-columns: 200px minmax(0, 680px); gap: clamp(24px, 6vw, 96px); margin-top: 72px; }
 .case__toc { position: sticky; top: 96px; align-self: start; font-size: 13px; }
 .case__toc ul { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }

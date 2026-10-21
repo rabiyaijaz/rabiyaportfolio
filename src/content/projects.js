@@ -11,8 +11,6 @@ export const PROJECTS = [
     cover: '/img/work/vettio.webp', hero: '/img/cs/vettio/ph-1.webp', heroVideo: '/video/vettio-intro.mp4', tint: '#eef0ff',
     tags: ['Human–AI', 'Research', 'Recruitment'],
     meta: { Role: 'Senior Product Designer', Timeline: 'Sep 2024 – May 2026', Context: 'Vettio, Dubai (remote)', Status: 'Shipped, launched on Product Hunt' },
-    // `hci`: the field's language for what the project practises, shown under the meta on its case study
-    hci: ['Explainable AI', 'Fairness in AI decision support'],
   },
   {
     id: 'crewnity', name: 'Crewnity', type: 'AI finance', year: '2026',
@@ -20,7 +18,6 @@ export const PROJECTS = [
     cover: '/img/work/crewnity.webp', hero: '/img/cs/crewnity/dashboard.webp', heroVideo: '/video/crewnity-intro.mp4', tint: '#eef4ef',
     tags: ['Human–AI', 'Conversational AI', 'Fintech', 'Trust'],
     meta: { Role: 'Lead Product Designer', Timeline: 'Jul 2026 – present', Context: 'Crewnity, Saudi Arabia (remote)', Status: 'Ongoing' },
-    hci: ['Human-in-the-loop design', 'Mixed-initiative interaction', 'Trust calibration in AI'],
   },
   {
     id: 'flownet', name: 'Flownet', type: 'Clinical training', year: '2025',
@@ -28,7 +25,6 @@ export const PROJECTS = [
     cover: '/img/work/flownet-card.webp', hero: '/img/cs/flownet/landing.webp', tint: '#eaf3f7',
     tags: ['Healthcare', 'Clinical workflows', 'Research', 'Role-based'],
     meta: { Role: 'Lead Product Designer & Advisor', Timeline: 'Sep – Dec 2025', Context: 'Swedish government hospitals', Status: 'MVP' },
-    hci: ['CSCW', 'Invisible work in clinical practice'],
   },
   {
     id: 'cystercare', name: 'CysterCare', type: 'Women’s health · AI', year: '2026',
@@ -42,7 +38,6 @@ export const PROJECTS = [
     },
     tags: ['Healthcare', 'Research', 'Service design', 'Hackathon'],
     meta: { Role: 'Service Design Lead', Timeline: 'Research 2025 · Build Jan – Apr 2026', Context: 'Team Peshawar × Imaginathon', Status: 'Hackathon MVP, 5th prize' },
-    hci: ['Service design', 'Health information trust', 'Designing for sensitive contexts'],
   },
   {
     id: 'access-adda', name: 'Access Adda', type: 'Accessibility game', year: 'Personal', passion: true,
@@ -50,7 +45,6 @@ export const PROJECTS = [
     cover: '/img/work/access-adda-card.webp', hero: '/img/cs/access-adda/cover.webp', tint: '#2a1d14',
     tags: ['Game', 'WCAG', 'Personal'],
     meta: { Role: 'Design and build', Context: 'Personal project', Status: 'Playable prototype' },
-    hci: ['Participatory design', 'Inclusive design', 'Serious games'],
   },
   {
     id: 'tamasha', name: 'Tamasha Banao', type: 'Community · Brand and UX', year: '2026',
@@ -58,7 +52,6 @@ export const PROJECTS = [
     cover: '/img/work/tamasha-card.webp', hero: '/img/cs/tamasha/stage-hero.webp', heroEmbed: '/embeds/tamasha-stage.html', tint: '#144a30',
     tags: ['Community', 'Brand', 'Research', 'Service design'],
     meta: { Role: 'Banao.pk ambassador, design strategy', Context: 'Banao.pk community (volunteer)', Status: 'Style direction v1 presented, Oct 2026' },
-    hci: ['Community-centred design', 'Culturally grounded design'],
   },
   {
     id: 'repshep', name: 'RepShep', type: 'Gym management · AI', year: 'Personal', passion: true,
@@ -67,7 +60,6 @@ export const PROJECTS = [
     cover: '/img/work/repshep.webp', hero: '/img/cs/repshep/cover.webp', heroVideo: '/video/repshep-intro.mp4', tint: '#2b2b9c',
     tags: ['Human–AI', 'AI workflows', 'WhatsApp', 'Personal'],
     meta: { Role: 'Designer', Context: 'Personal project', Status: 'In progress' },
-    hci: ['Persuasive technology and behaviour change', 'Human-in-the-loop AI'],
   },
   {
     // wip: shown everywhere, but can't be opened yet (cards, pins and the house say "under construction")
@@ -76,7 +68,6 @@ export const PROJECTS = [
     cover: '/img/work/devmode.webp', tint: '#f1f1f4',
     tags: ['Human–AI', 'EdTech', 'Personal'],
     meta: { Role: 'Designer', Context: 'Personal exploration', Status: 'Work in progress' },
-    hci: ['Computer-supported learning', 'End-user development'],
   },
 ];
 
