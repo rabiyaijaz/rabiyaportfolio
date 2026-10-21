@@ -1,7 +1,7 @@
 // The outskirts: what lies past the ring road, so the map has more to find when you zoom out.
 // All of it sits on the open south side and the far edge, away from the crescent of project houses:
-//   a cricket ground with a match on (south), a bazaar of awning stalls (south-west), a chai dhaba (south-east),
-//   a lake with two boats (east, behind the houses), and a train looping round the edge of town. Static parts go in `stat` (the caller bakes them); moving parts in `live`.
+//   Arbab Niaz Stadium with a match on (south), a bazaar of awning stalls (south-west), a chai dhaba (south-east),
+//   the Sardaryab with a fishing jetty and two boats (east, behind the houses), and a train looping round the edge of town. Static parts go in `stat` (the caller bakes them); moving parts in `live`.
 // `obstacles` are circles she walks around; `labels` are map-only name tags.
 import * as THREE from 'three';
 import { canvasTexture, mat } from './assets.js';
@@ -32,9 +32,32 @@ const windows = (body) => canvasTexture(256, 64, (ctx, w, h) => {
   ctx.fillStyle = '#f2d04b'; ctx.fillRect(0, h - 12, w, 5); // the yellow stripe
   ctx.fillStyle = '#cfe6ef'; for (let x = 12; x < w - 20; x += 30) ctx.fillRect(x, 12, 18, 22);
 });
+// The stadium scoreboard: a small heading over a big line (the score), each shrunk until it fits the board.
+// Redraws in place (drawBoard), so it can show her score live.
+function drawBoard(ctx, w, h, [top, main]) {
+  ctx.fillStyle = '#16231c'; ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = '#f2c230'; ctx.lineWidth = 10; ctx.strokeRect(10, 10, w - 20, h - 20);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const fit = (text, weight, size, y, colour) => {
+    let s = size;
+    do { ctx.font = `${weight} ${s}px sans-serif`; s -= 4; } while (ctx.measureText(text).width > w - 80 && s > 12);
+    ctx.fillStyle = colour; ctx.fillText(text, w / 2, y);
+  };
+  fit(top, 700, 64, h * 0.3, '#f2c230');
+  fit(main, 800, 120, h * 0.66, '#f6efe2');
+}
+const boardTexture = (lines) => canvasTexture(1024, 480, (ctx, w, h) => drawBoard(ctx, w, h, lines));
+let scoreTex = null;
+const setBoard = (lines) => {
+  if (!scoreTex) return;
+  const c = scoreTex.image;
+  drawBoard(c.getContext('2d'), c.width, c.height, lines);
+  scoreTex.needsUpdate = true;
+};
 const labelTexture = (text) => canvasTexture(512, 128, (ctx, w, h) => {
   ctx.clearRect(0, 0, w, h);
-  ctx.font = '600 52px Georgia, serif';
+  let size = 52; // shrink the type until the pill fits the canvas (long names like Arbab Niaz Stadium)
+  do { ctx.font = `600 ${size}px Georgia, serif`; size -= 2; } while (ctx.measureText(text).width + 56 > w - 8 && size > 20);
   const tw = ctx.measureText(text).width + 56;
   const x0 = (w - tw) / 2;
   ctx.fillStyle = 'rgba(255,255,255,0.92)';
@@ -76,15 +99,24 @@ export function createOutskirts({ reducedMotion = false } = {}) {
       for (const x of [-0.18, 0, 0.18]) g.add(cyl(0.035, 0.035, 0.9, mat(0xf2e6c8), x, 0.5, z, 6));
       g.add(box(2.4, 0.02, 0.06, mat(0xffffff), 0, 0.09, z - Math.sign(z) * 1.2)); // the crease
     }
-    // a scoreboard and benches along the side facing town
-    g.add(box(5, 3, 0.4, darkWood, -13, 2.6, -11.5));
-    const board = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 2.2), new THREE.MeshBasicMaterial({ map: signText('PESHAWAR  142/3', { bg: '#1d2a22', ink: '#f2e6c8', w: 512, h: 256, font: 'bold 64px sans-serif' }) }));
-    board.position.set(-13, 2.7, -11.28); g.add(board);
-    g.add(box(0.3, 1.2, 0.3, darkWood, -14.8, 0.6, -11.5), box(0.3, 1.2, 0.3, darkWood, -11.2, 0.6, -11.5));
+    // benches along the side facing town
     for (const [x, z, r] of [[-6, -13.6, 0.1], [0, -14.2, 0], [6, -13.6, -0.1]]) { const b = box(4, 0.5, 0.9, wood, x, 0.5, z); b.rotation.y = r; g.add(b); }
+    // the scoreboard: past the bowler's end, turned toward the batter so it's in view while she bats;
+    // it shows her score live (see drawBoard), and the stadium's name on the back, for the street side
+    const SB = new THREE.Vector3(9, 0, -15.5);
+    const sb = new THREE.Group(); sb.position.copy(SB); sb.rotation.y = -0.3;
+    sb.add(box(7.6, 3.8, 0.4, darkWood, 0, 3.5, 0));
+    for (const x of [-3, 3]) sb.add(box(0.35, 1.7, 0.35, darkWood, x, 0.85, 0));
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 3.4), new THREE.MeshBasicMaterial({ map: boardTexture(['ARBAB NIAZ', 'STADIUM']) }));
+    back.position.set(0, 3.5, -0.21); back.rotation.y = Math.PI; sb.add(back);
+    g.add(sb);
+    scoreTex = boardTexture(['ARBAB NIAZ STADIUM', 'PESHAWAR 142/3']);
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 3.4), new THREE.MeshBasicMaterial({ map: scoreTex, toneMapped: false }));
+    face.position.set(SB.x, 3.5, SB.z); face.rotation.y = -0.3; face.translateZ(0.22);
+    const faceG = new THREE.Group(); faceG.position.copy(C); faceG.add(face); live.add(faceG); // live: its texture changes
     stat.add(g);
-    obstacles.push({ x: C.x - 13, z: C.z - 11.5, r: 3 });
-    addLabel('Cricket ground', C, 10);
+    obstacles.push({ x: C.x + SB.x, z: C.z + SB.z, r: 4 });
+    addLabel('Arbab Niaz Stadium', C, 10);
 
     // the match: fielders spread round, a batter at one end, a bowler running in; the ball flies and is hit away
     const m = new THREE.Group(); m.position.copy(C); live.add(m);
@@ -124,10 +156,12 @@ export function createOutskirts({ reducedMotion = false } = {}) {
       this.on = true; this.onEvent = onEvent;
       this.g = { balls: 0, runs: 0, wkts: 0, phase: 'wait', t: 0 };
       const M = live.userData.match; M.batter.visible = false; M.keeper.visible = false; // the camera stands where the keeper would
+      showScore(this.g);
       this.emit('start', {});
     },
     stop() {
-      this.on = false; const M = live.userData.match; M.batter.visible = true; M.keeper.visible = true; M.mark.visible = false;
+      this.on = false; const M = live.userData.match;
+      setBoard(['ARBAB NIAZ STADIUM', 'PESHAWAR 142/3']); M.batter.visible = true; M.keeper.visible = true; M.mark.visible = false;
       M.bails.forEach((b, i) => { b.position.set(i ? 0.09 : -0.09, 0.97, 4.2); b.rotation.set(0, 0, 0); });
     },
     emit(type, d) { this.onEvent?.({ type, ...d, runs: this.g?.runs ?? 0, wkts: this.g?.wkts ?? 0, balls: this.g?.balls ?? 0 }); },
@@ -145,6 +179,8 @@ export function createOutskirts({ reducedMotion = false } = {}) {
       return { delay: Math.max(0, ideal - G.t) };
     },
   };
+  // her innings on the scoreboard: runs/wickets and overs (balls as 0.4, then 1.0 at the end of the over)
+  const showScore = (G) => setBoard(['ARBAB NIAZ STADIUM', `RABIYA ${G.runs}/${G.wkts}  (${Math.floor(G.balls / 6)}.${G.balls % 6} ov)`]);
   // where the ball is at k (0 release → 1 at the crease), with one bounce on a good length, coming up to bat height
   const KB = 0.64;
   const ballAt = (k, line, out) => {
@@ -248,6 +284,7 @@ export function createOutskirts({ reducedMotion = false } = {}) {
   function finishBall() {
     const G = cricket.g, M = live.userData.match;
     G.balls++; G.runs += G.hit.runs; if (G.hit.kind === 'out') G.wkts++;
+    showScore(G);
     cricket.emit('result', { label: G.hit.label, kind: G.hit.kind, scored: G.hit.runs });
     M.bails.forEach((b, i) => { b.position.set(i ? 0.09 : -0.09, 0.97, 4.2); b.rotation.set(0, 0, 0); });
     G.hit = null; G.swing = null;
@@ -321,8 +358,9 @@ export function createOutskirts({ reducedMotion = false } = {}) {
     addLabel('Chai dhaba', at, 9);
   }
 
-  // ---------- the lake (east, behind the houses), with a jetty and two boats ----------
+  // ---------- the Sardaryab (east, behind the houses): water, reeds, a fishing jetty and two boats ----------
   const boats = [];
+  let sardaryab = null;
   {
     const a = deg(102), at = polar(80, a);
     const shape = new THREE.Shape();
@@ -330,20 +368,37 @@ export function createOutskirts({ reducedMotion = false } = {}) {
     const shore = new THREE.Mesh(new THREE.ShapeGeometry(shape), mat(0xd9c99a, { roughness: 1 })); shore.rotation.x = -Math.PI / 2; shore.scale.setScalar(1.12); shore.position.copy(at).setY(0.03); stat.add(shore);
     const water = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshStandardMaterial({ color: 0x4f9fc4, roughness: 0.15, metalness: 0.15 }));
     water.rotation.x = -Math.PI / 2; water.position.copy(at).setY(0.06); stat.add(water);
-    // reeds round the edge, a little jetty
+    // reeds round the edge, and a wooden jetty from the town-side shore out over the water (where she fishes)
     for (let i = 0; i < 26; i++) { const t = (i / 26) * Math.PI * 2, r = 13.8 + Math.sin(i * 7) * 0.6; const reed = cyl(0.04, 0.05, 1.1 + (i % 3) * 0.3, mat(0x5c7a3a), at.x + Math.cos(t) * r * 1.25, 0.55, at.z - Math.sin(t) * r, 5); stat.add(reed); }
     const toTown = at.clone().setY(0).normalize().multiplyScalar(-1);
-    const jetty = box(1.6, 0.15, 7, wood, 0, 0.35, 0);
-    const jg = new THREE.Group(); jg.position.copy(at).addScaledVector(toTown, 11.5); jg.lookAt(at.x, 0, at.z); jg.add(jetty); stat.add(jg);
+    const jg = new THREE.Group(); jg.position.copy(at).addScaledVector(toTown, 15); jg.lookAt(at.x, 0, at.z);
+    jg.add(box(1.8, 0.15, 12, wood, 0, 0.35, 0)); // deck: 9 m to 21 m from the middle, onto the bank
+    for (const z of [-5, -1.5, 2, 5.5]) for (const x of [-0.8, 0.8]) jg.add(cyl(0.08, 0.08, 0.7, darkWood, x, 0.05, z, 6)); // posts
+    stat.add(jg);
     obstacles.push({ x: at.x, z: at.z, r: 16, water: true, sx: 1.25 });
-    for (const [c, ph, r] of [[0xc4232b, 0, 6], [0x2fa59a, 2.6, 8.5]]) {
+    // where she fishes: the end of the jetty, facing out over the water; she walks up to its foot first
+    const out = toTown.clone().multiplyScalar(-1);
+    sardaryab = { center: at.clone(), spot: at.clone().addScaledVector(toTown, 9.9).setY(0), approach: at.clone().addScaledVector(toTown, 21.5).setY(0), forward: out, deck: 0.43, water: 0.06 };
+    // a fish stall at the foot of the jetty, like the ones the Sardaryab is known for
+    {
+      const fs = new THREE.Group(); fs.position.copy(at).addScaledVector(toTown, 23).add(new THREE.Vector3(-out.z, 0, out.x).multiplyScalar(3.4)); fs.lookAt(at.x, 0, at.z);
+      fs.add(box(2.6, 0.9, 1.1, wood, 0, 0.45, 0));
+      for (const x of [-1.2, 1.2]) fs.add(box(0.1, 2.3, 0.1, darkWood, x, 1.15, -0.45));
+      const aw = box(3, 0.08, 1.6, new THREE.MeshStandardMaterial({ map: stripes('#2f6fb5', '#f6efe2'), roughness: 0.8 }), 0, 2.3, 0.1); aw.rotation.x = -0.2; fs.add(aw);
+      const sgn = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.5), new THREE.MeshBasicMaterial({ map: signText('FISH · MACHLI', { bg: '#f6efe2', ink: '#1f4fa0', w: 512, h: 112, font: 'bold 64px sans-serif' }) }));
+      sgn.position.set(0, 2.7, 0.75); fs.add(sgn);
+      for (let i = 0; i < 4; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), mat([0xd9a441, 0xc9b8b0, 0x7a9a6a, 0xd9a441][i])); f.scale.set(2.2, 0.7, 0.9); f.position.set(-0.8 + i * 0.55, 0.98, 0.1); fs.add(f); }
+      stat.add(fs);
+      const p = fs.position; obstacles.push({ x: p.x, z: p.z, r: 1.8 });
+    }
+    for (const [c, ph, r] of [[0xc4232b, 0, 4.2], [0x2fa59a, 2.6, 6.2]]) { // inside the jetty's reach
       const b = new THREE.Group();
       const hull = box(2.4, 0.5, 1.0, mat(c, { roughness: 0.6 }), 0, 0.25, 0); b.add(hull);
       b.add(box(2.0, 0.08, 0.8, wood, 0, 0.52, 0), box(0.06, 1.6, 0.06, darkWood, 0.2, 1.3, 0));
       const sail = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.2), mat(0xf6efe2, { side: THREE.DoubleSide })); sail.position.set(0.65, 1.4, 0); b.add(sail);
       live.add(b); boats.push({ b, at, ph, r });
     }
-    addLabel('The lake', at, 8);
+    addLabel('Sardaryab', at, 8);
   }
 
   // ---------- the railway: a loop round the edge of town ----------
@@ -395,7 +450,7 @@ export function createOutskirts({ reducedMotion = false } = {}) {
 
   let trainA = 0;
   return {
-    stat, live, obstacles, labels, lamps, floods, cricket,
+    stat, live, obstacles, labels, lamps, floods, cricket, sardaryab,
     /** 0 day → 1 night: the lanterns and lights glow. */
     setLights(k) { lanternMat.emissiveIntensity = 0.4 + k * 1.4; },
     /** view: 0 street → 1 map (the name tags show on the map). */
@@ -426,7 +481,7 @@ export function createOutskirts({ reducedMotion = false } = {}) {
         c.rotation.y = Math.PI / 2 - a; // along the track, nose first
         c.position.y = Math.sin(time * 9 + i) * 0.02;
       });
-      // boats drift slowly round the lake, bobbing
+      // boats drift slowly round the Sardaryab, bobbing
       boats.forEach(({ b, at, ph, r }) => {
         const a = time * 0.05 + ph;
         b.position.set(at.x + Math.cos(a) * r * 1.2, Math.sin(time * 1.3 + ph) * 0.06, at.z + Math.sin(a) * r * 0.9);

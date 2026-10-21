@@ -69,6 +69,19 @@ const CHAPTERS = [
   { id: 'hello', label: 'Say hello', at: () => topOf('#main > :last-child') },
 ];
 
+// Fishing on the Sardaryab: what to do at each moment, and what the one button does then
+const FISH_HINT = {
+  ready: 'Hold Space (or the button) to wind up your cast, and let go to throw it out.',
+  charge: 'Let go when the power is where you want it. More power, further out.',
+  cast: 'Out it goes…',
+  wait: 'Watch the bobber. Little shakes are nibbles. Wait for it to go right under.',
+  bite: 'It’s under! Press now to hook it!',
+  reel: 'Hold to reel it in. When the line goes red, let go before it snaps.',
+  caught: 'What a catch!',
+  reelin: 'Winding the line back in…',
+};
+const FISH_BUTTON = { ready: 'Hold to cast', charge: 'Let go', cast: 'Wait', wait: 'Wait…', bite: 'Hook it!', reel: 'Hold to reel', caught: 'Nice!', reelin: 'Wait' };
+
 // The street's sky for each phase of the Day / Dusk / Night switch
 const SKY_HOUR = { day: 11, dusk: 18.9, night: 22.5 };
 
@@ -142,6 +155,26 @@ export default function Landing() {
   const enterCricketRef = useRef(enterCricket); enterCricketRef.current = enterCricket;
   const leaveCricketRef = useRef(leaveCricket); leaveCricketRef.current = leaveCricket;
   const shot = () => { if (sceneRef.current?.swing()) sfx('hover', { volume: 0.8 }); };
+  // The Sardaryab: at the foot of the jetty, and fishing off the end of it
+  const [atFishing, setAtFishing] = useState(false);
+  const [inFishing, setInFishing] = useState(false);
+  const [fish, setFish] = useState({ phase: 'ready', caught: 0, best: null });
+  const fishingRef = useRef(false);
+  const fishMeterRef = useRef(null);
+  const enterFishing = () => viaFade(() => {
+    fishingRef.current = true; setInFishing(true); setPlaying(true); setFish({ phase: 'ready', caught: 0, best: null }); setCall(null);
+    sceneRef.current?.setFishing(true); sfx('whoosh');
+  });
+  const leaveFishing = () => viaFade(() => { fishingRef.current = false; setInFishing(false); setCall(null); sceneRef.current?.setFishing(false); });
+  const enterFishingRef = useRef(enterFishing); enterFishingRef.current = enterFishing;
+  const leaveFishingRef = useRef(leaveFishing); leaveFishingRef.current = leaveFishing;
+  // the one fishing button: held (cast, reel) or pressed (hook)
+  const fishHold = {
+    onPointerDown: (e) => { e.currentTarget.setPointerCapture?.(e.pointerId); sceneRef.current?.fishPress(true); },
+    onPointerUp: () => sceneRef.current?.fishPress(false),
+    onPointerCancel: () => sceneRef.current?.fishPress(false),
+    onLostPointerCapture: () => sceneRef.current?.fishPress(false),
+  };
   const shotRef = useRef(shot); shotRef.current = shot;
   const enterRangeenRef = useRef(enterRangeen);
   enterRangeenRef.current = enterRangeen;
@@ -178,6 +211,38 @@ export default function Landing() {
           sfx(e.kind === 'six' ? 'coin' : e.kind === 'four' ? 'want' : e.kind === 'out' ? 'splash' : 'toggle', { volume: 0.7 });
         }
         if (e.type === 'over') toastRef.current({ kind: 'want', title: `Over! ${e.runs}/${e.wkts}`, body: e.runs >= 24 ? 'A proper Peshawar Zalmi knock.' : e.runs >= 12 ? 'Not bad at all. The crowd at the boundary is clapping.' : 'Every innings starts somewhere. Bat again?' });
+      }),
+      // The Sardaryab: the foot of the jetty, and fishing (see world/fishing.js)
+      s.on('fishSpot', (on) => { setAtFishing(on); if (on) sfx('open', { volume: 0.6 }); }),
+      s.on('fishing', (e) => {
+        if (e.type !== 'phase' && e.type !== 'nibble') return;
+        if (e.type === 'nibble') { sfx('tap', { volume: 0.25 }); return; }
+        setFish({ phase: e.phase, caught: e.caught, best: e.best });
+        const say = (label, kind) => setCall((c) => ({ label, kind, n: (c?.n || 0) + 1 }));
+        if (e.phase === 'cast') sfx('whoosh', { volume: 0.6 });
+        if (e.phase === 'wait' && !e.missed) sfx('splash', { volume: 0.35 });
+        if (e.phase === 'wait' && e.missed) say('Too slow!', 'dot');
+        if (e.phase === 'bite') { say('BITE!', 'four'); sfx('chime', { volume: 0.8 }); }
+        if (e.phase === 'reel') sfx('toggle', { volume: 0.7 });
+        if (e.phase === 'caught') {
+          say(`${e.fish} · ${e.kg} kg`, 'six'); sfx('coin');
+          toastRef.current({ kind: 'want', title: `You caught a ${e.fish}!`, body: e.caught === 1 ? `${e.kg} kg, fresh from the Sardaryab. Cast again?` : `That’s ${e.caught} fish today.` });
+        }
+        if (e.phase === 'reelin') {
+          if (e.reason === 'spooked') say('Too soon, it swam off', 'dot');
+          if (e.reason === 'missed') say('It got away', 'dot');
+          if (e.reason === 'snap') { say('The line snapped!', 'out'); sfx('splash', { volume: 0.5 }); }
+          if (e.reason === 'escaped') say('It got away', 'out');
+        }
+      }),
+      // the fishing meters follow the game every frame (no re-render)
+      s.on('frame', () => {
+        const el = fishMeterRef.current, h = el && s.fishing?.hud();
+        if (!h) return;
+        el.style.setProperty('--power', h.power.toFixed(3));
+        el.style.setProperty('--tension', h.tension.toFixed(3));
+        el.style.setProperty('--progress', h.progress.toFixed(3));
+        el.classList.toggle('is-hot', h.tension > 0.8);
       }),
       // Clicking her on the street opens her pie menu (like the About room)
       s.on('simClick', (p) => { setPlaying(true); setSimMenu(p); sfx('open', { volume: 0.6 }); }),
@@ -250,6 +315,7 @@ export default function Landing() {
     s?.setView(view);
     if (view > 0.2 && roomRef.current) leaveRangeenRef.current(); // scrolling on climbs her back down
     if (view > 0.2 && cricketRef.current) leaveCricketRef.current(); // …or walks her off the pitch
+    if (view > 0.2 && fishingRef.current) leaveFishingRef.current(); // …or off the jetty
     if (introRef.current) {
       const out = seg(p, 0.04, 0.26);
       introRef.current.style.opacity = String(1 - out);
@@ -273,6 +339,7 @@ export default function Landing() {
     return [
       { label: 'Fly a kite', icon: '🪁', onSelect: () => s.actGoToRangeen(() => enterRangeenRef.current()) },
       { label: 'Play cricket', icon: '🏏', onSelect: () => s.walkThen(s.outskirts.cricket.approach, () => enterCricketRef.current()) },
+      { label: 'Go fishing', icon: '🎣', onSelect: () => s.walkThen(s.outskirts.sardaryab.approach, () => enterFishingRef.current()) },
       {
         label: 'Catch a frog', icon: '🐸',
         onSelect: () => { if (!s.actCatchFrog()) toast({ kind: 'want', title: 'No frogs left', body: 'You’ve caught every frog in the fountain. They’re all hopping after you.' }); },
@@ -295,7 +362,7 @@ export default function Landing() {
   // Keyboard play is page-wide: arrow keys / WASD walk on the street the moment the page opens,
   // intro or not, wherever focus is (no click into the scene needed). Esc and Enter work once walking.
   const keyState = useRef({});
-  keyState.current = { playing, near, atRangeen, inRangeen, atCricket, inCricket };
+  keyState.current = { playing, near, atRangeen, inRangeen, atCricket, inCricket, atFishing, inFishing };
   useEffect(() => {
     const WALK = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD']);
     const typing = (t) => t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName);
@@ -305,8 +372,16 @@ export default function Landing() {
     const SIDE = new Set(['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD']);
     const inHood = () => { const r = heroRef.current.getBoundingClientRect(); return r.top <= 1 && r.bottom > innerHeight * 0.6; };
     const down = (e) => {
-      const s = sceneRef.current, { playing: on, near: at, atRangeen: atR, inRangeen: inR, atCricket: atC, inCricket: inC } = keyState.current;
+      const s = sceneRef.current, { playing: on, near: at, atRangeen: atR, inRangeen: inR, atCricket: atC, inCricket: inC, atFishing: atF, inFishing: inF } = keyState.current;
       if (!s || typing(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (inF) {
+        // On the jetty: Space / ↑ / Enter is the one button (held to cast and reel); Esc walks back
+        if (e.key === 'Escape') { leaveFishingRef.current(); return; }
+        if ((e.code === 'Space' || e.code === 'Enter') && e.target.tagName === 'BUTTON') return;
+        if (FISH_KEYS.has(e.code)) { e.preventDefault(); if (!e.repeat) s.fishPress(true); }
+        return;
+      }
+      if (atF && e.key === 'Enter' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') { e.preventDefault(); s.releaseKeys(); enterFishingRef.current(); return; }
       if (inC) {
         // At the crease: ← → move across it (held), Space / ↑ / Enter swing; Esc walks off
         if (e.key === 'Escape') { leaveCricketRef.current(); return; }
@@ -337,7 +412,9 @@ export default function Landing() {
       s.setRun(e.shiftKey); // Shift + arrows: jog
       s.key(e.code, true);
     };
+    const FISH_KEYS = new Set(['Space', 'ArrowUp', 'KeyW', 'Enter']);
     const up = (e) => {
+      if (FISH_KEYS.has(e.code)) sceneRef.current?.fishPress(false);
       if (e.key === 'Shift') sceneRef.current?.setRun(false);
       sceneRef.current?.key(e.code, false);
     };
@@ -385,7 +462,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className={`hood__help${playing && !inRangeen && !inCricket ? ' is-on' : ''}${guideOpen ? '' : ' is-mini'}`} hidden={inRangeen || inCricket}>
+          <div className={`hood__help${playing && !inRangeen && !inCricket && !inFishing ? ' is-on' : ''}${guideOpen ? '' : ' is-mini'}`} hidden={inRangeen || inCricket || inFishing}>
             <p id="hood-help" role="status" className="sr-only">
               {playing ? 'Click the ground or use the arrow keys to walk, hold Shift to run, drag to look around. At a door, press Enter or Go inside.' : ''}
             </p>
@@ -415,7 +492,7 @@ export default function Landing() {
           )}
           {atCricket && !inCricket && viewRef.current < 0.5 && (
             <div className="door" role="status">
-              <span className="muted">At the</span> <strong>cricket ground</strong>
+              <span className="muted">At</span> <strong>Arbab Niaz Stadium</strong>
               <button className="button button--small" onClick={enterCricket}>🏏 Bat an over <kbd>↵</kbd></button>
             </div>
           )}
@@ -423,7 +500,7 @@ export default function Landing() {
           {inCricket && (
             <>
               {call && <p className={`cricket-call cricket-call--${call.kind}`} key={call.n} aria-hidden="true">{call.label}</p>}
-              <div className="kite-hud cricket-hud" role="group" aria-label="Batting an over at the cricket ground">
+              <div className="kite-hud cricket-hud" role="group" aria-label="Batting an over at Arbab Niaz Stadium">
                 <p className="kite-hud__title">
                   <span className="muted">At the crease</span> <strong>{score.done ? 'Over!' : 'Batting an over'}</strong>
                   <span className="kite-hud__score" aria-live="polite">
@@ -449,6 +526,43 @@ export default function Landing() {
                     </div>
                   )}
                   <button className="button button--small" onClick={leaveCricket}>Walk off <kbd>Esc</kbd></button>
+                </div>
+              </div>
+            </>
+          )}
+          {atFishing && !inFishing && viewRef.current < 0.5 && (
+            <div className="door" role="status">
+              <span className="muted">At the</span> <strong>Sardaryab</strong>
+              <button className="button button--small" onClick={enterFishing}>🎣 Go fishing <kbd>↵</kbd></button>
+            </div>
+          )}
+          {/* On the jetty: the catch, what to do now, the meter for this moment, and the one button */}
+          {inFishing && (
+            <>
+              {call && <p className={`cricket-call cricket-call--${call.kind}`} key={call.n} aria-hidden="true">{call.label}</p>}
+              <div className="kite-hud cricket-hud fish-hud" role="group" aria-label="Fishing on the Sardaryab">
+                <p className="kite-hud__title">
+                  <span className="muted">On the Sardaryab</span> <strong>Fishing</strong>
+                  <span className="kite-hud__score" aria-live="polite">
+                    <b title="Fish caught">🐟 {fish.caught}</b>
+                    {fish.best && <b className="is-lost" title="Your best catch">Best: {fish.best.name} {fish.best.kg} kg</b>}
+                  </span>
+                </p>
+                <p className="kite-hud__hint" aria-live="polite">{FISH_HINT[fish.phase] || ''}</p>
+                <div className={`fish-meter fish-meter--${fish.phase}`} ref={fishMeterRef} style={{ '--power': 0, '--tension': 0, '--progress': 0 }} aria-hidden="true">
+                  {fish.phase === 'charge' && <div className="fish-meter__bar"><span>Power</span><i className="fish-meter__power" /></div>}
+                  {fish.phase === 'reel' && (
+                    <>
+                      <div className="fish-meter__bar"><span>Line tension</span><i className="fish-meter__tension" /></div>
+                      <div className="fish-meter__bar"><span>Reeled in</span><i className="fish-meter__progress" /></div>
+                    </>
+                  )}
+                </div>
+                <div className="kite-hud__row">
+                  <button type="button" className="kite-hud__btn cricket-hud__swing fish-hud__btn" {...fishHold}>
+                    <span aria-hidden="true">🎣</span><span>{FISH_BUTTON[fish.phase] || 'Hold'}</span>
+                  </button>
+                  <button className="button button--small" onClick={leaveFishing}>Walk back <kbd>Esc</kbd></button>
                 </div>
               </div>
             </>
@@ -519,7 +633,7 @@ export default function Landing() {
           </div>
 
           {/* On the street (while walking) these zoom the camera around her; on the map they zoom the map */}
-          <MapZoom scene={sceneObj} hidden={!(mapOn || playing) || inRangeen || inCricket || !!simMenu} street={!mapOn} />
+          <MapZoom scene={sceneObj} hidden={!(mapOn || playing) || inRangeen || inCricket || inFishing || !!simMenu} street={!mapOn} />
           {simMenu && !inRangeen && !inCricket && !mapOn &&<SimMenu x={simMenu.x} y={simMenu.y} items={simActions()} onClose={() => setSimMenu(null)} />}
           {/* The map's caption: one line, no panel. The pins themselves are the list. */}
           <p className="hood__mapline" aria-hidden={!mapOn}>

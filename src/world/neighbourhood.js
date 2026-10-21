@@ -9,6 +9,7 @@ import { createHouse } from './house.js';
 import { createRangeenHouse } from './rangeen.js';
 import { createKites } from './kites.js';
 import { TRACK_R, WALK_R, createOutskirts } from './outskirts.js';
+import { createFishing } from './fishing.js';
 import { BASIN_R, PLAZA_R, createFountain } from './fountain.js';
 import { createForest, createPlumbob, createSimCutout, createStreetLamp, bakeStatic, canvasTexture, mat, seeded } from './assets.js';
 
@@ -277,12 +278,13 @@ export class NeighbourhoodScene {
       return { ...lot, angle: a, center, door, group: g, marker, star, label: polar(HOUSE_R, a).setY(lot.featured ? 11 : 9) };
     });
 
-    // The Rangeen house: not a project, a place to visit, at the free west end of the crescent
+    // The Rangeen house: not a project, an easter egg. Tucked away out west past the ring road, facing town,
+    // so you only find it if you wander (or hear its song)
     {
-      const a = THREE.MathUtils.degToRad(-86);
+      const a = THREE.MathUtils.degToRad(-100), RR = 68; // in the woods north-west, behind Access Adda
       const r = createRangeenHouse();
       const body = bakeStatic(r.group);
-      const at = polar(HOUSE_R + 0.5, a);
+      const at = polar(RR, a);
       for (const o of [body, r.glow]) { o.position.copy(at); o.rotation.y = -a; scene.add(o); }
       // the house's own frame (+Z out of its front), for the kites and her spot on the roof
       const frame = new THREE.Group(); frame.position.copy(at); frame.rotation.y = -a; scene.add(frame);
@@ -290,10 +292,11 @@ export class NeighbourhoodScene {
       this.kites = createKites({ reducedMotion: this.reducedMotion });
       this.kites.onEvent((e) => this.emit('kitegame', e)); // challenger · pech · win · lose · relaunch · gone
       frame.add(this.kites.group);
-      this.rangeen = { ...r, angle: a, center: at, door: polar(DOOR_R, a), frame };
+      this.rangeen = { ...r, angle: a, center: at, door: polar(RR - (HOUSE_R - DOOR_R), a), frame };
+      this.rangeenYaw = -a; // how far the street camera swings round to face its front as she arrives
     }
 
-    // The outskirts past the ring road: cricket ground, Board Bazar, dhaba, lake, railway (outskirts.js)
+    // The outskirts past the ring road: Arbab Niaz Stadium, Board Bazar, dhaba, the Sardaryab, railway (outskirts.js)
     this.outskirts = createOutskirts({ reducedMotion: this.reducedMotion });
     // its lamps glow like the ring road's (on at dusk); the floodlights are bigger
     {
@@ -306,9 +309,12 @@ export class NeighbourhoodScene {
       this.outskirts.stat.add(lampRoot);
     }
     scene.add(bakeStatic(this.outskirts.stat), this.outskirts.live);
+    // Fishing off the Sardaryab jetty (fishing.js): the bobber, line and catch live in the scene; the rod goes in her hands
+    this.fishing = createFishing({ ...this.outskirts.sardaryab, reducedMotion: this.reducedMotion });
+    scene.add(this.fishing.live);
     this.obstacles = [...this.outskirts.obstacles, ...this.outskirts.lamps.map((p) => ({ x: p.x, z: p.z, r: 0.5 }))];
 
-    // Forest: a belt beyond the railway, plus woods behind the crescent of houses (clear of the lake).
+    // Forest: a belt beyond the railway, plus woods behind the crescent of houses (clear of the Sardaryab).
     // The near trees are obstacles now that she can walk out this far.
     const spots = [];
     while (spots.length < 170) {
@@ -316,8 +322,11 @@ export class NeighbourhoodScene {
       spots.push({ x: Math.sin(a) * r, z: -Math.cos(a) * r, scale: 0.9 + rand() * 1.2, pine: rand() < 0.45 });
     }
     for (let n = 0; n < 60;) {
-      const a = THREE.MathUtils.degToRad(-100 + rand() * 175), r = 50 + rand() * 52; // -100° … 75°, north of the lake
+      const a = THREE.MathUtils.degToRad(-100 + rand() * 175), r = 50 + rand() * 52; // -100° … 75°, north of the Sardaryab
       const x = Math.sin(a) * r, z = -Math.cos(a) * r;
+      // leave a clearing round the hidden Rangeen house, and a way through the trees to its door
+      const R = this.rangeen, ra = R.angle, along = x * Math.sin(ra) - z * Math.cos(ra), across = x * Math.cos(ra) + z * Math.sin(ra);
+      if (Math.hypot(x - R.center.x, z - R.center.z) < 15 || (along < 66 && Math.abs(across) < 4.5)) continue;
       spots.push({ x, z, scale: 0.9 + rand() * 1.0, pine: rand() < 0.5 });
       this.obstacles.push({ x, z, r: 1.4 });
       n++;
@@ -645,11 +654,17 @@ export class NeighbourhoodScene {
     // The default framing keeps her right of the hero text; once the visitor orbits or zooms in, centre her
     // Near the Rangeen house the camera swings round to face its front (it faces east, the street looks north)
     const at = this.autoTurn || 0;
-    const O = at ? { ...this.orbit, yaw: this.orbit.yaw + at * 1.4, dist: this.orbit.dist * (1 - at * 0.32) } : this.orbit;
+    const O = at ? { ...this.orbit, yaw: this.orbit.yaw + at * this.rangeenYaw, dist: this.orbit.dist * (1 - at * 0.32) } : this.orbit;
     const lat = (portrait ? 3 : 12) * clamp01(1 - Math.abs(O.yaw) * 1.5) * clamp01((O.dist - 0.35) / 0.65);
     const follow = new THREE.Vector3(s.x - lat, portrait ? 11 : 9.5, s.z + (portrait ? 25 : 27));
     const followLook = new THREE.Vector3(s.x - lat, 3.6, s.z - 18);
-    if (this.cricketMode) {
+    if (this.fishingMode) {
+      // On the jetty: behind her and a little to her left, looking out past the rod tip to the water
+      const R = this.outskirts.sardaryab, f = R.forward, sd = new THREE.Vector3(-f.z, 0, f.x);
+      const back = portrait ? 5.6 : 4.4;
+      follow.copy(R.spot).addScaledVector(f, -back).addScaledVector(sd, portrait ? -0.6 : -1.4).setY(R.deck + (portrait ? 3.4 : 2.6));
+      followLook.copy(R.spot).addScaledVector(f, 5.5).addScaledVector(sd, portrait ? 0 : 0.8).setY(portrait ? -0.6 : 0.1);
+    } else if (this.cricketMode) {
       // At the crease: just behind and above her, over the keeper's head, looking down the pitch at the bowler
       const K = this.outskirts.cricket, sp = K.spot;
       // (from her right, the bat side, so you see the bat come through; landscape puts her left of centre,
@@ -739,7 +754,7 @@ export class NeighbourhoodScene {
     const w = this.container.clientWidth || innerWidth, h = this.container.clientHeight || innerHeight;
     this.camera.aspect = w / h;
     this.baseFov = this.camera.aspect < 0.9 ? 44 : 36;
-    this.camera.fov = this.baseFov + (this.kiteMode ? 18 : this.cricketMode ? 8 : 0); // a wider lens on the roof and at the crease (see frame)
+    this.camera.fov = this.baseFov + (this.kiteMode ? 18 : this.cricketMode || this.fishingMode ? 8 : 0); // a wider lens on the roof and at the crease (see frame)
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h, false);
   }
@@ -770,13 +785,14 @@ export class NeighbourhoodScene {
     let drag = null, pinch = null, dragged = false;
     const street = () => this.view < 0.45 && !this.mapOnly;
     this.onDown = (e) => {
+      if (this.fishingMode) { this.fishing.press(true); return; } // on the jetty, a press on the water is the button
       if (!street() && this.view < 0.6) return;
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       dragged = false;
       if (pointers.size === 1) drag = { x: e.clientX, y: e.clientY };
       if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), zoom: this.currentZoom() }; drag = null; }
     };
-    this.onUp = (e) => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; if (!pointers.size) { drag = null; el.style.cursor = ''; } };
+    this.onUp = (e) => { if (this.fishingMode) this.fishing.press(false); pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; if (!pointers.size) { drag = null; el.style.cursor = ''; } };
     this.onMove = (e) => {
       if (pointers.has(e.pointerId)) {
         pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -818,7 +834,7 @@ export class NeighbourhoodScene {
     };
     this.onClick = (e) => {
       if (dragged) { dragged = false; return; } // the end of a pan isn't a click
-      if (this.kiteMode) return;
+      if (this.kiteMode || this.fishingMode) return;
       if (this.cricketMode) { this.swing(); return; } // a tap at the crease is a swing
       this.skipIntro();
       const { lot, point, frog, sim } = pick(e);
@@ -942,6 +958,31 @@ export class NeighbourhoodScene {
     this.camera.fov = this.baseFov + (on ? 8 : 0); this.camera.updateProjectionMatrix();
     this.snapCamera();
   }
+  /** On the end of the Sardaryab jetty with a rod (true), or back at its foot (false). The page fades around it. */
+  setFishing(on) {
+    const F = this.fishing, R = this.outskirts?.sardaryab, S = this.sim;
+    if (!F || this.mapOnly || !!on === !!this.fishingMode) return;
+    this.fishingMode = !!on;
+    this.releaseKeys(); S.target = null; S.goal = null; S.catching = null; S.arrive = null; S.walk = 0;
+    this.tapMark.material.opacity = 0;
+    if (!this.rodHolder) {
+      // the rod's frame: at her feet, turned to face the water, in true metres (she's drawn at ROOF_SCALE here)
+      this.rodHolder = new THREE.Group();
+      this.rodHolder.rotation.y = Math.atan2(R.forward.x, R.forward.z);
+      this.rodHolder.scale.setScalar(1 / ROOF_SCALE);
+      this.rodHolder.add(F.rod);
+      this.simGroup.add(this.rodHolder);
+    }
+    if (on) { S.pos.copy(R.spot).setY(0); F.start((e) => this.emit('fishing', e)); }
+    else { F.stop(); S.pos.copy(R.approach).setY(0); }
+    this.simGroup.scale.setScalar(on ? ROOF_SCALE : 1);
+    this.simGroup.position.set(S.pos.x, on ? R.deck : 0, S.pos.z);
+    this.camera.fov = this.baseFov + (on ? 8 : 0); this.camera.updateProjectionMatrix();
+    this.snapCamera();
+  }
+  /** The fishing button (Space / ↑ / the big button / a press on the water): down and up. */
+  fishPress(down) { if (this.fishingMode) this.fishing.press(down); }
+
   /** Another over, after one finishes. */
   cricketAgain() { if (this.cricketMode) this.outskirts.cricket.start((e) => this.emit('cricket', e)); }
   /** Her shot. Where it goes depends on the ball's line and her timing (outskirts.js). */
@@ -1107,7 +1148,7 @@ export class NeighbourhoodScene {
   clampWalkable(p) {
     const r = Math.hypot(p.x, p.z);
     if (r > WALK_R) p.multiplyScalar(WALK_R / r); // out to the railway, not over it
-    // Round things she walks around: stalls, the dhaba, trees, the scoreboard; the lake is an oval
+    // Round things she walks around: stalls, the dhaba, trees, the scoreboard; the Sardaryab is an oval
     for (const o of this.obstacles || []) {
       const sx = o.sx || 1, dx = (p.x - o.x) / sx, dz = p.z - o.z, d = Math.hypot(dx, dz);
       if (d < o.r) { const k = o.r / Math.max(d, 0.001); p.x = o.x + dx * k * sx; p.z = o.z + dz * k; }
@@ -1161,7 +1202,7 @@ export class NeighbourhoodScene {
     if (S.keys.size) {
       if (S.keys.has('u')) move.z -= 1; if (S.keys.has('d')) move.z += 1;
       if (S.keys.has('l')) move.x -= 1; if (S.keys.has('r')) move.x += 1;
-      move.applyAxisAngle(UP, this.orbit.yaw + (this.autoTurn || 0) * 1.4); // "up" always walks away from the camera
+      move.applyAxisAngle(UP, this.orbit.yaw + (this.autoTurn || 0) * (this.rangeenYaw || 0)); // "up" always walks away from the camera
     } else if (S.target) {
       move.subVectors(S.target, S.pos).setY(0);
       // Stuck against a wall or the fountain (the walk is a straight line)? Count it as arrived.
@@ -1179,7 +1220,7 @@ export class NeighbourhoodScene {
         const then = S.arrive; S.arrive = null; then?.(); // an action from her menu finishes here
       }
     }
-    const moving = move.lengthSq() > 0 && this.view < 0.6 && !this.intro && !this.kiteMode && !this.cricketMode; // on the roof the keys fly the kite; at the crease they play shots
+    const moving = move.lengthSq() > 0 && this.view < 0.6 && !this.intro && !this.kiteMode && !this.cricketMode && !this.fishingMode; // on the roof the keys fly the kite; at the crease they play shots
     // Shift + keys: ease up to a jog (0 walk → 1 run), and back down when Shift is let go
     S.run = (S.run || 0) + (((moving && S.running && S.keys.size) ? 1 : 0) - (S.run || 0)) * Math.min(1, dt * 5);
     if (moving) {
@@ -1202,7 +1243,8 @@ export class NeighbourhoodScene {
       if (Math.abs(S.shuffle) > 0.05) S.step += dt * 14; // little side-steps
     }
     const R = this.rangeen, kite = this.kiteMode;
-    this.simGroup.position.set(S.pos.x, kite ? R.roof.y : 0, S.pos.z);
+    this.simGroup.position.set(S.pos.x, kite ? R.roof.y : this.fishingMode ? this.outskirts.sardaryab.deck : 0, S.pos.z);
+    this.fishPose = this.fishingMode ? this.fishing.tick(dt, time) : null;
 
     // The kites over the Rangeen house (her own only while she's on its roof)
     let kw = null;
@@ -1221,7 +1263,9 @@ export class NeighbourhoodScene {
       // Face where she's walking; when idle, turn to the camera like a Sim waiting for you
       // (during the prologue she holds still, matching the white sculpt, so the camera orbits her;
       // on the roof she faces her kite)
+      const fw = this.outskirts?.sardaryab.forward;
       const want = this.cricketMode ? Math.PI // at the crease: facing the bowler, down the pitch
+        : this.fishingMode ? Math.atan2(fw.x, fw.z) // on the jetty: facing the water
         : kw ? Math.atan2(kw.x - S.pos.x, kw.z - S.pos.z)
         : moving ? Math.atan2(move.x, move.z)
         : this.prologue && this.prologue.stage !== 'done' ? 0
@@ -1262,6 +1306,13 @@ export class NeighbourhoodScene {
         const sh = S.shuffle || 0;
         g.position.y = -0.04 + Math.abs(Math.sin(S.step)) * 0.08 * Math.min(1, Math.abs(sh));
         g.rotation.z = -sh * 0.08;
+      }
+      if (this.fishPose && !this.reducedMotion) {
+        // fishing: she rocks back on the cast and leans back against a fish on the line
+        const { lean, whip } = this.fishPose;
+        g.rotation.x = -0.04 - lean * 0.12 + Math.max(0, whip) * 0.08;
+        g.rotation.y = -whip * 0.25;
+        g.position.y = Math.sin(time * 1.4) * 0.006;
       }
       if (S.dance > 0) {
         // the little dance: a full spin with three hops and a sway
@@ -1320,8 +1371,12 @@ export class NeighbourhoodScene {
 
     // The cricket ground: standing by the pitch offers "Bat an over"
     if (this.outskirts && !this.mapOnly) {
-      const at = !this.cricketMode && !kite && this.view < 0.4 && S.pos.distanceTo(this.outskirts.cricket.approach) < 3.2;
+      const free = !this.cricketMode && !this.fishingMode && !kite && this.view < 0.4;
+      const at = free && S.pos.distanceTo(this.outskirts.cricket.approach) < 3.2;
       if (at !== !!this.atCricket) { this.atCricket = at; this.emit('cricketSpot', at); }
+      // …and the foot of the Sardaryab jetty offers "Go fishing"
+      const atF = free && S.pos.distanceTo(this.outskirts.sardaryab.approach) < 3.2;
+      if (atF !== !!this.atFishing) { this.atFishing = atF; this.emit('fishSpot', atF); }
     }
 
     // Map marker grows as the camera rises
@@ -1344,7 +1399,7 @@ export class NeighbourhoodScene {
     }
 
     // On the roof the lens widens so she and her kite fit in one shot
-    const fov = this.baseFov + (kite ? 18 : this.cricketMode ? 8 : 0);
+    const fov = this.baseFov + (kite ? 18 : this.cricketMode || this.fishingMode ? 8 : 0);
     if (Math.abs(this.camera.fov - fov) > 0.05) { this.camera.fov += (fov - this.camera.fov) * Math.min(1, dt * 4); this.camera.updateProjectionMatrix(); }
 
     // Camera eases toward where the view wants it
