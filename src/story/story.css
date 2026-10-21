@@ -320,6 +320,9 @@
 /* Map zoom controls (landing map + Work banner) */
 .map-zoom { position: absolute; right: var(--gutter); bottom: clamp(88px, 14vh, 150px); z-index: 4; display: grid; justify-items: end; gap: 6px; transition: opacity 300ms, transform 300ms var(--ease); }
 .map-zoom.is-hidden { opacity: 0; transform: translateY(10px); pointer-events: none; }
+/* the box is as wide as its hint line, so only the buttons take clicks (it used to swallow clicks on her) */
+.map-zoom { pointer-events: none; }
+.map-zoom:not(.is-hidden) button { pointer-events: auto; }
 .map-zoom button {
   display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; cursor: pointer; font-size: 22px; font-weight: 500; line-height: 1;
   color: #15201a; background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(21, 32, 26, 0.08); backdrop-filter: blur(10px);

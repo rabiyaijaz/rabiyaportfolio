@@ -305,6 +305,10 @@ export class NeighbourhoodScene {
     // The Sim, plus a big plumbob that marks her on the map
     this.simGroup = new THREE.Group();
     this.simGroup.position.copy(START);
+    // An invisible hit box around her, so a click on her opens the action menu (cheaper than testing the model)
+    this.simHit = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, SIM_H, 10), new THREE.MeshBasicMaterial({ visible: false }));
+    this.simHit.position.y = SIM_H / 2;
+    this.simGroup.add(this.simHit);
     // No 2D stand-in: the 3D model appears as soon as it loads. The flat cutout is only a
     // fallback if the model fails or takes over 7 s (see useFallbackSim).
     this.mapBob = createPlumbob({ size: 1.4, light: false });
@@ -714,6 +718,7 @@ export class NeighbourhoodScene {
       ray.setFromCamera(ndc, this.camera);
       // Easter egg: wild frogs can be clicked (no hover highlight, nothing tells you)
       if (this.view < 0.5 && !this.mapOnly) {
+        if (!this.kiteMode && !this.intro && ray.intersectObject(this.simHit)[0]) return { sim: true }; // her: the action menu
         const wild = this.frogs.filter((f) => !f.userData.caught);
         const fh = ray.intersectObjects(wild, true)[0];
         if (fh) { let o = fh.object; while (o && !wild.includes(o)) o = o.parent; if (o) return { frog: o }; }
@@ -767,18 +772,19 @@ export class NeighbourhoodScene {
           }
         }
       }
-      const { lot } = pick(e);
-      if (lot !== this.hovered) {
-        this.hovered = lot;
-        el.style.cursor = lot ? 'pointer' : this.view < 0.5 ? 'crosshair' : this.view > 0.6 ? 'grab' : '';
-        this.emit('hover', lot || null);
+      const { lot, sim } = pick(e);
+      if (lot !== this.hovered || sim !== this.hoverSim) {
+        this.hoverSim = sim;
+        el.style.cursor = lot || sim ? 'pointer' : this.view < 0.5 ? 'crosshair' : this.view > 0.6 ? 'grab' : '';
+        if (lot !== this.hovered) { this.hovered = lot; this.emit('hover', lot || null); }
       }
     };
     this.onClick = (e) => {
       if (dragged) { dragged = false; return; } // the end of a pan isn't a click
       if (this.kiteMode) return;
       this.skipIntro();
-      const { lot, point, frog } = pick(e);
+      const { lot, point, frog, sim } = pick(e);
+      if (sim) { const r = el.getBoundingClientRect(); this.emit('simClick', { x: e.clientX - r.left, y: e.clientY - r.top }); return; }
       if (frog) { this.goCatch(frog); return; }
       if (lot) { if (this.view > 0.5) this.emit('enter', lot); else this.walkTo(lot); return; }
       if (point && this.view < 0.5 && !this.mapOnly) this.walkToPoint(point);
@@ -837,7 +843,7 @@ export class NeighbourhoodScene {
     const held = (this.keyAt ||= {}), real = (this.realKeys ||= new Set());
     if (down) {
       if (!real.has(k)) held[k] = performance.now();
-      real.add(k); this.sim.keys.add(k); this.sim.target = null; this.sim.goal = null;
+      real.add(k); this.sim.keys.add(k); this.sim.target = null; this.sim.goal = null; this.sim.arrive = null; this.sim.catching = null;
     } else {
       // A quick tap still takes a small step: keep the key "down" for at least 160 ms
       real.delete(k);
@@ -932,7 +938,7 @@ export class NeighbourhoodScene {
   goCatch(frog) {
     const wp = frog.getWorldPosition(new THREE.Vector3()).setY(0);
     const t = this.clampWalkable(wp.clone());
-    this.sim.target = t; this.sim.goal = null; this.sim.catching = frog;
+    this.sim.target = t; this.sim.goal = null; this.sim.catching = frog; this.sim.arrive = null;
     this.tapMark.position.copy(t).setY(0.1);
     this.tapMark.material.opacity = 0.9;
   }
@@ -947,16 +953,61 @@ export class NeighbourhoodScene {
     this.emit('frog', this.caughtFrogs.length);
   }
 
+  // ------------------------------------------------------------------ actions (her pie menu on the street)
+  // Each one walks her there first, then does the thing on arrival. Taking over (a click, a key) cancels it.
+  /** Walk to `p`, then call `then`. */
+  walkThen(p, then) {
+    this.walkToPoint(p);
+    this.sim.arrive = then;
+  }
+  /** The nearest frog still in the fountain, or null once they're all caught. */
+  nearestFrog() {
+    const S = this.sim, wp = new THREE.Vector3();
+    let best = null, bd = Infinity;
+    for (const f of this.frogs) {
+      if (f.userData.caught) continue;
+      const d = f.getWorldPosition(wp).distanceTo(S.pos);
+      if (d < bd) { bd = d; best = f; }
+    }
+    return best;
+  }
+  /** Catch a frog: walk to the fountain's edge beside the nearest one, and catch it there. */
+  actCatchFrog() {
+    const f = this.nearestFrog();
+    if (!f) return false;
+    this.goCatch(f);
+    return true;
+  }
+  /** Walk up the Rangeen house's path to its door, then `then` (the page takes her up to the roof). */
+  actGoToRangeen(then) {
+    const R = this.rangeen;
+    if (!R) return;
+    this.walkThen(R.door.clone().addScaledVector(R.door.clone().setY(0).normalize(), -0.8), then);
+  }
+  /** Walk to a project house's door, then `then` (the page opens it). */
+  actVisit(id, then) {
+    this.walkTo(id);
+    this.sim.arrive = then;
+  }
+  /** The project house nearest to her, for "Visit …". */
+  nearestLot() {
+    let best = null, bd = Infinity;
+    for (const l of this.lots) { const d = l.door.distanceTo(this.sim.pos); if (d < bd) { bd = d; best = l; } }
+    return best;
+  }
+  /** A little dance on the spot: a spin and a few hops. */
+  dance() { this.sim.dance = 1.8; this.sim.target = null; this.sim.arrive = null; }
+
   walkToPoint(p) {
     const t = this.clampWalkable(p.clone().setY(0));
-    this.sim.target = t; this.sim.goal = null; this.sim.catching = null;
+    this.sim.target = t; this.sim.goal = null; this.sim.catching = null; this.sim.arrive = null;
     this.tapMark.position.copy(t).setY(0.1);
     this.tapMark.material.opacity = 0.9;
   }
   walkTo(id) {
     const lot = this.lots.find((l) => l.id === id);
     if (!lot) return;
-    this.sim.target = lot.door.clone(); this.sim.goal = id; this.sim.catching = null;
+    this.sim.target = lot.door.clone(); this.sim.goal = id; this.sim.catching = null; this.sim.arrive = null;
     this.tapMark.position.copy(lot.door).setY(0.1);
     this.tapMark.material.opacity = 0.9;
   }
@@ -1016,14 +1067,19 @@ export class NeighbourhoodScene {
       move.applyAxisAngle(UP, this.orbit.yaw + (this.autoTurn || 0) * 1.4); // "up" always walks away from the camera
     } else if (S.target) {
       move.subVectors(S.target, S.pos).setY(0);
-      if (move.length() < 0.25) {
+      // Stuck against a wall or the fountain (the walk is a straight line)? Count it as arrived.
+      const d = move.length();
+      if (S.trackFor !== S.target) { S.trackFor = S.target; S.bestD = d; S.stuckT = 0; }
+      if (d < S.bestD - 0.05) { S.bestD = d; S.stuckT = 0; } else S.stuckT += dt;
+      if (d < 0.25 || S.stuckT > 1.2) {
         S.target = null; move.set(0, 0, 0);
         this.tapMark.material.opacity = 0;
-        S.goal = null; // arriving at a door only offers "Go inside"; the visitor decides
+        S.goal = null; // arriving at a door only offers "Go inside"; the visitor decides (unless an action asked for it)
         if (S.catching) {
           const f = S.catching; S.catching = null;
           if (!f.userData.caught && f.getWorldPosition(new THREE.Vector3()).setY(0).distanceTo(S.pos) < 5) this.catchFrog(f);
         }
+        const then = S.arrive; S.arrive = null; then?.(); // an action from her menu finishes here
       }
     }
     const moving = move.lengthSq() > 0 && this.view < 0.6 && !this.intro && !this.kiteMode; // on the roof the keys fly the kite
@@ -1081,6 +1137,14 @@ export class NeighbourhoodScene {
       const squash = (1 - stepUp) * 0.035 * w;
       g.scale.set(1 + squash * 0.5, 1 - squash + breathe, 1 + squash * 0.5);
       this.simBlob.scale.setScalar(1 - stepUp * 0.15 * w);
+      if (S.dance > 0) {
+        // the little dance: a full spin with three hops and a sway
+        S.dance = Math.max(0, S.dance - dt);
+        const k = 1 - S.dance / 1.8;
+        g.rotation.y = this.reducedMotion ? 0 : k * Math.PI * 2;
+        g.position.y = this.reducedMotion ? 0 : Math.abs(Math.sin(k * Math.PI * 3)) * 0.35;
+        g.rotation.z = this.reducedMotion ? 0 : Math.sin(k * Math.PI * 6) * 0.08;
+      }
       if (kw && !this.reducedMotion) {
         // Flying: she leans back against the line, harder and with a yank on each pull, and sways
         // into the turns; giving line, she steps forward a touch

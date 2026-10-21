@@ -43,6 +43,7 @@ function Mailbox() {
 }
 import MapZoom from '../ui/MapZoom.jsx';
 import PageGuide from '../ui/PageGuide.jsx';
+import SimMenu from '../ui/SimMenu.jsx';
 import { sfx, zoneMusic } from '../lib/audio.js';
 
 // The Rangeen house's song (Rabiya's own audio edit), louder the closer she is, full on the roof
@@ -76,7 +77,8 @@ export default function Landing() {
   const { toast } = useSim();
   const toastRef = useRef(toast); // the scene and key listeners are set once; this keeps them on the current toast
   toastRef.current = toast;
-  const { phase } = usePhase();
+  const { phase, choose: choosePhase } = usePhase();
+  const [simMenu, setSimMenu] = useState(null); // her pie menu on the street: { x, y } in the stage
   const heroRef = useRef(null);
   const hostRef = useRef(null);
   const sceneRef = useRef(null);
@@ -151,6 +153,8 @@ export default function Landing() {
       s.on('enter', (id) => { if (byId[id]?.wip) { toastRef.current(wipToast(byId[id])); return; } sfx('coin'); navigate(`/work/${id}`); }),
       s.on('step', () => sfx('step', { volume: 0.55 })),
       // Easter egg: catching a frog from the fountain
+      // Clicking her on the street opens her pie menu (like the About room)
+      s.on('simClick', (p) => { setPlaying(true); setSimMenu(p); sfx('open', { volume: 0.6 }); }),
       s.on('frog', (n) => toast({ kind: 'want', title: n === 1 ? 'You caught a frog!' : `Frog #${n} joined the parade`, body: n === 1 ? 'It’ll hop along behind you now. Ribbit.' : 'They follow wherever you walk.' })),
       s.on('near', (id) => { if (id) sfx('open', { volume: 0.6 }); }),
       s.on('frame', placePins),
@@ -232,6 +236,28 @@ export default function Landing() {
 
   // ---------------------------------------------------------------- keyboard play
   const startPlaying = () => { sceneRef.current?.skipIntro(); setPlaying(true); };
+
+  // Her actions on the street. Each one walks her there first (you see her go), then does it.
+  const NEXT_PHASE = { day: ['dusk', 'Watch the sunset', '🌇'], dusk: ['night', 'Wait for the stars', '🌙'], night: ['day', 'Wait for morning', '☀️'] };
+  const simActions = () => {
+    const s = sceneRef.current;
+    const lot = s?.nearestLot(), proj = lot && byId[lot.id];
+    const [nextPhase, phaseLabel, phaseIcon] = NEXT_PHASE[phase];
+    return [
+      { label: 'Fly a kite', icon: '🪁', onSelect: () => s.actGoToRangeen(() => enterRangeenRef.current()) },
+      {
+        label: 'Catch a frog', icon: '🐸',
+        onSelect: () => { if (!s.actCatchFrog()) toast({ kind: 'want', title: 'No frogs left', body: 'You’ve caught every frog in the fountain. They’re all hopping after you.' }); },
+      },
+      proj && {
+        label: `Visit ${proj.name}`, icon: '🏠',
+        onSelect: () => s.actVisit(lot.id, () => { if (proj.wip) toast(wipToast(proj)); else { sfx('coin'); navigate(`/work/${proj.id}`); } }),
+      },
+      { label: 'Dance', icon: '💃', onSelect: () => { s.dance(); sfx('want', { volume: 0.4 }); } },
+      { label: phaseLabel, icon: phaseIcon, onSelect: () => choosePhase(nextPhase) },
+      { label: 'See the whole map', icon: '🗺️', onSelect: () => { setPlaying(false); glideTo(CHAPTERS[1].at()); } },
+    ].filter(Boolean);
+  };
   // From the map (or anywhere further down): glide back to the street first, then start walking
   const playFromAnywhere = () => {
     const top = heroRef.current.getBoundingClientRect().top + scrollY;
@@ -415,7 +441,8 @@ export default function Landing() {
           </div>
 
           {/* On the street (while walking) these zoom the camera around her; on the map they zoom the map */}
-          <MapZoom scene={sceneObj} hidden={!(mapOn || playing) || inRangeen} street={!mapOn} />
+          <MapZoom scene={sceneObj} hidden={!(mapOn || playing) || inRangeen || !!simMenu} street={!mapOn} />
+          {simMenu && !inRangeen && !mapOn && <SimMenu x={simMenu.x} y={simMenu.y} items={simActions()} onClose={() => setSimMenu(null)} />}
           {/* The map's caption: one line, no panel. The pins themselves are the list. */}
           <p className="hood__mapline" aria-hidden={!mapOn}>
             <span className="story-kicker">The neighbourhood</span>
