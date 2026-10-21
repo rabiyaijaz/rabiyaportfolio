@@ -141,7 +141,7 @@ export default function Landing() {
   const leaveCricket = () => viaFade(() => { cricketRef.current = false; setInCricket(false); setCall(null); sceneRef.current?.setCricket(false); });
   const enterCricketRef = useRef(enterCricket); enterCricketRef.current = enterCricket;
   const leaveCricketRef = useRef(leaveCricket); leaveCricketRef.current = leaveCricket;
-  const shot = (dir) => { if (sceneRef.current?.swing(dir)) sfx('hover', { volume: 0.8 }); };
+  const shot = () => { if (sceneRef.current?.swing()) sfx('hover', { volume: 0.8 }); };
   const shotRef = useRef(shot); shotRef.current = shot;
   const enterRangeenRef = useRef(enterRangeen);
   enterRangeenRef.current = enterRangeen;
@@ -308,12 +308,12 @@ export default function Landing() {
       const s = sceneRef.current, { playing: on, near: at, atRangeen: atR, inRangeen: inR, atCricket: atC, inCricket: inC } = keyState.current;
       if (!s || typing(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
       if (inC) {
-        // At the crease: ← pull, ↑ / Space / Enter drive, → cut; Esc walks off
+        // At the crease: ← → move across it (held), Space / ↑ / Enter swing; Esc walks off
         if (e.key === 'Escape') { leaveCricketRef.current(); return; }
+        if (SIDE.has(e.code)) { e.preventDefault(); s.key(e.code, true); return; } // released by the keyup below
         if (e.repeat) return;
         if ((e.code === 'Space' || e.code === 'Enter') && e.target.tagName === 'BUTTON') return; // let a focused button do its thing
-        const dir = { ArrowLeft: -1, KeyA: -1, ArrowRight: 1, KeyD: 1, ArrowUp: 0, KeyW: 0, Space: 0, Enter: 0 }[e.code];
-        if (dir !== undefined) { e.preventDefault(); shotRef.current(dir); }
+        if (['ArrowUp', 'KeyW', 'Space', 'Enter'].includes(e.code)) { e.preventDefault(); shotRef.current(); }
         return;
       }
       if (atC && e.key === 'Enter' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') { e.preventDefault(); s.releaseKeys(); enterCricketRef.current(); return; }
@@ -431,18 +431,21 @@ export default function Landing() {
                     <b className="is-lost" title="Balls bowled">Ball {Math.min(6, score.balls + (score.done ? 0 : 1))} of 6</b>
                   </span>
                 </p>
-                <p className="kite-hud__hint">Swing as the ball reaches you: spot on is a <b>six</b>. <kbd>←</kbd> pull · <kbd>↑</kbd> or <kbd>Space</kbd> drive · <kbd>→</kbd> cut. Or tap the pitch.</p>
+                <p className="kite-hud__hint"><kbd>←</kbd><kbd>→</kbd> get your bat in line with the ball (the ring shows where it bounces), then <kbd>Space</kbd> or <kbd>↑</kbd> to swing as it arrives. Spot on is a <b>six</b>. Stay in line without swinging to block.</p>
                 <div className="kite-hud__row">
                   {score.done ? (
                     <button className="button button--small" onClick={() => { setScore({ runs: 0, wkts: 0, balls: 0, done: false }); setCall(null); sceneRef.current?.cricketAgain(); }}>🏏 Bat another over</button>
                   ) : (
                     <div className="kite-hud__pad">
-                      {[[-1, 'Pull', 'M15 5l-7 7 7 7'], [0, 'Drive', 'M5 15l7-7 7 7'], [1, 'Cut', 'M9 5l7 7-7 7']].map(([dir, label, d]) => (
-                        <button key={label} type="button" className="kite-hud__btn" aria-label={`${label} shot`} onPointerDown={() => shot(dir)}>
-                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d={d} /></svg>
-                          <span>{label}</span>
-                        </button>
-                      ))}
+                      <button type="button" className="kite-hud__btn" aria-label="Move left" title="Move left" {...hold('ArrowLeft')}>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg><span>Move</span>
+                      </button>
+                      <button type="button" className="kite-hud__btn cricket-hud__swing" aria-label="Swing" onPointerDown={() => shot()}>
+                        <span aria-hidden="true">🏏</span><span>Swing</span>
+                      </button>
+                      <button type="button" className="kite-hud__btn" aria-label="Move right" title="Move right" {...hold('ArrowRight')}>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg><span>Move</span>
+                      </button>
                     </div>
                   )}
                   <button className="button button--small" onClick={leaveCricket}>Walk off <kbd>Esc</kbd></button>

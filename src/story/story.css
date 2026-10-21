@@ -283,6 +283,10 @@
 }
 /* at the crease the panel sits bottom right, so she (left of centre, bat side to camera) stays clear */
 @media (min-width: 861px) { .cricket-hud { left: auto; right: 40px; } }
+.cricket-hud__swing { min-width: 92px; background: #5fe08a; border-color: transparent; color: #0d2a17; font-size: 12px; }
+.cricket-hud__swing > span:first-child { font-size: 20px; line-height: 20px; }
+.cricket-hud__swing:hover { background: #79ea9d; }
+@media (max-width: 560px) { .cricket-hud__swing { width: 84px; } .cricket-hud__swing > span:first-child { display: block; } }
 /* The cricket call after each ball: a big word that pops in the middle of the screen and fades */
 .cricket-call {
   position: absolute; left: 50%; top: 34%; z-index: 7; margin: 0; transform: translate(-50%, -50%); pointer-events: none;

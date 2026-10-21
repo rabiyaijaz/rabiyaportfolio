@@ -101,60 +101,74 @@ export function createOutskirts({ reducedMotion = false } = {}) {
   }
 
   // ---------- the mini game: she bats one over (six balls) ----------
-  // Timing is everything: swing as the ball reaches her bat. Spot on is a six, close is a four, a bit off is
-  // a run or two, and a miss on the stumps knocks the bails off. A late edge can be caught behind.
-  // ← pull to leg, ↑ drive straight, → cut to off. Each ball comes a little quicker than the last.
-  // She takes guard with her bat in line with the stumps, so the ball comes onto the bat; at contact the
-  // ball meets the blade (batPoint, set by the scene) and flies off it. An early swing is just a practice
-  // swing: she can swing again. Only a swing in the window around the ball's arrival counts.
-  // Her guard and her bat (neighbourhood.js BAT_HAND, BAT_SWEET): hands 0.32 m to her right and 0.16 m in front,
-  // so with her feet at x -0.3 the hanging blade's middle is at x 0.02, z 3.39, 0.4 m up: right where each ball arrives.
+  // Two things to get right, like real batting:
+  //   Where: each ball comes down a different line (outside off, at the stumps, down leg). She shuffles across
+  //     the crease with ← → to get her bat in line; a ring on the pitch shows where it will bounce.
+  //   When: swing (Space / ↑ / a tap) as it reaches the bat. Spot on is a six, close is a four, a bit off a run or two.
+  // Bat in line and timed: a clean hit, sent where the line and timing take it (late to the off side, early to leg).
+  // Bat nearly in line: an edge (a single, or caught behind if it's late). Not in line: a miss, and if the ball
+  // was on the stumps the bails fly. Don't swing with the bat in line and she blocks it. Each ball is a bit quicker.
+  // An early swing is a practice swing: she can go again. At contact the ball meets the blade (batPoint, from the scene).
+  // Her bat (neighbourhood.js BAT_HAND, BAT_SWEET): hands 0.32 m to her right and 0.16 m in front, so at her guard
+  // (feet at x -0.3) the hanging blade's middle is at x 0.02, z 3.39, 0.4 m up: where each ball arrives.
   const RELEASE = new THREE.Vector3(0.25, 2.0, -4.6), CONTACT_Z = 3.39, CROSS = 0.047, WINDOW = 0.25;
+  const MIDDLE = 0.14, EDGE = 0.3; // how far the ball may be from the middle of the bat (m): a clean hit, an edge
   const cricket = {
-    spot: C.clone().add(new THREE.Vector3(-0.3, 0, 3.55)),  // where she stands: her bat (in her right hand) over the stumps' line (world)
+    spot: C.clone().add(new THREE.Vector3(-0.3, 0, 3.55)),  // her guard: her bat (in her right hand) over the stumps' line (world)
+    reach: 0.95,                                             // how far she can shuffle either side of her guard (m)
     batPoint: null, // () => the blade's sweet spot in world space (the scene sets it)
     approach: C.clone().add(new THREE.Vector3(2.4, 0, 6.2)), // where she walks to first (world)
     center: C.clone(),
     on: false, onEvent: null,
-    g: null, // the current over: { balls, runs, wkts, phase, t, D, line, swing, hit, result }
+    g: null, // the current over: { balls, runs, wkts, phase, t, D, line, swing, hit }
     start(onEvent) {
       this.on = true; this.onEvent = onEvent;
       this.g = { balls: 0, runs: 0, wkts: 0, phase: 'wait', t: 0 };
       const M = live.userData.match; M.batter.visible = false; M.keeper.visible = false; // the camera stands where the keeper would
       this.emit('start', {});
     },
-    stop() { this.on = false; const M = live.userData.match; M.batter.visible = true; M.keeper.visible = true; M.bails.forEach((b, i) => { b.position.set(i ? 0.09 : -0.09, 0.97, 4.2); b.rotation.set(0, 0, 0); }); },
+    stop() {
+      this.on = false; const M = live.userData.match; M.batter.visible = true; M.keeper.visible = true; M.mark.visible = false;
+      M.bails.forEach((b, i) => { b.position.set(i ? 0.09 : -0.09, 0.97, 4.2); b.rotation.set(0, 0, 0); });
+    },
     emit(type, d) { this.onEvent?.({ type, ...d, runs: this.g?.runs ?? 0, wkts: this.g?.wkts ?? 0, balls: this.g?.balls ?? 0 }); },
-    /** dir: -1 pull (leg side), 0 drive, 1 cut (off side). Returns null if she can't swing right now, else
-     *  { delay }: how long she should hold her backlift before bringing the bat through, so it meets the ball. */
-    swing(dir) {
+    /** Swing. Returns null if she can't right now, else { delay }: how long to hold the backlift before bringing
+     *  the bat through, so it crosses as the ball arrives. */
+    swing() {
       const G = this.g;
       if (!this.on || !G || G.hit || G.cool > 0 || !(G.phase === 'runup' || G.phase === 'flight')) return null;
       G.cool = 0.35; // a practice swing takes a moment to recover from
       if (G.phase !== 'flight' || G.swing) { G.air = true; return { delay: 0 }; }
       const ideal = G.D - CROSS; // pressing then brings the bat across just as the ball arrives
       if (G.t < ideal - WINDOW) { G.air = true; return { delay: 0 }; } // too early: an air shot, she can go again
-      G.swing = { t: G.t, dir, q: Math.abs(G.t - ideal), late: G.t > ideal };
+      G.swing = { t: G.t, q: Math.abs(G.t - ideal), late: G.t > ideal };
       G.contactAt = Math.max(G.D, G.t + CROSS);
       return { delay: Math.max(0, ideal - G.t) };
     },
   };
-  // where the ball is at k (0 release → 1 at her bat), with one bounce on a good length, coming up to bat height
+  // where the ball is at k (0 release → 1 at the crease), with one bounce on a good length, coming up to bat height
   const KB = 0.64;
   const ballAt = (k, line, out) => {
     out.set(RELEASE.x + (line - RELEASE.x) * Math.min(1, k), 0, RELEASE.z + (CONTACT_Z - RELEASE.z) * k);
     out.y = k < KB ? 0.1 + (RELEASE.y - 0.1) * (1 - Math.pow(k / KB, 1.6)) : 0.1 + 0.3 * Math.sin(Math.min(1, (k - KB) / (1 - KB)) * (Math.PI / 2));
     return out;
   };
-  const verdict = (q, late) => {
+  const verdict = (q) => {
     if (q <= 0.06) return { runs: 6, label: 'SIX!', kind: 'six' };
     if (q <= 0.12) return { runs: 4, label: 'FOUR!', kind: 'four' };
     if (q <= 0.18) return { runs: 2, label: '2 runs', kind: 'runs' };
-    if (late && Math.random() < 0.3) return { runs: 0, label: 'Caught behind!', kind: 'out' };
     return { runs: 1, label: '1 run', kind: 'runs' };
   };
   const _bp = new THREE.Vector3();
   const hitVel = new THREE.Vector3();
+  // how far the middle of her bat is from the ball's line, across the pitch (m)
+  const offLine = (G) => (cricket.batPoint ? G.line - (_bp.copy(cricket.batPoint()).x - C.x) : 0);
+  // the ring on the pitch where this ball will bounce
+  {
+    const M = live.userData.match;
+    M.mark = new THREE.Mesh(new THREE.RingGeometry(0.16, 0.24, 24), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+    M.mark.rotation.x = -Math.PI / 2; M.mark.visible = false; M.ball.parent.add(M.mark);
+  }
   function tickCricket(dt) {
     const G = cricket.g, M = live.userData.match;
     if (!G) return;
@@ -162,33 +176,50 @@ export function createOutskirts({ reducedMotion = false } = {}) {
     G.cool = Math.max(0, (G.cool || 0) - dt);
     if (G.phase === 'wait') {
       // the bowler walks back to his mark; then he's off
-      M.bowler.position.set(0.2, 0, -11); M.ball.position.set(0.4, 1.3, -10.8);
-      if (G.t > 1.4) { G.phase = 'runup'; G.t = 0; G.swing = null; G.contactAt = null; G.air = false; G.line = [0, 0.05, -0.1, 0.18][Math.floor(Math.random() * 4)]; G.D = Math.max(0.6, 0.95 - G.balls * 0.04 + Math.random() * 0.06); cricket.emit('bowl', {}); }
+      M.bowler.position.set(0.2, 0, -11); M.ball.position.set(0.4, 1.3, -10.8); M.mark.visible = false;
+      if (G.t > 1.4) {
+        G.phase = 'runup'; G.t = 0; G.swing = null; G.contactAt = null; G.air = false; G.blocked = false;
+        // anywhere from well outside off to down leg; she has to move to it
+        G.line = -0.6 + Math.random() * 1.25;
+        G.D = Math.max(0.62, 0.98 - G.balls * 0.04 + Math.random() * 0.06);
+        cricket.emit('bowl', {});
+      }
     } else if (G.phase === 'runup') {
       const k = Math.min(1, G.t / 1.3);
       M.bowler.position.set(0.2, Math.abs(Math.sin(k * Math.PI * 7)) * 0.12, -11 + k * 6.3);
       M.ball.position.set(0.4, 1.3 + k * 0.6, M.bowler.position.z + 0.2);
-      if (k >= 1) { G.phase = 'flight'; G.t = 0; }
+      if (k >= 1) {
+        G.phase = 'flight'; G.t = 0;
+        ballAt(KB, G.line, M.mark.position); M.mark.position.y = 0.09; M.mark.visible = true; // where it'll pitch
+      }
     } else if (G.phase === 'flight') {
       const k = G.t / G.D;
       ballAt(k, G.line, M.ball.position);
-      // contact: a swing in the window connects when the bat comes across (as the ball arrives, or just after a late swing)
+      M.mark.material.opacity = Math.min(0.85, G.t * 3) * (k < KB ? 1 : Math.max(0, 1 - (k - KB) * 4));
       const s = G.swing;
       if (s && G.t >= G.contactAt && !G.hit) {
-        const r = verdict(s.q, s.late);
-        G.hit = r; G.phase = 'hit'; G.t = 0;
-        // the ball meets the blade
-        if (cricket.batPoint) M.ball.position.copy(_bp.copy(cricket.batPoint()).sub(C));
-        // send it: high for six, along the ground for four, gently for a run or two; aimed by the shot
-        const ang = (s.dir * 0.75 + (Math.random() - 0.5) * 0.3);
-        const sp = r.kind === 'six' ? 24 : r.kind === 'four' ? 26 : r.kind === 'out' ? 6 : 11;
-        hitVel.set(Math.sin(ang) * sp, r.kind === 'six' ? 15 : r.kind === 'four' ? 2 : r.kind === 'out' ? 6 : 4, -Math.cos(ang) * sp);
-        if (r.kind === 'out') hitVel.set(0.4, 5, 4); // up off the edge, into the keeper's gloves
-        cricket.emit('contact', { kind: r.kind });
-      } else if (!s && G.t > G.D - CROSS + WINDOW) {
-        // missed it (or never swung): it goes on through
-        const onStumps = Math.abs(G.line) < 0.15;
-        G.hit = onStumps ? { runs: 0, label: 'Bowled!', kind: 'out' } : { runs: 0, label: G.air ? 'Swing and a miss' : 'Dot ball', kind: 'dot' };
+        // the bat comes across: is it in line?
+        const off = Math.abs(offLine(G));
+        if (off <= EDGE) {
+          const edge = off > MIDDLE;
+          const r = edge ? (s.late && Math.random() < 0.45 ? { runs: 0, label: 'Edged… caught behind!', kind: 'out' } : { runs: 1, label: 'Edged for one', kind: 'runs' }) : verdict(s.q);
+          G.hit = r; G.phase = 'hit'; G.t = 0;
+          if (cricket.batPoint) M.ball.position.copy(_bp.copy(cricket.batPoint()).sub(C)); // the ball meets the blade
+          // where it goes: the line and timing choose the side (off-side balls and late swings go to the off side)
+          const ang = Math.max(-1.1, Math.min(1.1, G.line * 0.9 + (s.late ? 1 : -1) * Math.min(1, s.q / 0.12) * 0.45 + (Math.random() - 0.5) * 0.2));
+          const sp = r.kind === 'six' ? 24 : r.kind === 'four' ? 26 : edge ? 7 : 11;
+          hitVel.set(Math.sin(ang) * sp, r.kind === 'six' ? 15 : r.kind === 'four' ? 2 : 4, -Math.cos(ang) * sp);
+          if (edge) hitVel.set(Math.sign(G.line || 1) * 2.5, 4, r.kind === 'out' ? 5 : -3); // off the edge: behind, or squirting away
+          cricket.emit('contact', { kind: r.kind });
+        } else { G.air = true; G.swing = null; G.contactAt = null; } // swung at nothing: it carries on through
+      } else if (!s && !G.blocked && k >= 1 && Math.abs(offLine(G)) <= MIDDLE) {
+        // she didn't swing, but her bat is in line: blocked, dead at her feet
+        G.blocked = true; G.hit = { runs: 0, label: 'Defended', kind: 'dot' }; G.phase = 'miss'; G.t = 0;
+        cricket.emit('contact', { kind: 'dot' });
+      } else if (!G.swing && G.t > G.D - CROSS + WINDOW) {
+        // missed it (or let it go): it carries on through, and hits the stumps if it was on them
+        const onStumps = Math.abs(G.line) < 0.14;
+        G.hit = onStumps ? { runs: 0, label: 'Bowled!', kind: 'out' } : { runs: 0, label: G.air ? 'Swing and a miss' : 'Left alone', kind: 'dot' };
         G.phase = 'miss'; G.t = 0;
       }
     } else if (G.phase === 'hit') {
@@ -200,7 +231,10 @@ export function createOutskirts({ reducedMotion = false } = {}) {
       if (G.t > 2.4) finishBall();
     } else if (G.phase === 'miss') {
       const b = M.ball.position;
-      if (G.hit.label === 'Bowled!') {
+      if (G.blocked) {
+        // dropped dead in front of her bat
+        b.y = Math.max(0.12, b.y - dt * 1.5); b.z -= dt * 0.6 * Math.max(0, 1 - G.t);
+      } else if (G.hit.label === 'Bowled!') {
         // into the stumps: the bails fly
         b.set(G.line, 0.5, 4.2);
         M.bails.forEach((x, i) => { x.position.x += (i ? 1 : -1) * dt * 2; x.position.y = 0.97 + Math.sin(Math.min(1, G.t * 1.6) * Math.PI) * 0.9 - G.t * 0.3; x.rotation.z += dt * 9; });

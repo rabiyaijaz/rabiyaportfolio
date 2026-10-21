@@ -819,7 +819,7 @@ export class NeighbourhoodScene {
     this.onClick = (e) => {
       if (dragged) { dragged = false; return; } // the end of a pan isn't a click
       if (this.kiteMode) return;
-      if (this.cricketMode) { this.swing(0); return; } // a tap at the crease is a straight drive
+      if (this.cricketMode) { this.swing(); return; } // a tap at the crease is a swing
       this.skipIntro();
       const { lot, point, frog, sim } = pick(e);
       if (sim) { const r = el.getBoundingClientRect(); this.emit('simClick', { x: e.clientX - r.left, y: e.clientY - r.top }); return; }
@@ -944,12 +944,12 @@ export class NeighbourhoodScene {
   }
   /** Another over, after one finishes. */
   cricketAgain() { if (this.cricketMode) this.outskirts.cricket.start((e) => this.emit('cricket', e)); }
-  /** Her shot: -1 pull (leg side), 0 drive, 1 cut (off side). */
-  swing(dir = 0) {
-    const r = this.cricketMode && this.outskirts.cricket.swing(dir);
+  /** Her shot. Where it goes depends on the ball's line and her timing (outskirts.js). */
+  swing() {
+    const r = this.cricketMode && this.outskirts.cricket.swing();
     if (!r) return false;
     // hold the backlift for `delay`, then bring the bat through: it crosses the crease as the ball arrives
-    this.sim.swingT = -r.delay || 0.001; this.sim.swingDir = dir;
+    this.sim.swingT = -r.delay || 0.001; this.sim.swingDir = 0;
     return true;
   }
   /** A cricket bat in her right hand (made once, the first time she bats). */
@@ -1192,6 +1192,15 @@ export class NeighbourhoodScene {
       if (Math.floor(S.step / Math.PI) !== before) this.emit('step'); // one per footfall
     }
     S.walk += ((moving ? 1 : 0) - S.walk) * Math.min(1, dt * 7); // 0 idle → 1 full stride
+    // At the crease, ← → shuffle her across it to get in line with the ball (screen right is +X from the batting camera)
+    if (this.cricketMode) {
+      const K = this.outskirts.cricket, side = (S.keys.has('r') ? 1 : 0) - (S.keys.has('l') ? 1 : 0);
+      // eases into the step, but stops the moment the key is let go, so she ends up exactly where you put her
+      S.shuffle = side ? (S.shuffle || 0) + (side - (S.shuffle || 0)) * Math.min(1, dt * 16) : 0;
+      S.pos.x = Math.max(K.spot.x - K.reach, Math.min(K.spot.x + K.reach, S.pos.x + S.shuffle * 2.4 * dt));
+      S.pos.z = K.spot.z;
+      if (Math.abs(S.shuffle) > 0.05) S.step += dt * 14; // little side-steps
+    }
     const R = this.rangeen, kite = this.kiteMode;
     this.simGroup.position.set(S.pos.x, kite ? R.roof.y : 0, S.pos.z);
 
@@ -1249,7 +1258,10 @@ export class NeighbourhoodScene {
         B.rotation.set(-1.2 + e * 2.6, -d * 0.6 * Math.sin(e * Math.PI), -0.12 + e * 0.24);
         g.rotation.y = -0.3 + e * (0.75 + d * 0.3);
         g.rotation.x = 0.12 - e * 0.05;
-        g.position.y = -0.04;
+        // side-steps while she shuffles across the crease: a little bob and a lean the way she's going
+        const sh = S.shuffle || 0;
+        g.position.y = -0.04 + Math.abs(Math.sin(S.step)) * 0.08 * Math.min(1, Math.abs(sh));
+        g.rotation.z = -sh * 0.08;
       }
       if (S.dance > 0) {
         // the little dance: a full spin with three hops and a sway
