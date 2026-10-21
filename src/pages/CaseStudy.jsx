@@ -216,12 +216,9 @@ function LiveApp({ live, name }) {
         <p className="case__label"><LiveBadge /> Try it yourself</p>
         <h2 id="try-title" className="case__playtitle">{live.headline}</h2>
         <p className="muted">{live.note}</p>
-        <a className="ghost-button" href={live.href} target="_blank" rel="noopener noreferrer">
-          Open in a new tab <Arrow dir="out" /><span className="sr-only"> (opens in a new tab)</span>
-        </a>
       </div>
       <div className={`case__phone${tried ? ' is-tried' : ''}`}>
-        {!tried && <span className="case__tap" aria-hidden="true"><span>👆</span> Tap to try it</span>}
+        {!tried && <span className="case__tap" aria-hidden="true"><span>👆</span> Tap to try it<i /></span>}
         <div className="case__phone-screen">
           {near
             ? <iframe src={live.href} title={`${name}, the live app`} loading="lazy" allow="clipboard-write" />
