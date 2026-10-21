@@ -9,6 +9,7 @@ import { reducedMotion } from '../lib/scroll.js';
 export default function PageGuide({ chapters, hidden }) {
   const [cur, setCur] = useState(0);
   const [idle, setIdle] = useState(false);
+  const [top, setTop] = useState(true); // still on the hero, before any scrolling
   const fill = useRef(null);
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export default function PageGuide({ chapters, hidden }) {
       // At the very bottom the last chapter is the current one, even if it's short
       if (scrollY + innerHeight >= document.documentElement.scrollHeight - 4) i = chapters.length - 1;
       setCur(i);
+      setTop(scrollY < innerHeight * 0.12);
       const max = document.documentElement.scrollHeight - innerHeight;
       fill.current?.style.setProperty('--fill', String(max > 0 ? Math.min(1, scrollY / max) : 0));
     };
@@ -54,8 +56,17 @@ export default function PageGuide({ chapters, hidden }) {
           ))}
         </ol>
       </nav>
+      {/* On the hero: a centred cue, there from the start, saying there's a whole page below the street */}
+      <button className={`pguide__hero${top ? ' is-on' : ''}`} onClick={() => go(1)} tabIndex={top ? 0 : -1} aria-hidden={!top}>
+        <span className="pguide__hero-label">Scroll to explore</span>
+        <span className="pguide__hero-next">{chapters.slice(1).map((c) => c.label).join(' · ')}</span>
+        <span className="pguide__hero-arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg>
+          <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg>
+        </span>
+      </button>
       {next && (
-        <button className={`pguide__nudge${idle ? ' is-on' : ''}`} onClick={() => go(cur + 1)} tabIndex={idle ? 0 : -1} aria-hidden={!idle}>
+        <button className={`pguide__nudge${idle && !top ? ' is-on' : ''}`} onClick={() => go(cur + 1)} tabIndex={idle && !top ? 0 : -1} aria-hidden={!idle || top}>
           <span className="pguide__mouse" aria-hidden="true"><span /></span>
           <span><small>Keep scrolling</small>Next: {next.label}</span>
           <span className="pguide__chev" aria-hidden="true">↓</span>
