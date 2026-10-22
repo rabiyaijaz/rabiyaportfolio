@@ -61,7 +61,7 @@ const NO_KEYS = new Set();
 // Her bat when she's batting (metres, from her feet; she faces -Z): hands at her right hip, a little in front.
 // Hanging straight down, the blade's middle (BAT_SWEET below the hands) is where each ball arrives (outskirts.js).
 export const BAT_HAND = new THREE.Vector3(0.32, 0.95, -0.16), BAT_SWEET = 0.55;
-export const MAP_ZOOM_MAX = 2.6; // how far the map pulls back (1 = the crescent framed)
+export const MAP_ZOOM_MAX = 4; // how far the map pulls back (1 = the crescent framed; 4 = the whole town, railway and all)
 const ROOF_SKY_TOP = new THREE.Color(0x9fcab5), ROOF_SKY_BOTTOM = new THREE.Color(0xeee6cf); // mint over a warm haze
 
 /** Angle a is measured from -Z (north), clockwise seen from above. */
@@ -1413,8 +1413,9 @@ export class NeighbourhoodScene {
     // (the prologue starts in a close mist that only she stands clear of)
     if (this.scene.fog) {
       const f = this.fogK;
-      this.scene.fog.near = (90 + this.view * 220) * (1 - f) + 9 * f;
-      this.scene.fog.far = (420 + this.view * 520) * (1 - f) + 26 * f;
+      const zf = 1 + this.view * Math.max(0, this.zoom - 1) * 0.8; // zoomed far out, the haze moves back with the camera
+      this.scene.fog.near = (90 + this.view * 220) * zf * (1 - f) + 9 * f;
+      this.scene.fog.far = (420 + this.view * 520) * zf * (1 - f) + 26 * f;
     }
 
     this.fountain.tick(time, dt, this.reducedMotion);
