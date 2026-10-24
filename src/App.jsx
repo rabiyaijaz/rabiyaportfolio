@@ -14,12 +14,39 @@ import About from './pages/About.jsx';
 import Resume from './pages/Resume.jsx';
 import Contact from './pages/Contact.jsx';
 import NotFound from './pages/NotFound.jsx';
+import SearchPalette from './ui/SearchPalette.jsx';
+
+const ROOM_PANELS = new Set(['needs', 'traits', 'skills', 'people', 'items', 'offwork', 'wants']);
 import './story/story.css'; // story headers, buttons and plumbob styles are shared by every page
 
 export default function App() {
-  const { pathname, state } = useLocation();
+  const { pathname, state, hash } = useLocation();
   const landing = pathname === '/';
   useEffect(() => { if (!location.hash) scrollTo(0, 0); }, [pathname]);
+  // A link to a section (from search, the deck, anywhere): wait for it to render, bring it into view, and
+  // let it glow for a moment. About's room panels (#people, #skills…) are opened by the room itself.
+  useEffect(() => {
+    const id = decodeURIComponent(hash.slice(1));
+    if (!id || ROOM_PANELS.has(id)) return;
+    let n = 0, t;
+    const find = () => {
+      const el = document.getElementById(id);
+      if (!el) { if (n++ < 40) t = setTimeout(find, 100); return; }
+      const align = () => scrollTo({ top: el.getBoundingClientRect().top + scrollY - 96, behavior: 'auto' });
+      align();
+      // images above it can still be loading and push it down: re-align a few times, unless the visitor scrolls
+      let mine = true;
+      const stop = () => { mine = false; };
+      ['wheel', 'touchstart', 'keydown'].forEach((e) => addEventListener(e, stop, { once: true, passive: true }));
+      [250, 700, 1500, 2600].forEach((ms) => setTimeout(() => { if (mine) align(); }, ms));
+      setTimeout(() => ['wheel', 'touchstart', 'keydown'].forEach((e) => removeEventListener(e, stop)), 2700);
+      const glow = el.querySelector('h1, h2, h3') || el; // its heading glows, not the whole (often huge) section
+      glow.classList.remove('is-found'); void glow.offsetWidth; glow.classList.add('is-found');
+      setTimeout(() => glow.classList.remove('is-found'), 1900);
+    };
+    t = setTimeout(find, 60);
+    return () => clearTimeout(t);
+  }, [pathname, hash]);
 
   return (
     <PhaseProvider>
@@ -37,6 +64,7 @@ export default function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <SearchPalette />
       <PhaseSwitch />
       <SoundControl />
       <SoundFx />

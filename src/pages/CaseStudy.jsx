@@ -25,7 +25,7 @@ export default function CaseStudy() {
   const [lightbox, setLightbox] = useState(null);
 
   useEffect(() => {
-    scrollTo(0, 0);
+    if (!location.hash) scrollTo(0, 0); // a link to a section scrolls there instead (App.jsx)
     if (p && !p.wip) { fulfil('read'); boost('fun', 30); }
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -218,7 +218,7 @@ function LiveApp({ live, name }) {
         <p className="muted">{live.note}</p>
       </div>
       <div className={`case__phone${tried ? ' is-tried' : ''}`}>
-        {!tried && <span className="case__tap" aria-hidden="true"><span>👆</span> Tap to try it<i /></span>}
+        {!tried && <span className="case__tap" aria-hidden="true"><i className="case__tap-dot" />Tap to try the live app</span>}
         <div className="case__phone-screen">
           {near
             ? <iframe src={live.href} title={`${name}, the live app`} loading="lazy" allow="clipboard-write" />

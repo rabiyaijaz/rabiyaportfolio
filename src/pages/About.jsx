@@ -28,9 +28,10 @@ export default function About() {
     <main id="main" className="about-page">
       <h1 className="sr-only">About Rabiya Ijaz</h1>
       <Room />
-      {use3d ? <WhoIAm3D facts={FACTS} /> : <IntroStatic />}
-      <ToolFlow />
-      <OffWork />
+      {/* anchors for links and search: /about#who-i-am, #how-i-work, #off-work */}
+      <div id="who-i-am">{use3d ? <WhoIAm3D facts={FACTS} /> : <IntroStatic />}</div>
+      <div id="how-i-work"><ToolFlow /></div>
+      <div id="off-work"><OffWork /></div>
       <NightCta />
     </main>
   );

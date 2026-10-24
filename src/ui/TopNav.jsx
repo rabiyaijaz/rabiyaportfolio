@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import Logo from './Logo.jsx';
+import { SearchButton } from './SearchPalette.jsx';
 
 export const NAV = [
   { to: '/', label: 'Home' },
@@ -14,11 +15,14 @@ export default function TopNav({ floating = false }) {
   return (
     <header className={`topnav${floating ? ' topnav--float' : ''}`}>
       <Logo />
-      <nav aria-label="Main">
-        <ul>
-          {NAV.map((n) => <li key={n.to}><NavLink to={n.to} end={n.to === '/'}>{n.label}</NavLink></li>)}
-        </ul>
-      </nav>
+      <div className="topnav__right">
+        <SearchButton />
+        <nav aria-label="Main">
+          <ul>
+            {NAV.map((n) => <li key={n.to}><NavLink to={n.to} end={n.to === '/'}>{n.label}</NavLink></li>)}
+          </ul>
+        </nav>
+      </div>
     </header>
   );
 }

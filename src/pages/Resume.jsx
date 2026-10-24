@@ -60,7 +60,7 @@ export default function Resume() {
         </aside>
         <div className="timeline" ref={lineRef}>
           {SECTIONS.map(([id, name, items]) => (
-            <section key={id} className="tl-section" data-name={name} aria-labelledby={`tl-${id}`}>
+            <section key={id} id={id} className="tl-section" data-name={name} aria-labelledby={`tl-${id}`}>
               <h2 id={`tl-${id}`} className="tl-section__title">{name}</h2>
               <ol className="tl-list">
                 {items.map((x) => (
@@ -77,7 +77,7 @@ export default function Resume() {
               </ol>
             </section>
           ))}
-          <section className="tl-section" data-name="Extras" aria-labelledby="tl-extras">
+          <section id="certificates" className="tl-section" data-name="Extras" aria-labelledby="tl-extras">
             <h2 id="tl-extras" className="tl-section__title">Certificates & languages</h2>
             <ol className="tl-list">
               <li className="tl-item"><span className="tl-node" aria-hidden="true" /><p>Google Foundations of UX Design · Web Page Design with HTML5/CSS3 · Practical Python for Beginners</p><p className="muted">Urdu (native) · English (C2, writing C1)</p></li>

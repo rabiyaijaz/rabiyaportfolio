@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { CAREER, FEARS, INVENTORY, NEEDS, OFF_WORK, PERSONALITY, RELATIONSHIPS, WANTS } from '../content/about.js';
 import { useSim } from '../lib/simState.jsx';
 import { usePhase } from '../lib/phase.jsx';
@@ -44,6 +44,21 @@ export default function Room() {
   const { boost, fulfil, toast } = useSim();
   const { phase, now } = usePhase();
   const [panel, setPanel] = useState('needs');
+  // A link to a panel (/about#people from search): open it, bring the room into view, and make the panel glow
+  const { hash } = useLocation();
+  useEffect(() => {
+    const id = hash.slice(1);
+    if (!TABS.some((t) => t.id === id)) return;
+    setPanel(id);
+    scrollTo({ top: 0, behavior: 'auto' });
+    const t = setTimeout(() => {
+      const el = document.getElementById('hud-panel');
+      if (!el) return;
+      el.classList.remove('is-found'); void el.offsetWidth; el.classList.add('is-found');
+      setTimeout(() => el.classList.remove('is-found'), 1900);
+    }, 80);
+    return () => clearTimeout(t);
+  }, [hash]);
   const [menu, setMenu] = useState(null);
   const [bubble, setBubble] = useState(false);
   const [leave, setLeave] = useState(null); // the dial item waiting for "leave the lot?" confirmation

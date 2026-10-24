@@ -19,7 +19,7 @@ export default function ProcessStory() {
   const gallery = CHAPTERS.map((c) => ({ src: c.img, alt: c.alt, caption: `${c.name}: ${c.headline}` }));
 
   return (
-    <section className="process" aria-labelledby="process-title">
+    <section id="process" className="process" aria-labelledby="process-title">
       <StoryHeader
         className="process__intro" label="Design process" id="process-title"
         title={<>How I take a product <em>from fuzzy to shipped.</em></>}

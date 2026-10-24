@@ -662,7 +662,7 @@ function Skills() {
     return () => io.disconnect();
   }, []);
   return (
-    <section className={`evening${seen ? ' is-seen' : ''}`} ref={ref} aria-labelledby="evening-title">
+    <section id="skills" className={`evening${seen ? ' is-seen' : ''}`} ref={ref} aria-labelledby="evening-title">
       <div className="story-wrap">
         <StoryHeader label="Skills" id="evening-title" title={<>Skills, <em>levelled up over four years.</em></>} />
         <div className="evening__grid">
