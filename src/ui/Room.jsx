@@ -356,6 +356,11 @@ function PeoplePanel() {
 
   return (
     <>
+      <p className="hud-people__hint">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17c-2 0-3-1.5-3-3.5C4 10 6.5 7.5 9 7l.5 1.2C8 9 7.2 10.2 7.2 11.4c.3-.1.6-.1.9-.1 1.6 0 2.7 1.1 2.7 2.8S9.5 17 7 17Zm9 0c-2 0-3-1.5-3-3.5 0-3.5 2.5-6 5-6.5l.5 1.2c-1.5.8-2.3 2-2.3 3.2.3-.1.6-.1.9-.1 1.6 0 2.7 1.1 2.7 2.8S18.5 17 16 17Z" /></svg>
+        <span className="hud-people__hint-hover">Hover a person to read what they said about her</span>
+        <span className="hud-people__hint-touch">Tap a person to read what they said about her</span>
+      </p>
       <ul className="hud-people">
         {RELATIONSHIPS.map((r) => (
           <li key={r.name}>
@@ -367,6 +372,7 @@ function PeoplePanel() {
             >
               <img src={img(r.img)} alt="" />
               <span><strong>{r.name}</strong><small>{r.role}</small><Bar value={r.level} label={`Relationship with ${r.name}`} /></span>
+              <i className="hud-people__quote" aria-hidden="true">“</i>
             </button>
           </li>
         ))}
